@@ -4,7 +4,6 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import Fab from '@mui/material/Fab'
 
 import MenuBox from '../MenuBox'
-import Header from '../Header'
 import { ScrollTop } from '../Scroll/Scroll'
 
 import style from './Layout.module.scss'
@@ -12,13 +11,9 @@ import style from './Layout.module.scss'
 function Layout() {
   return (
     <>
-      <header>
-        <Header />
-      </header>
+      <header>{/* <Header /> */}</header>
       <Box sx={{ display: 'flex' }}>
-        <nav>
-          <MenuBox />
-        </nav>
+        <MenuBox />
 
         <main className={style.container}>
           <Outlet />

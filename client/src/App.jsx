@@ -7,6 +7,7 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import TestingPage from '@/pages/TestingPage'
 import SuccessPage from '@/pages/SuccessPage'
 import Layout from '@/components/Layout'
+import ProfilePage from '@/pages/ProfilePage'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="knowladge/audio" element={<KnowBasePage />} />
         <Route path="knowladge/video" element={<KnowBasePage />} />
         <Route path="test" element={<TestingPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="mysuccess" element={<SuccessPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

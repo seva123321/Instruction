@@ -1,36 +1,108 @@
-import { Link } from 'react-router-dom'
-import { ListItem, ListItemIcon } from '@mui/material'
+import * as React from 'react'
+import {
+  Divider,
+  List,
+  ListItemText,
+  ListItemIcon,
+  ListItemButton,
+  Collapse,
+} from '@mui/material'
+import {
+  School as SchoolIcon,
+  FactCheck as FactCheckIcon,
+  EmojiEvents as EmojiEventsIcon,
+  Headphones as HeadphonesIcon,
+  SmartDisplay as SmartDisplayIcon,
+  ImportContacts as ImportContactsIcon,
+  ExpandLess,
+  ExpandMore,
+  Person as PersonIcon,
+  NoteAlt as NoteAltIcon,
+} from '@mui/icons-material'
 
-import style from './MenuItem.module.scss'
+import CustomLink from '../CustomLink/CustomLink'
 
-function MenuItem({ item, isOpen, onToggle }) {
+export default function MenuItem() {
+  const [open, setOpen] = React.useState(true)
+
+  const handleClick = () => {
+    setOpen(!open)
+  }
+
   return (
-    <ListItem component="div">
-      {item.children ? (
-        <div className={style.dropdown}>
-          {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-          <button type="button" className={style.dropbtn} onClick={onToggle}>
-            {item.title}
-          </button>
-          {isOpen && (
-            <div className={style.dropdownContent}>
-              {item.children.map((child) => (
-                <Link key={child.path} to={child.path}>
-                  {/* {child.icon && <ListItemIcon>{child.icon}</ListItemIcon>} */}
-                  {child.title}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          <ListItemIcon>{item.icon}</ListItemIcon>
-          <Link to={item.path}>{item.title}</Link>
-        </>
-      )}
-    </ListItem>
+    <List
+      sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+      component="nav"
+      aria-labelledby="nested-list-subheader"
+      // subheader={
+      //   <ListSubheader component="div" id="nested-list-subheader">
+      //     Nested List Items
+      //   </ListSubheader>
+      // }
+    >
+      <ListItemButton>
+        <ListItemIcon>
+          <NoteAltIcon />
+        </ListItemIcon>
+        <CustomLink to="/instruction">Инструктаж</CustomLink>
+      </ListItemButton>
+
+      <ListItemButton>
+        <ListItemIcon>
+          <FactCheckIcon />
+        </ListItemIcon>
+        <CustomLink to="/test">Тестирование</CustomLink>
+        {/* <ListItemText primary="Drafts" /> */}
+      </ListItemButton>
+
+      <ListItemButton onClick={handleClick}>
+        <ListItemIcon>
+          <SchoolIcon />
+        </ListItemIcon>
+        <ListItemText primary="База знаний" />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItemButton sx={{ pl: 4 }}>
+            <ListItemIcon>
+              <ImportContactsIcon />
+            </ListItemIcon>
+            <CustomLink to="/knowladge/nla">Правовые документы</CustomLink>
+          </ListItemButton>
+        </List>
+
+        <List component="div" disablePadding>
+          <ListItemButton sx={{ pl: 4 }}>
+            <ListItemIcon>
+              <HeadphonesIcon />
+            </ListItemIcon>
+            <CustomLink to="/knowladge/audio">Аудио</CustomLink>
+          </ListItemButton>
+        </List>
+
+        <List component="div" disablePadding>
+          <ListItemButton sx={{ pl: 4 }}>
+            <ListItemIcon>
+              <SmartDisplayIcon />
+            </ListItemIcon>
+            <CustomLink to="/knowladge/video">Видео</CustomLink>
+          </ListItemButton>
+        </List>
+      </Collapse>
+      <Divider />
+      <ListItemButton>
+        <ListItemIcon>
+          <PersonIcon />
+        </ListItemIcon>
+        <CustomLink to="/profile">Профиль</CustomLink>
+      </ListItemButton>
+      <ListItemButton>
+        <ListItemIcon>
+          <EmojiEventsIcon />
+        </ListItemIcon>
+        <CustomLink to="/mysuccess">Мои успехи</CustomLink>
+      </ListItemButton>
+    </List>
   )
 }
-
-export default MenuItem

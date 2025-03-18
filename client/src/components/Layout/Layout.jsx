@@ -1,10 +1,17 @@
-import React from 'react'
-import { Outlet, Link } from 'react-router-dom'
-import { Box, Typography, List, ListItem, ListItemIcon } from '@mui/material'
+import React, { useState } from 'react'
+import { Outlet } from 'react-router-dom'
+import { Box, List } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/Dashboard'
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
-import DescriptionIcon from '@mui/icons-material/Description'
-import LayersIcon from '@mui/icons-material/Layers'
+import SchoolIcon from '@mui/icons-material/School'
+import GradingIcon from '@mui/icons-material/Grading'
+import FactCheckIcon from '@mui/icons-material/FactCheck'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import HeadphonesIcon from '@mui/icons-material/Headphones'
+import SmartDisplayIcon from '@mui/icons-material/SmartDisplay'
+import ImportContactsIcon from '@mui/icons-material/ImportContacts';
+
+import MenuItem from '../MenuItem'
+
 import style from './Layout.module.scss'
 
 const NAVIGATION = [
@@ -16,67 +23,59 @@ const NAVIGATION = [
   {
     title: 'Инструктаж',
     path: '/instruction',
-    icon: <ShoppingCartIcon />,
+    icon: <GradingIcon />,
   },
   {
     title: 'База знаний',
+    icon: <SchoolIcon />,
     children: [
       {
         title: 'Правовые документы',
         path: '/knowladge/nla',
+        icon: <ImportContactsIcon />,
       },
       {
         title: 'Аудио',
         path: '/knowladge/audio',
+        icon: <HeadphonesIcon />,
       },
       {
         title: 'Видео',
         path: '/knowladge/video',
+        icon: <SmartDisplayIcon />,
       },
     ],
   },
   {
     title: 'Тестирование',
     path: '/test',
-    icon: <DescriptionIcon />,
+    icon: <FactCheckIcon />,
   },
   {
     title: 'Мои успехи',
     path: '/mysuccess',
-    icon: <LayersIcon />,
+    icon: <EmojiEventsIcon />,
   },
 ]
 
 function Layout() {
+  const [openIndex, setOpenIndex] = useState(null)
+
+  const handleToggle = (index) => {
+    setOpenIndex(openIndex === index ? null : index)
+  }
+
   return (
     <Box sx={{ display: 'flex' }}>
       <nav>
         <List>
-          {NAVIGATION.map((item) => (
-            <ListItem
+          {NAVIGATION.map((item, index) => (
+            <MenuItem
               key={item.title}
-              component="div" //{item.children ? 'div' : Link}
-              to={item.path}
-            >
-              {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
-              <Link to={item.path} className={style.link}>
-                {item.title}
-              </Link>
-              {/* {item.children && (
-                <div className={style.dropdown}>
-                  <button type="button" className={style.dropbtn}>
-                    {item.title}
-                  </button>
-                  <div className={style.dropdownContent}>
-                    {item.children.map((child) => (
-                      <Link key={child.path} to={child.path}>
-                        {child.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )} */}
-            </ListItem>
+              item={item}
+              isOpen={openIndex === index}
+              onToggle={() => handleToggle(index)}
+            />
           ))}
         </List>
       </nav>
@@ -89,55 +88,3 @@ function Layout() {
 }
 
 export default Layout
-
-// import React from 'react'
-// import { Outlet, Link } from 'react-router-dom'
-// // Используем Link вместо CustomLink для выпадающего списка
-
-// import CustomLink from '../CustomLink'
-
-// import style from './Layout.module.scss'
-
-// function Layout() {
-//   return (
-//     <>
-//       <header className={style.header}>
-//         <nav>
-//           <ul className={style.header__list}>
-//             <li>
-//               <CustomLink to="/">Главная</CustomLink>
-//             </li>
-//             <li>
-//               <CustomLink to="/instruction">Инструктаж</CustomLink>
-//             </li>
-//             <li>
-//               <div className={style.dropdown}>
-//                 <button type="button" className={style.dropbtn}>
-//                   База знаний
-//                 </button>
-//                 <div className={style.dropdownContent}>
-//                   <Link to="/knowladge/nla">Правовые документы</Link>
-//                   <Link to="/knowladge/audio">Аудио</Link>
-//                   <Link to="/knowladge/video">Видео</Link>
-//                 </div>
-//               </div>
-//             </li>
-//             <li>
-//               <CustomLink to="/test">Тестирование</CustomLink>
-//             </li>
-//             <li>
-//               <CustomLink to="/mysuccess">Мои успехи</CustomLink>
-//             </li>
-//           </ul>
-//         </nav>
-//       </header>
-
-//       <main className={style.container}>
-//         <Outlet />
-//       </main>
-//       <footer className={style.container} />
-//     </>
-//   )
-// }
-
-// export default Layout

@@ -7,7 +7,7 @@ import TestingPage from '@/pages/TestingPage'
 import SuccessPage from '@/pages/SuccessPage'
 import Layout from '@/components/Layout'
 import ProfilePage from '@/pages/ProfilePage'
-import LoginPage from '@/pages/LoginPage'
+import RegistrationPage from '@/pages/RegistrationPage'
 
 import RequireAuth from './hoc/RequireAuth'
 import { AuthProvider } from './hoc/AuthProvider'
@@ -16,8 +16,8 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route index element={<RegistrationPage />} />
         <Route path="/" element={<Layout />}>
-          <Route index element={<LoginPage />} />
           <Route
             path="instruction"
             element={

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Divider,
   IconButton,
@@ -29,6 +30,8 @@ import {
   ExpandMore,
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
+
+import useAuth from '@/hook/useAuth'
 
 import CustomLink from '../CustomLink/CustomLink'
 
@@ -110,7 +113,8 @@ const ListItemText = styled(MuiListItemText)(({ open }) => ({
 export default function MenuBox() {
   const [openSubMenu, setOpenSubMenu] = useState(false)
   const [open, setOpen] = useState(false)
-  const [auth, setAuth] = useState(true)
+  const { signOut, user } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(min-width: 800px)')
@@ -135,8 +139,8 @@ export default function MenuBox() {
     setOpenSubMenu(!openSubMenu)
   }
 
-  const handleAuthClick = () => {
-    setAuth(!auth)
+  const handleSignOutClick = () => {
+    signOut(() => navigate('/', { replace: true }))
   }
 
   return (
@@ -240,13 +244,16 @@ export default function MenuBox() {
       </List>
 
       <Box sx={{ flexGrow: 1 }} />
-      <ListItem component={CustomLink} to="/auth" sx={{ mb: 3 }}>
-        <ListItemIcon open={open} onClick={handleAuthClick}>
-          <Tooltip title="Выйти">
-            {auth ? <LogoutIcon /> : <LoginIcon />}
-          </Tooltip>
-        </ListItemIcon>
-        <ListItemText open={open} primary="Выйти" />
+
+      <ListItem onClick={handleSignOutClick} sx={{ mb: 3, p: 0 }}>
+        <ListItemButton>
+          <ListItemIcon open={open}>
+            <Tooltip title="Выйти">
+              {user ? <LogoutIcon /> : <LoginIcon />}
+            </Tooltip>
+          </ListItemIcon>
+          <ListItemText open={open} primary="Выйти" />
+        </ListItemButton>
       </ListItem>
     </Drawer>
   )

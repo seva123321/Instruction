@@ -1,7 +1,95 @@
-import React from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { TextField as MuiTextField, Button, Box } from '@mui/material'
+import { styled } from '@mui/material/styles'
+import { useForm } from 'react-hook-form'
+
+import PasswordInput from '@/components/PasswordInput'
+import useAuth from '@/hook/useAuth'
+
+const TextField = styled(MuiTextField)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(1),
+  display: 'block',
+}))
 
 function AuthPage() {
-  return <div>AuthPage</div>
+  const navigate = useNavigate()
+  const location = useLocation()
+  const {
+    register,
+    formState: { errors, isValid },
+    handleSubmit,
+    reset,
+    watch,
+    control,
+  } = useForm({
+    mode: 'onBlur',
+  })
+  const { signIn } = useAuth()
+  const fromPage = location.state?.from?.pathname || '/'
+
+  const onSubmit = (data) => {
+    // alert(JSON.stringify(data))
+    // const { username, usersurname, password, confirmPassword } = data
+    const { username } = data
+    signIn(username, () => navigate(fromPage), { replace: true })
+    reset()
+  }
+
+  return (
+    <div>
+      <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
+        <Box display="flex" flexDirection="column" alignItems="flex-start">
+          <TextField
+            label="Имя"
+            variant="outlined"
+            autoComplete="username"
+            required
+            {...register('username', {
+              required: 'Поле обязательно к заполнению!',
+            })}
+            error={!!errors.username}
+            helperText={errors.username?.message}
+          />
+          <TextField
+            label="Фамилия"
+            variant="outlined"
+            autoComplete="usersurname"
+            required
+            {...register('usersurname', {
+              required: 'Поле обязательно к заполнению!',
+            })}
+            error={!!errors.usersurname}
+            helperText={errors.usersurname?.message}
+          />
+
+          <PasswordInput
+            name="password"
+            label="Пароль"
+            control={control}
+            errors={errors}
+            watch={watch}
+          />
+          <PasswordInput
+            name="confirmPassword"
+            label="Повторите пароль"
+            control={control}
+            errors={errors}
+            watch={watch}
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={!isValid}
+            sx={{ marginTop: 2 }}
+          >
+            Войти
+          </Button>
+        </Box>
+      </form>
+    </div>
+  )
 }
 
 export default AuthPage

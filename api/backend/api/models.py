@@ -101,12 +101,16 @@ class Publickey(models.Model):
         verbose_name = 'Публичный ключ'
         verbose_name_plural = 'Публичные ключи'
 
+
 class TypeOfInstruction(models.Model):
     """Модель типов инструктажей."""
 
     name = models.CharField(
         'Название',
         max_length=MAX_LENGTH_INSTRUCTION_TYPE,
+    )
+    frequency_of_passage = models.IntegerField(
+        'Частота прохождения',
     )
 
     class Meta:
@@ -137,6 +141,9 @@ class Instruction(models.Model):
         related_name='instruction',
         verbose_name='Тесты',
     )
+    npa = models.URLField(
+        'Нормативно-правовой акт',
+    )
 
     class Meta:
         verbose_name = 'Инструктаж'
@@ -145,6 +152,7 @@ class Instruction(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта инструктажа."""
         return self.name
+
 
 class Tests(models.Model):
     """Модель тестов инструктажа."""
@@ -168,6 +176,7 @@ class Tests(models.Model):
         """Возвращает строковое представление объекта теста."""
         return self.name
 
+
 class Question(models.Model):
     """Модель вопросов теста."""
 
@@ -188,6 +197,7 @@ class Question(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта вопроса."""
         return self.question
+
 
 class Answer(models.Model):
     """Модель ответов на вопросы."""
@@ -212,6 +222,7 @@ class Answer(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта ответа."""
         return self.answer
+
 
 class TestResult(models.Model):
     """Модель результатов тестирования."""
@@ -247,6 +258,42 @@ class TestResult(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта результата тестирования."""
         return f'{self.user} - {self.test} - {self.result}'
+
+
+class InstructionResult(models.Model):
+    """Модель результатов инструктажа."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='instruction_results',
+        verbose_name='Пользователь',
+    )
+    instruction = models.ForeignKey(
+        Instruction,
+        on_delete=models.CASCADE,
+        related_name='instruction_results',
+        verbose_name='Инструктаж',
+    )
+    result = models.BooleanField(
+        'Прошёл инструктаж',
+    )
+    date = models.DateTimeField(
+        'Дата прохождения',
+        auto_now_add=True,
+    )
+    time = models.TimeField(
+        'Время прохождения',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Результат инструктажа'
+        verbose_name_plural = 'Результаты инструктажа'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта результата инструктажа."""
+        return f'{self.user} - {self.instruction} - {self.result}'
 
 
 class Media(models.Model):

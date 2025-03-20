@@ -7,16 +7,19 @@ import TestingPage from '@/pages/TestingPage'
 import SuccessPage from '@/pages/SuccessPage'
 import Layout from '@/components/Layout'
 import ProfilePage from '@/pages/ProfilePage'
-import RegistrationPage from '@/pages/RegistrationPage'
+import RegPage from '@/pages/RegPage'
 
 import RequireAuth from './hoc/RequireAuth'
 import { AuthProvider } from './hoc/AuthProvider'
+import AuthPage from './pages/AuthPage'
 
 function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route index element={<RegistrationPage />} />
+        <Route index element={<RegPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        {/* @TODO */}
         <Route path="/" element={<Layout />}>
           <Route
             path="instruction"

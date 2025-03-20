@@ -1,33 +1,25 @@
 import { useState } from 'react'
 import { Controller } from 'react-hook-form'
-import { Typography } from '@mui/material'
-import { styled } from '@mui/material/styles'
-import IconButton from '@mui/material/IconButton'
-import OutlinedInput from '@mui/material/OutlinedInput'
-import Visibility from '@mui/icons-material/Visibility'
-import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import InputLabel from '@mui/material/InputLabel'
-import InputAdornment from '@mui/material/InputAdornment'
-import FormControl from '@mui/material/FormControl'
-
-const ErrorText = styled(Typography)(({ theme }) => ({
-  color: theme.palette.error.main,
-  marginTop: theme.spacing(1),
-  marginBottom: theme.spacing(1),
-  marginLeft: theme.spacing(2),
-  fontSize: '0.775rem',
-}))
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import {
+  IconButton,
+  OutlinedInput,
+  InputLabel,
+  InputAdornment,
+  FormControl,
+  FormHelperText,
+} from '@mui/material'
 
 function PasswordInput({ name, label, control, errors, ...props }) {
   const [showPassword, setShowPassword] = useState(false)
   const { watch } = props
   const handleClickShowPassword = () => setShowPassword((show) => !show)
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault()
+  const handleMouseDownPassword = (e) => {
+    e.preventDefault()
   }
 
   return (
-    <FormControl sx={{ width: '25ch', marginTop: 2 }} variant="outlined">
+    <FormControl sx={{ width: '100%', marginBottom: 2 }} variant="outlined">
       <InputLabel htmlFor={name}>{label}</InputLabel>
       <Controller
         name={name}
@@ -35,6 +27,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
         defaultValue=""
         rules={{
           required: 'Поле обязательно к заполнению!',
+          pattern: /^[a-zA-Zа-яА-Я0-9\s-]+$/,
           ...(name === 'password' && {
             minLength: {
               value: 5,
@@ -52,6 +45,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
             {...field}
             autoComplete="off"
             id={name}
+            required
             type={showPassword ? 'text' : 'password'}
             endAdornment={
               <InputAdornment position="end">
@@ -63,7 +57,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
                   onMouseDown={handleMouseDownPassword}
                   edge="end"
                 >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </InputAdornment>
             }
@@ -71,7 +65,9 @@ function PasswordInput({ name, label, control, errors, ...props }) {
           />
         )}
       />
-      {errors[name] && <ErrorText>{errors[name].message}</ErrorText>}
+      <FormHelperText sx={{ maxWidth: '30ch' }} error={errors[name]}>
+        {errors[name]?.message}
+      </FormHelperText>
     </FormControl>
   )
 }

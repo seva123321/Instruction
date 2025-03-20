@@ -1,6 +1,6 @@
 import { Box, Grid2 } from '@mui/material'
 
-import AuthPage from '../models/AuthModel/AuthModel'
+import LoginPage from '@/models/LoginModel'
 
 export default function RegistrationPage() {
   return (
@@ -33,10 +33,10 @@ export default function RegistrationPage() {
             sx={{ position: 'relative', color: 'white', textAlign: 'center' }}
           >
             <h1 style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}>
-              Присоединяйтесь к нам!
+              Добро пожаловать!
             </h1>
             <p style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)' }}>
-              Это страница регистрации. Пожалуйста, заполните форму.
+              Это страница входа. Пожалуйста, введите свои данные.
             </p>
           </Box>
         </Grid2>
@@ -51,7 +51,7 @@ export default function RegistrationPage() {
               height: '100%',
             }}
           >
-            <AuthPage />
+            <LoginPage />
           </Box>
         </Grid2>
       </Grid2>

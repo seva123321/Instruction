@@ -141,9 +141,7 @@ class Instruction(models.Model):
         related_name='instruction',
         verbose_name='Тесты',
     )
-    npa = models.URLField(
-        'Нормативно-правовой акт',
-    )
+
 
     class Meta:
         verbose_name = 'Инструктаж'

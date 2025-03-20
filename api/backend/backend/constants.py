@@ -1,5 +1,7 @@
 """Константы проекта."""
 
+ME = 'me'
+
 # User
 MAX_LENGTH_FIRST_NAME = 150
 MAX_LENGTH_LAST_NAME = 150

@@ -1,5 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { TextField as MuiTextField, Button, Box } from '@mui/material'
+import {
+  TextField as MuiTextField,
+  Button,
+  Box,
+  FormHelperText,
+} from '@mui/material'
 import { styled } from '@mui/material/styles'
 import { useForm } from 'react-hook-form'
 
@@ -26,7 +31,7 @@ function AuthPage() {
     mode: 'onBlur',
   })
   const { signIn } = useAuth()
-  const fromPage = location.state?.from?.pathname || '/'
+  const fromPage = location.state?.from?.pathname || '/instruction'
 
   const onSubmit = (data) => {
     // alert(JSON.stringify(data))
@@ -39,7 +44,7 @@ function AuthPage() {
   return (
     <div>
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-        <Box display="flex" flexDirection="column" alignItems="flex-start">
+        <Box display="flex" flexDirection="column" alignItems="center">
           <TextField
             label="Имя"
             variant="outlined"
@@ -47,10 +52,18 @@ function AuthPage() {
             required
             {...register('username', {
               required: 'Поле обязательно к заполнению!',
+              pattern: {
+                value: /^[a-zA-Zа-яА-Я\s-]+$/,
+                message:
+                  'Разрешены только русские и латинские буквы, пробел и тире',
+              },
             })}
             error={!!errors.username}
-            helperText={errors.username?.message}
           />
+          <FormHelperText sx={{ maxWidth: '30ch' }} error>
+            {errors.username?.message}
+          </FormHelperText>
+
           <TextField
             label="Фамилия"
             variant="outlined"
@@ -58,10 +71,17 @@ function AuthPage() {
             required
             {...register('usersurname', {
               required: 'Поле обязательно к заполнению!',
+              pattern: {
+                value: /^[a-zA-Zа-яА-Я\s-]+$/,
+                message:
+                  'Разрешены только русские и латинские буквы, пробелы и тире',
+              },
             })}
             error={!!errors.usersurname}
-            helperText={errors.usersurname?.message}
           />
+          <FormHelperText sx={{ maxWidth: '30ch' }} error>
+            {errors.usersurname?.message}
+          </FormHelperText>
 
           <PasswordInput
             name="password"
@@ -70,6 +90,7 @@ function AuthPage() {
             errors={errors}
             watch={watch}
           />
+
           <PasswordInput
             name="confirmPassword"
             label="Повторите пароль"
@@ -84,7 +105,7 @@ function AuthPage() {
             disabled={!isValid}
             sx={{ marginTop: 2 }}
           >
-            Войти
+            Зарегистрироваться
           </Button>
         </Box>
       </form>

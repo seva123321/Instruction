@@ -27,7 +27,7 @@ function LoginPage() {
   })
   const { signIn } = useAuth()
 
-  const fromPage = location.state?.from?.pathname || '/'
+  const fromPage = location.state?.from?.pathname || '/instruction'
 
   const onSubmit = (data) => {
     // alert(JSON.stringify(data))
@@ -40,7 +40,7 @@ function LoginPage() {
   return (
     <div>
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
-        <Box display="flex" flexDirection="column" alignItems="flex-start">
+        <Box display="flex" flexDirection="column" alignItems="center">
           <TextField
             label="Логин"
             variant="outlined"

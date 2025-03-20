@@ -19,7 +19,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
   }
 
   return (
-    <FormControl sx={{ width: '25ch', marginTop: 2 }} variant="outlined">
+    <FormControl sx={{ width: '100%', marginBottom: 2 }} variant="outlined">
       <InputLabel htmlFor={name}>{label}</InputLabel>
       <Controller
         name={name}
@@ -45,6 +45,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
             {...field}
             autoComplete="off"
             id={name}
+            required
             type={showPassword ? 'text' : 'password'}
             endAdornment={
               <InputAdornment position="end">
@@ -56,7 +57,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
                   onMouseDown={handleMouseDownPassword}
                   edge="end"
                 >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
               </InputAdornment>
             }

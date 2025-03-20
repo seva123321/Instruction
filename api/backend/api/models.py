@@ -28,6 +28,7 @@ class User(AbstractUser):
         'position',
         'mobile_phone',
         'role',
+        'email'
     )
 
     class Role(models.TextChoices):

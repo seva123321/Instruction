@@ -29,6 +29,19 @@ function CheckboxFields({ agreements }) {
     setAllChecked(allCheckedValue)
   }, [watchAllCheckboxes])
 
+  // Проверяем состояние чекбоксов compliance и isPassed
+  const complianceChecked = watchAllCheckboxes.find((value, index) => {
+    const key = Object.keys(agreements[index])[0]
+    return key === 'compliance' && value === true
+  })
+
+  const isPassedChecked = watchAllCheckboxes.find((value, index) => {
+    const key = Object.keys(agreements[index])[0]
+    return key === 'isPassed' && value === true
+  })
+
+  const isSubmitValid = complianceChecked === true && isPassedChecked === true
+
   const onSubmit = (data, e) => {
     e.preventDefault()
     // console.log('form > ', data)
@@ -67,7 +80,7 @@ function CheckboxFields({ agreements }) {
           )
         })}
       </FormGroup>
-      <Button type="submit" variant="contained">
+      <Button type="submit" variant="contained" disabled={!isSubmitValid}>
         Подписать инструктаж
       </Button>
     </form>

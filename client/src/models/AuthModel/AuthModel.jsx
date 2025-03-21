@@ -1,3 +1,4 @@
+import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -10,9 +11,11 @@ import {
 } from '@mui/material'
 import { useForm, Controller } from 'react-hook-form'
 
-import CustomLink from '@/components/CustomLink'
 import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
+import CustomLink from '@/components/CustomLink'
+
+import formatPhoneNumber from '../../service/utilsFunction'
 
 function AuthModel() {
   const navigate = useNavigate()
@@ -30,9 +33,10 @@ function AuthModel() {
   const fromPage = location.state?.from?.pathname || '/instruction'
 
   const onSubmit = (data) => {
-    // alert(JSON.stringify(data))
-    // const { username, usersurname, password, confirmPassword } = data
-    const { username } = data
+    const newData = { ...data, ...{ phone: data.phone.replaceAll('-', '') } }
+    const { username } = newData
+    // alert(JSON.stringify(newData))
+
     signIn(username, () => navigate(fromPage), { replace: true })
     reset()
   }
@@ -55,6 +59,7 @@ function AuthModel() {
           flexDirection="column"
           alignItems="center"
         >
+          {/* Имя */}
           <FormControl
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
@@ -86,6 +91,7 @@ function AuthModel() {
             </FormHelperText>
           </FormControl>
 
+          {/* Фамилия */}
           <FormControl
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
@@ -117,6 +123,75 @@ function AuthModel() {
             </FormHelperText>
           </FormControl>
 
+          {/* Почта */}
+          <FormControl
+            sx={{ width: '100%', marginBottom: 2 }}
+            variant="outlined"
+          >
+            <InputLabel htmlFor="email">Почта</InputLabel>
+            <Controller
+              name="email"
+              control={control}
+              defaultValue=""
+              rules={{
+                required: 'Поле обязательно к заполнению!',
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                  message: 'Введите корректный адрес электронной почты',
+                },
+              }}
+              render={({ field }) => (
+                <OutlinedInput
+                  {...field}
+                  autoComplete="email"
+                  id="email"
+                  label="Почта"
+                />
+              )}
+            />
+            <FormHelperText sx={{ maxWidth: '30ch' }} error>
+              {errors.email?.message}
+            </FormHelperText>
+          </FormControl>
+
+          {/* Телефон */}
+          <FormControl
+            sx={{ width: '100%', marginBottom: 2 }}
+            variant="outlined"
+          >
+            <InputLabel htmlFor="phone">Телефон</InputLabel>
+            <Controller
+              name="phone"
+              control={control}
+              defaultValue=""
+              rules={{
+                required: 'Поле обязательно к заполнению!',
+                pattern: {
+                  value: /^\+?\d{1,3}-\d{3}-\d{3}-\d{2}-\d{2}$/,
+                  message:
+                    'Проверьте, что вводите телефон в правильном формате, например +7 900 123-33-55',
+                },
+              }}
+              render={({ field }) => (
+                <OutlinedInput
+                  {...field}
+                  autoComplete="phone"
+                  id="phone"
+                  label="Телефон"
+                  value={formatPhoneNumber(field.value)}
+                  onChange={(e) => {
+                    const formattedValue = formatPhoneNumber(e.target.value)
+                    field.onChange(formattedValue)
+                  }}
+                />
+              )}
+            />
+            <FormHelperText sx={{ maxWidth: '30ch' }} error>
+              {errors.phone?.message}
+            </FormHelperText>
+          </FormControl>
+
+          {/* Пароль */}
           <PasswordInput
             name="password"
             label="Пароль"
@@ -125,6 +200,7 @@ function AuthModel() {
             watch={watch}
           />
 
+          {/* Подтверждение пароля */}
           <PasswordInput
             name="confirmPassword"
             label="Повторите пароль"

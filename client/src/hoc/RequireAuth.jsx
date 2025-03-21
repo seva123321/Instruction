@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { Box } from '@mui/material'
 
 import useAuth from '../hook/useAuth'
 
@@ -10,7 +11,7 @@ function RequireAuth({ children }) {
   if (!user) {
     return <Navigate to="/" state={{ from: location }} />
   }
-  return children
+  return <Box sx={{ padding: 3 }}>{children}</Box>
 }
 
 export default RequireAuth

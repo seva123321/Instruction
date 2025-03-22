@@ -59,11 +59,18 @@ function CheckboxFields({ agreements }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      style={{
+        border: '1px solid #1976d2',
+        borderRadius: '10px 10px',
+        padding: '16px',
+      }}
+    >
       <FormGroup>
         <FormControlLabel
           control={<Checkbox checked={allChecked} onChange={handleSelectAll} />}
-          label="Выбрать все"
+          label="ВЫБРАТЬ ВСЕ ВАРИАНТЫ"
           sx={{ fontSize: 30 }}
         />
 
@@ -80,7 +87,12 @@ function CheckboxFields({ agreements }) {
           )
         })}
       </FormGroup>
-      <Button type="submit" variant="contained" disabled={!isSubmitValid}>
+      <Button
+        type="submit"
+        variant="contained"
+        sx={{ m: '24px auto', display: 'block' }}
+        disabled={!isSubmitValid}
+      >
         Подписать инструктаж
       </Button>
     </form>

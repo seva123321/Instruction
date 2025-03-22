@@ -11,15 +11,16 @@ import RegPage from '@/pages/RegPage'
 
 import RequireAuth from './hoc/RequireAuth'
 import { AuthProvider } from './hoc/AuthProvider'
+// import ThemeProvider from './hoc/ThemeProvider'
 import AuthPage from './pages/AuthPage'
 
 function App() {
   return (
     <AuthProvider>
+      {/* <ThemeProvider> */}
       <Routes>
         <Route index element={<RegPage />} />
         <Route path="/auth" element={<AuthPage />} />
-        {/* @TODO */}
         <Route path="/" element={<Layout />}>
           <Route
             path="instruction"
@@ -88,6 +89,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+      {/* </ThemeProvider> */}
     </AuthProvider>
   )
 }

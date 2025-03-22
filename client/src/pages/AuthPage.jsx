@@ -7,7 +7,6 @@ export default function RegistrationPage() {
     <Box sx={{ height: '100vh' }}>
       <Grid2 container spacing={2} sx={{ height: '100vh' }}>
         <Grid2
-          item
           size={{ xs: 12, sm: 6 }}
           sx={{
             display: { xs: 'none', sm: 'flex' },
@@ -40,7 +39,7 @@ export default function RegistrationPage() {
             </p>
           </Box>
         </Grid2>
-        <Grid2 item size={{ xs: 12, sm: 6 }}>
+        <Grid2 size={{ xs: 12, sm: 6 }}>
           <Box
             sx={{
               flex: 1,

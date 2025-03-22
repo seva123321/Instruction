@@ -12,6 +12,7 @@ function Layout() {
   return (
     <>
       <header>{/* <Header /> */}</header>
+      <div id="back-to-top-anchor" />
       <Box sx={{ display: 'flex' }}>
         <MenuBox />
 

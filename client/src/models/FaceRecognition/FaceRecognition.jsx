@@ -14,7 +14,7 @@ import VideoContainer from '../../components/VideoContainer/VideoContainer'
 import MessageAlert from '../../components/MessageAlert/MessageAlert'
 
 const FaceRecognition = forwardRef(
-  ({ onClose, referenceDescriptor, onFaceDescriptor }, ref) => {
+  ({ onClose, referenceDescriptor, onFaceDescriptor, onCameraError }, ref) => {
     const videoRef = useRef(null)
     const animationFrameRef = useRef(null)
     const [isLoadedModel, setIsLoadedModel] = useState(false)
@@ -62,19 +62,34 @@ const FaceRecognition = forwardRef(
 
     const startVideo = useCallback(async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} })
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        })
         videoRef.current.srcObject = stream
+        onCameraError('')
         setCameraPermissionGranted(true)
         setMessage({ text: '', type: '' })
       } catch (error) {
-        setCameraPermissionGranted(false)
-        setMessage({
-          text: 'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.',
-          type: 'warning',
-        })
+        if (error.name === 'NotAllowedError') {
+          setCameraPermissionGranted(false)
+          // eslint-disable-next-line operator-linebreak
+          const errorMessage =
+            'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
+          setMessage({
+            text: errorMessage,
+            type: 'warning',
+          })
+          onCameraError(new Error(errorMessage)) // Передаем ошибку в родительский компонент
+          onClose() // Закрываем компонент
+        } else {
+          setMessage({
+            text: 'Произошла ошибка при доступе к камере.',
+            type: 'error',
+          })
+        }
         throw error
       }
-    }, [])
+    }, [onClose, onCameraError])
 
     const stopVideo = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -271,8 +286,8 @@ const FaceRecognition = forwardRef(
             </Typography>
           </Container>
         )}
-        {/*
-        <Button
+
+        {/* <Button
           type="button"
           size="large"
           variant="contained"

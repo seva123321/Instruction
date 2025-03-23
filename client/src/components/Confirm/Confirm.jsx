@@ -80,9 +80,7 @@ export default function AlertDialog({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleAllowAccess}>Предоставить доступ</Button>
-          <Button onClick={handleClose} autoFocus>
-            Не предоставлять
-          </Button>
+          <Button onClick={handleClose}>Не предоставлять</Button>
         </DialogActions>
       </Dialog>
     </>

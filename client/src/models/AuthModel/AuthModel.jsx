@@ -276,6 +276,7 @@ function AuthModel() {
                 setFaceDescriptor(data)
                 setIsFaceDescriptorReceived(true) // Обновляем состояние при получении данных
               }}
+              onCameraError={(error) => setCameraError(error.message)}
             />
           )}
 

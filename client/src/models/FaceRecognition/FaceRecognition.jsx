@@ -2,6 +2,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useCallback,
   useImperativeHandle,
   forwardRef,
 } from 'react'
@@ -27,7 +28,7 @@ const FaceRecognition = forwardRef(
     const descriptorsRef = useRef([])
 
     // Проверка поддержки камеры
-    const checkCameraSupport = async () => {
+    const checkCameraSupport = useCallback(async () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices()
         const hasCamera = devices.some((device) => device.kind === 'videoinput')
@@ -45,9 +46,9 @@ const FaceRecognition = forwardRef(
           type: 'error',
         })
       }
-    }
+    }, [])
 
-    const loadModels = async () => {
+    const loadModels = useCallback(async () => {
       try {
         const MODEL_URL = '/modelFaceApi'
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
@@ -55,12 +56,11 @@ const FaceRecognition = forwardRef(
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
         setIsLoadedModel(true)
       } catch (error) {
-        // console.error('Ошибка при загрузке моделей:', error)
-        throw error
+        throw new Error('Ошибка при загрузке моделей.')
       }
-    }
+    }, [])
 
-    const startVideo = async () => {
+    const startVideo = useCallback(async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} })
         videoRef.current.srcObject = stream
@@ -74,26 +74,46 @@ const FaceRecognition = forwardRef(
         })
         throw error
       }
-    }
+    }, [])
 
-    const stopVideo = () => {
+    const stopVideo = useCallback(() => {
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject
         const tracks = stream.getTracks()
         tracks.forEach((track) => track.stop())
         videoRef.current.srcObject = null
       }
-    }
+    }, [])
     // Сравнение дескрипторов по евклидову расстоянию
-    const compareDescriptors = (descriptor1, descriptor2, threshold = 0.6) => {
-      if (!descriptor1 || !descriptor2) return null
-      const distance = faceapi.euclideanDistance(descriptor1, descriptor2)
-      return distance < threshold
-        ? 'Это один и тот же человек!'
-        : 'Это разные люди!'
-    }
+    const compareDescriptors = useCallback(
+      (descriptor1, descriptor2, threshold = 0.6) => {
+        if (!descriptor1 || !descriptor2) return null
+        const distance = faceapi.euclideanDistance(descriptor1, descriptor2)
+        return distance < threshold
+          ? 'Это один и тот же человек!'
+          : 'Это разные люди!'
+      },
+      []
+    )
+    // Усреднение дескрипторов
+    const averageDescriptors = useCallback((descriptors) => {
+      if (!descriptors || descriptors.length === 0) return null
+      const descriptorLength = descriptors[0].length
+      const averagedDescriptor = new Array(descriptorLength).fill(0)
+
+      descriptors.forEach((descriptor) => {
+        if (descriptor && descriptor.length === descriptorLength) {
+          descriptor.forEach((value, index) => {
+            averagedDescriptor[index] += value
+          })
+        }
+      })
+
+      return averagedDescriptor.map((value) => value / descriptors.length)
+    }, [])
+
     // Обработка видео
-    const handleVideoPlay = async () => {
+    const handleVideoPlay = useCallback(async () => {
       const video = videoRef.current
       if (video.videoWidth === 0 || video.videoHeight === 0) return
 
@@ -165,27 +185,17 @@ const FaceRecognition = forwardRef(
 
       // Запускаем обработку кадров
       animationFrameRef.current = requestAnimationFrame(processFrame)
-    }
-
-    // Усреднение дескрипторов
-    const averageDescriptors = (descriptors) => {
-      if (!descriptors || descriptors.length === 0) return null
-      const descriptorLength = descriptors[0].length
-      const averagedDescriptor = new Array(descriptorLength).fill(0)
-
-      descriptors.forEach((descriptor) => {
-        if (descriptor && descriptor.length === descriptorLength) {
-          descriptor.forEach((value, index) => {
-            averagedDescriptor[index] += value
-          })
-        }
-      })
-
-      return averagedDescriptor.map((value) => value / descriptors.length)
-    }
+    }, [
+      stopVideo,
+      onClose,
+      averageDescriptors,
+      onFaceDescriptor,
+      referenceDescriptor,
+      compareDescriptors,
+    ])
 
     // Запуск процесса распознавания
-    const startRecognition = async () => {
+    const startRecognition = useCallback(async () => {
       try {
         descriptorsRef.current = []
         await checkCameraSupport()
@@ -201,7 +211,7 @@ const FaceRecognition = forwardRef(
         })
         throw error
       }
-    }
+    }, [loadModels, cameraSupported, checkCameraSupport, startVideo])
     // Используем useImperativeHandle для предоставления доступа к startRecognition
     useImperativeHandle(ref, () => ({
       startRecognition,
@@ -224,7 +234,9 @@ const FaceRecognition = forwardRef(
           }
         }
       }
-    }, [cameraPermissionGranted])
+
+      return () => {}
+    }, [cameraPermissionGranted, handleVideoPlay, stopVideo])
 
     return (
       <Box

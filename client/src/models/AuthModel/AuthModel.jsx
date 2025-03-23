@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -9,12 +9,18 @@ import {
   InputLabel,
   OutlinedInput,
 } from '@mui/material'
+import {
+  CameraAlt as CameraAltIcon,
+  PersonAddOutlined as PersonAddOutlinedIcon,
+} from '@mui/icons-material'
 import { useForm, Controller } from 'react-hook-form'
 
 import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import CustomLink from '@/components/CustomLink'
+import Confirm from '@/components/Confirm'
 
+import FaceRecognition from '../FaceRecognition/FaceRecognition'
 import formatPhoneNumber from '../../service/utilsFunction'
 
 function AuthModel() {
@@ -30,13 +36,48 @@ function AuthModel() {
     mode: 'onBlur',
   })
   const { signIn } = useAuth()
+  const [showFaceRecognition, setShowFaceRecognition] = useState(false)
+  const [cameraError, setCameraError] = useState('')
+  const [faceDescriptor, setFaceDescriptor] = useState(null)
+  // eslint-disable-next-line operator-linebreak
+  const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
+    useState(false)
+  const faceRecognitionRef = useRef(null)
+
+  useEffect(() => {
+    if (showFaceRecognition && faceRecognitionRef.current) {
+      faceRecognitionRef.current.startRecognition()
+    }
+  }, [showFaceRecognition])
+
+  const handleAllowAccess = async () => {
+    try {
+      setShowFaceRecognition(true)
+    } catch (error) {
+      setCameraError(
+        'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
+      )
+    }
+  }
+
   const fromPage = location.state?.from?.pathname || '/instruction'
 
   const onSubmit = (data) => {
-    const newData = { ...data, ...{ phone: data.phone.replaceAll('-', '') } }
-    const { username } = newData
-    // alert(JSON.stringify(newData))
+    if (!isFaceDescriptorReceived) {
+      // alert('Пожалуйста, завершите распознавание лица перед отправкой формы.')
+      return
+    }
 
+    const newData = {
+      ...data,
+      phone: data.phone.replaceAll('-', ''),
+      faceDescriptor, // Добавляем faceDescriptor в данные формы
+    }
+    const { username } = newData
+
+    // console.log(JSON.stringify(newData))
+
+    // alert(JSON.stringify(newData))
     signIn(username, () => navigate(fromPage), { replace: true })
     reset()
   }
@@ -209,11 +250,42 @@ function AuthModel() {
             watch={watch}
           />
 
+          {/* Кнопка для запуска распознавания лица */}
+          <Confirm
+            textTitle="Разрешение на использование камеры"
+            text="Разрешить использование камеры для распознавания лица?"
+            btnIcon={<PersonAddOutlinedIcon />}
+            titleIcon={<CameraAltIcon sx={{ mr: 2 }} />}
+            buttonName="Распознавание лица*"
+            onAllowAccess={handleAllowAccess} // передача функции!/не события
+          />
+
+          {/* Сообщение об ошибке доступа к камере */}
+          {cameraError && (
+            <FormHelperText error sx={{ mt: 1 }}>
+              {cameraError}
+            </FormHelperText>
+          )}
+
+          {/* Компонент FaceRecognition */}
+          {showFaceRecognition && (
+            <FaceRecognition
+              ref={faceRecognitionRef}
+              onClose={() => setShowFaceRecognition(false)}
+              onFaceDescriptor={(data) => {
+                setFaceDescriptor(data)
+                setIsFaceDescriptorReceived(true) // Обновляем состояние при получении данных
+              }}
+            />
+          )}
+
+          {/* Кнопка регистрации */}
           <Button
             type="submit"
             variant="contained"
-            disabled={!isValid}
-            sx={{ marginTop: 2, width: '100%' }}
+            disabled={!isValid || !isFaceDescriptorReceived}
+            fullWidth
+            sx={{ mt: 2 }}
           >
             Зарегистрироваться
           </Button>

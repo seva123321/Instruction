@@ -10,8 +10,8 @@ import * as faceapi from 'face-api.js'
 import { Typography, Container, CircularProgress, Box } from '@mui/material'
 
 // import { faceDescriptorMy } from '../../service/constValues'
-import VideoContainer from '../../components/VideoContainer/VideoContainer'
-import MessageAlert from '../../components/MessageAlert/MessageAlert'
+import VideoContainer from '../VideoContainer/VideoContainer'
+import MessageAlert from '../MessageAlert/MessageAlert'
 
 const FaceRecognition = forwardRef(
   ({ onClose, referenceDescriptor, onFaceDescriptor, onCameraError }, ref) => {
@@ -66,7 +66,8 @@ const FaceRecognition = forwardRef(
           video: true,
         })
         videoRef.current.srcObject = stream
-        onCameraError('')
+        // @TODO очистка если сначала камера блокирована, а потом разблокирована
+        // onCameraError('')
         setCameraPermissionGranted(true)
         setMessage({ text: '', type: '' })
       } catch (error) {
@@ -195,6 +196,7 @@ const FaceRecognition = forwardRef(
           })
           stopVideo()
           setIsProcessing(false)
+          onClose()
         }
       }
 

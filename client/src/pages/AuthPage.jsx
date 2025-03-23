@@ -1,4 +1,4 @@
-import { Box, Grid2 } from '@mui/material'
+import { Box, Grid2, Typography } from '@mui/material'
 
 import AuthPage from '../models/AuthModel/AuthModel'
 
@@ -15,7 +15,7 @@ export default function RegistrationPage() {
             padding: 2,
             position: 'relative',
             background:
-              'rgb(74, 84, 86) url(@/../public/img/enterpriseDawn2.jpg) no-repeat center / cover',
+              'rgb(74, 84, 86) url(@/../img/enterpriseDawn2.jpg) no-repeat center / cover',
           }}
         >
           <Box
@@ -31,9 +31,12 @@ export default function RegistrationPage() {
           <Box
             sx={{ position: 'relative', color: 'white', textAlign: 'center' }}
           >
-            <h1 style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}>
+            <Typography
+              variant="h4"
+              style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}
+            >
               Присоединяйтесь к нам!
-            </h1>
+            </Typography>
             <p style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)' }}>
               Это страница регистрации. Пожалуйста, заполните форму.
             </p>

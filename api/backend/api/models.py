@@ -1,8 +1,8 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django_cryptography.fields import encrypt
 
-from api.backend.backend.constants import (
+from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
     MAX_LENGTH_FIRST_NAME,
     MAX_LENGTH_LAST_NAME,
@@ -11,8 +11,32 @@ from api.backend.backend.constants import (
     MAX_LENGTH_ROLE,
     MAX_LENGTH_INSTRUCTION_TYPE,
     MAX_LENGTH_INSTRUCTION,
-    MAX_LENGTH_MEDIA_NAME
+    MAX_LENGTH_MEDIA_NAME,
+    MAX_LENGTH_PHONE
 )
+
+
+class UserManager(BaseUserManager):
+    """Кастомный менеджер для модели User."""
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        """Создает и сохраняет пользователя с email и паролем."""
+        if not email:
+            raise ValueError('Email должен быть указан')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        """Создает суперпользователя."""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', User.Role.ADMIN)
+
+        return self._create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -23,12 +47,9 @@ class User(AbstractUser):
         'first_name',
         'last_name',
         'middle_name',
-        'password',
         'birthday',
         'position',
         'mobile_phone',
-        'role',
-        'email'
     )
 
     class Role(models.TextChoices):
@@ -36,6 +57,7 @@ class User(AbstractUser):
         USER = 'user', 'Пользователь'
         MANAGEMENT = 'management', 'Управление'
 
+    username = None
     first_name = models.CharField(
         'Имя',
         max_length=MAX_LENGTH_FIRST_NAME,
@@ -45,11 +67,12 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_LAST_NAME,
     )
     middle_name = models.CharField(
-        'Фамилия',
+        'Отчество',
         max_length=MAX_LENGTH_MIDDLE_NAME,
     )
     birthday = models.DateField(
-        'Дата рождения'
+        'Дата рождения',
+        blank=True,
     )
     position = models.CharField(
         'Должность',
@@ -60,9 +83,10 @@ class User(AbstractUser):
         unique=True,
         max_length=MAX_LENGTH_EMAIL_ADDRESS,
     )
-    mobile_phone = models.IntegerField(
+    mobile_phone = models.CharField(
         'Мобильный телефон',
         unique=True,
+        max_length=MAX_LENGTH_PHONE,
     )
     role = models.CharField(
         'Роль',
@@ -70,6 +94,8 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
     )
+
+    objects = UserManager()
 
     class Meta:
         ordering = ('last_name', 'email')
@@ -149,6 +175,36 @@ class Instruction(models.Model):
         """Возвращает строковое представление объекта инструктажа."""
         return self.name
 
+class InstructionAgreement(models.Model):
+    """Модель согласия на инструктаж."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='instruction_agreements',
+        verbose_name='Пользователь',
+    )
+    health = models.TextField(blank=True, null=True)
+    noAlcohol = models.TextField(blank=True, null=True)
+    isProvided = models.TextField(blank=True, null=True)
+    emergency = models.TextField(blank=True, null=True)
+    compliance = models.TextField(blank=True, null=True)
+    isPassed = models.TextField(blank=True, null=True)
+    report = models.TextField(blank=True, null=True)
+    medAid = models.TextField(blank=True, null=True)
+    attention = models.TextField(blank=True, null=True)
+    date = models.DateTimeField(
+        'Дата согласия',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Согласие на инструктаж'
+        verbose_name_plural = 'Согласия на инструктаж'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта согласия на инструктаж."""
+        return f'{self.user} - {self.instruction}'
 
 class Tests(models.Model):
     """Модель тестов инструктажа."""

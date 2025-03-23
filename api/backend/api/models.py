@@ -178,21 +178,51 @@ class Instruction(models.Model):
 class InstructionAgreement(models.Model):
     """Модель согласия на инструктаж."""
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='instruction_agreements',
-        verbose_name='Пользователь',
+    health = models.TextField(
+        'Состояние здоровья',
+        blank=True,
+        null=True
     )
-    health = models.TextField(blank=True, null=True)
-    noAlcohol = models.TextField(blank=True, null=True)
-    isProvided = models.TextField(blank=True, null=True)
-    emergency = models.TextField(blank=True, null=True)
-    compliance = models.TextField(blank=True, null=True)
-    isPassed = models.TextField(blank=True, null=True)
-    report = models.TextField(blank=True, null=True)
-    medAid = models.TextField(blank=True, null=True)
-    attention = models.TextField(blank=True, null=True)
+    no_alcohol = models.TextField(
+        'Отказ от алкоголя',
+        blank=True,
+        null=True
+    )
+    is_provided = models.TextField(
+        'Предоставлены средства индивидуальной защиты',
+        blank=True,
+        null=True
+    )
+    emergency = models.TextField(
+        'Правила действий при возникновении чрезвычайных ситуаций',
+        blank=True,
+        null=True
+    )
+    compliance = models.TextField(
+        'Соблюдение правил техники безопасности',
+        blank=True,
+        null=True
+    )
+    is_passed = models.TextField(
+        'Прошел инструктаж по безопасности',
+        blank=True,
+        null=True
+    )
+    report = models.TextField(
+        'Доклад',
+        blank=True,
+        null=True
+    )
+    med_aid = models.TextField(
+        'Первая помощь',
+        blank=True,
+        null=True
+    )
+    attention = models.TextField(
+        'Внимание',
+        blank=True,
+        null=True
+    )
     date = models.DateTimeField(
         'Дата согласия',
         auto_now_add=True,
@@ -202,9 +232,6 @@ class InstructionAgreement(models.Model):
         verbose_name = 'Согласие на инструктаж'
         verbose_name_plural = 'Согласия на инструктаж'
 
-    def __str__(self):
-        """Возвращает строковое представление объекта согласия на инструктаж."""
-        return f'{self.user} - {self.instruction}'
 
 class Tests(models.Model):
     """Модель тестов инструктажа."""

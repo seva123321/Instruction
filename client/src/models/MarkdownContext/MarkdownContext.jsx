@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Typography,
@@ -40,7 +40,12 @@ const MarkdownComponents = {
     return <Typography variant="h6" gutterBottom id={id} {...props} />
   },
   p: (props) => (
-    <Typography component="p" sx={{ textAlign: 'justify' }} {...props} />
+    <Typography
+      component="p"
+      gutterBottom
+      sx={{ textAlign: 'justify' }}
+      {...props}
+    />
   ),
   ul: (props) => <List {...props} />,
   li: (props) => <ListItem {...props} />,
@@ -49,7 +54,7 @@ const MarkdownComponents = {
 function MarkdownContext({ markdown, header }) {
   const [headings, setHeadings] = useState([])
   const [currentHeading, setCurrentHeading] = useState(null)
-  const headingRefs = useRef([])
+  const headingRefs = useRef({})
 
   // Извлечение заголовков из markdown
   useEffect(() => {
@@ -83,7 +88,6 @@ function MarkdownContext({ markdown, header }) {
       }
     )
 
-    // Обновляем ссылки на заголовки
     headingRefs.current = headings.map((heading) => {
       const value = document.getElementById(heading.id)
 
@@ -107,12 +111,12 @@ function MarkdownContext({ markdown, header }) {
   }, [headings])
 
   // Прокрутка к заголовку
-  const scrollToHeading = (id) => {
-    const element = document.getElementById(id)
+  const scrollToHeading = useCallback((id) => {
+    const element = headingRefs.current[id]
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
-  }
+  }, [])
 
   return (
     <Grid2 container spacing={2}>

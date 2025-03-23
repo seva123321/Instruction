@@ -136,11 +136,8 @@ class Instruction(models.Model):
         related_name='instructions',
         verbose_name='Тип инструктажа',
     )
-    tests = models.OneToOneField(
-        'Tests',
-        on_delete=models.CASCADE,
-        related_name='instruction',
-        verbose_name='Тесты',
+    text = models.TextField(
+        'Текст инструктажа',
     )
 
 

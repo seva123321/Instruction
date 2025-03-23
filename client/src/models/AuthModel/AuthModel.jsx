@@ -121,6 +121,8 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="text"
+                  autoFocus
                   autoComplete="username"
                   id="username"
                   label="Имя"
@@ -153,6 +155,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="text"
                   autoComplete="usersurname"
                   id="usersurname"
                   label="Фамилия"
@@ -184,6 +187,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputmode="email"
                   autoComplete="email"
                   id="email"
                   label="Почта"
@@ -216,6 +220,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputmode="tel"
                   autoComplete="phone"
                   id="phone"
                   label="Телефон"

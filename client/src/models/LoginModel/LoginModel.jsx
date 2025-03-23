@@ -69,6 +69,8 @@ function LoginModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  autoFocus
+                  inputMode="text"
                   autoComplete="username"
                   id="username"
                   label="Логин"

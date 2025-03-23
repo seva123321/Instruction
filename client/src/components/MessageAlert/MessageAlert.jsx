@@ -1,6 +1,19 @@
+import { useState, useEffect } from 'react'
 import { Alert } from '@mui/material'
 
-function MessageAlert({ message }) {
+function MessageAlert({ message, duration = 3000 }) {
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false)
+    }, duration)
+
+    return () => clearTimeout(timer)
+  }, [duration])
+
+  if (!visible) return null
+
   return (
     <Alert
       severity={message.type}

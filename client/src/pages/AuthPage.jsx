@@ -1,4 +1,4 @@
-import { Box, Grid2 } from '@mui/material'
+import { Box, Grid2, Typography } from '@mui/material'
 
 import AuthPage from '../models/AuthModel/AuthModel'
 
@@ -7,7 +7,6 @@ export default function RegistrationPage() {
     <Box sx={{ height: '100vh' }}>
       <Grid2 container spacing={2} sx={{ height: '100vh' }}>
         <Grid2
-          item
           size={{ xs: 12, sm: 6 }}
           sx={{
             display: { xs: 'none', sm: 'flex' },
@@ -16,7 +15,7 @@ export default function RegistrationPage() {
             padding: 2,
             position: 'relative',
             background:
-              'rgb(74, 84, 86) url(@/../public/img/enterpriseDawn2.jpg) no-repeat center / cover',
+              'rgb(74, 84, 86) url(@/../img/enterpriseDawn2.jpg) no-repeat center / cover',
           }}
         >
           <Box
@@ -32,15 +31,18 @@ export default function RegistrationPage() {
           <Box
             sx={{ position: 'relative', color: 'white', textAlign: 'center' }}
           >
-            <h1 style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}>
+            <Typography
+              variant="h4"
+              style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}
+            >
               Присоединяйтесь к нам!
-            </h1>
+            </Typography>
             <p style={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.7)' }}>
               Это страница регистрации. Пожалуйста, заполните форму.
             </p>
           </Box>
         </Grid2>
-        <Grid2 item size={{ xs: 12, sm: 6 }}>
+        <Grid2 size={{ xs: 12, sm: 6 }}>
           <Box
             sx={{
               flex: 1,

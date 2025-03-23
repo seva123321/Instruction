@@ -17,7 +17,6 @@ function InstructionPage() {
           </Container>
         </Grid2>
         <Grid2
-          item
           size={{ xs: 12, sm: 3 }}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
         />

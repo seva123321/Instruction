@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -14,8 +14,10 @@ import { useForm, Controller } from 'react-hook-form'
 import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import CustomLink from '@/components/CustomLink'
+import Recognition from '@/models/Recognition'
 
 import formatPhoneNumber from '../../service/utilsFunction'
+import MessageAlert from '../../components/MessageAlert/MessageAlert'
 
 function AuthModel() {
   const navigate = useNavigate()
@@ -30,13 +32,26 @@ function AuthModel() {
     mode: 'onBlur',
   })
   const { signIn } = useAuth()
+  const [faceDescriptor, setFaceDescriptor] = useState(null)
+  // eslint-disable-next-line operator-linebreak
+  const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
+    useState(false)
+  const [errorMessage, setErrorMessage] = useState(null)
   const fromPage = location.state?.from?.pathname || '/instruction'
 
   const onSubmit = (data) => {
-    const newData = { ...data, ...{ phone: data.phone.replaceAll('-', '') } }
-    const { username } = newData
-    // alert(JSON.stringify(newData))
+    if (!isFaceDescriptorReceived) {
+      return
+    }
 
+    const newData = {
+      ...data,
+      phone: data.phone.replaceAll('-', ''),
+      faceDescriptor,
+    }
+    const { username } = newData
+
+    // alert(JSON.stringify(newData))
     signIn(username, () => navigate(fromPage), { replace: true })
     reset()
   }
@@ -80,6 +95,8 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="text"
+                  autoFocus
                   autoComplete="username"
                   id="username"
                   label="Имя"
@@ -112,6 +129,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="text"
                   autoComplete="usersurname"
                   id="usersurname"
                   label="Фамилия"
@@ -143,6 +161,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="email"
                   autoComplete="email"
                   id="email"
                   label="Почта"
@@ -175,6 +194,7 @@ function AuthModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
+                  inputMode="tel"
                   autoComplete="phone"
                   id="phone"
                   label="Телефон"
@@ -209,11 +229,33 @@ function AuthModel() {
             watch={watch}
           />
 
+          <Recognition
+            onFaceDescriptor={(data) => {
+              setFaceDescriptor(data)
+              setIsFaceDescriptorReceived(true)
+            }}
+            onCameraError={(error) => {
+              setErrorMessage({
+                text: `Ошибка доступа к камере. ${error}`,
+                type: 'error',
+              })
+            }}
+          />
+
+          {/* Отображение MessageAlert, если есть ошибка */}
+          {errorMessage && (
+            <MessageAlert
+              message={errorMessage}
+              onClose={() => setErrorMessage(null)} // Очистка ошибки при закрытии
+            />
+          )}
+
           <Button
             type="submit"
             variant="contained"
-            disabled={!isValid}
-            sx={{ marginTop: 2, width: '100%' }}
+            disabled={!isValid || !isFaceDescriptorReceived}
+            fullWidth
+            sx={{ mt: 2 }}
           >
             Зарегистрироваться
           </Button>

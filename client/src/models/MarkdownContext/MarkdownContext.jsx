@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Typography,
   List,
   ListItem,
-  Button,
+  Link,
   Grid2,
   Container,
 } from '@mui/material'
+import './Markdown.css'
 
-// Выносим компоненты за пределы рендера
 const MarkdownComponents = {
   h1: (props) => {
     const id = props.children.toString().toLowerCase().replace(/\s+/g, '-')
@@ -40,7 +40,12 @@ const MarkdownComponents = {
     return <Typography variant="h6" gutterBottom id={id} {...props} />
   },
   p: (props) => (
-    <Typography component="p" sx={{ textAlign: 'justify' }} {...props} />
+    <Typography
+      component="p"
+      gutterBottom
+      sx={{ textAlign: 'justify' }}
+      {...props}
+    />
   ),
   ul: (props) => <List {...props} />,
   li: (props) => <ListItem {...props} />,
@@ -49,8 +54,9 @@ const MarkdownComponents = {
 function MarkdownContext({ markdown, header }) {
   const [headings, setHeadings] = useState([])
   const [currentHeading, setCurrentHeading] = useState(null)
-  const headingRefs = useRef([])
+  const headingRefs = useRef({})
 
+  // Извлечение заголовков из markdown
   useEffect(() => {
     const headingRegex = /^(#{1,3})\s+(.*)$/gm
     const matches = markdown.match(headingRegex)
@@ -66,10 +72,8 @@ function MarkdownContext({ markdown, header }) {
     }
   }, [markdown])
 
+  // Настройка IntersectionObserver для отслеживания видимости заголовков
   useEffect(() => {
-    // Сохраняем текущее значение ref в переменную
-    const currentHeadingRefs = headingRefs.current
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -79,20 +83,26 @@ function MarkdownContext({ markdown, header }) {
         })
       },
       {
-        rootMargin: '0px 0px 0px 0px',
-        threshold: 0,
+        rootMargin: '0px 0px -90% 0px',
+        threshold: 0.5, // Порог пересечения
       }
     )
 
-    currentHeadingRefs.forEach((heading) => {
+    headingRefs.current = headings.map((heading) => {
+      const value = document.getElementById(heading.id)
+
+      return value
+    })
+
+    // Наблюдаем за всеми заголовками
+    headingRefs.current.forEach((heading) => {
       if (heading) {
         observer.observe(heading)
       }
     })
 
     return () => {
-      // Используем сохраненное значение ref в cleanup-функции
-      currentHeadingRefs.forEach((heading) => {
+      headingRefs.current.forEach((heading) => {
         if (heading) {
           observer.unobserve(heading)
         }
@@ -100,12 +110,13 @@ function MarkdownContext({ markdown, header }) {
     }
   }, [headings])
 
-  const scrollToHeading = (id) => {
-    const element = document.getElementById(id)
+  // Прокрутка к заголовку
+  const scrollToHeading = useCallback((id) => {
+    const element = headingRefs.current[id]
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
-  }
+  }, [])
 
   return (
     <Grid2 container spacing={2}>
@@ -123,7 +134,6 @@ function MarkdownContext({ markdown, header }) {
         </Container>
       </Grid2>
       <Grid2
-        item
         size={{ xs: 12, sm: 3 }}
         sx={{ display: { xs: 'none', sm: 'flex' } }}
       >
@@ -144,11 +154,13 @@ function MarkdownContext({ markdown, header }) {
           <List sx={{ direction: 'ltr' }}>
             {headings.map((heading) => (
               <ListItem key={heading.id}>
-                <Button
-                  fullWidth
+                <Link
+                  href={`#${heading.id}`}
+                  className={`menu-item ${currentHeading === heading.id ? 'active' : ''}`}
                   sx={{
                     textAlign: 'left',
                     display: 'flex',
+                    width: '100%',
                     justifyContent: 'flex-start',
                     paddingTop: 0.5,
                     paddingBottom: 0.5,
@@ -157,10 +169,13 @@ function MarkdownContext({ markdown, header }) {
                     backgroundColor:
                       currentHeading === heading.id ? '#f0f0f0' : 'transparent',
                   }}
-                  onClick={() => scrollToHeading(heading.id)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    scrollToHeading(heading.id)
+                  }}
                 >
                   {heading.text}
-                </Button>
+                </Link>
               </ListItem>
             ))}
           </List>

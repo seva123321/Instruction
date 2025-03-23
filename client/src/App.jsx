@@ -86,8 +86,8 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route path="*" element={<NotFoundPage />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {/* </ThemeProvider> */}
     </AuthProvider>

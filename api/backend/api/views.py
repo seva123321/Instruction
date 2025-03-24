@@ -6,11 +6,17 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.models import User, Instruction, InstructionAgreement
+from api.models import (
+    User,
+    Instruction,
+    InstructionAgreement,
+    Tests
+)
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
-    UserSerializer
+    UserSerializer,
+    TestSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -58,5 +64,18 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Instruction.objects.all()
     serializer_class = InstructionSerializer
+    # TODO: IsAuthenticated
+    permission_classes = (AllowAny,)
+
+
+@extend_schema(
+    tags=['Tests'],
+    description='Получение тестов.'
+)
+class TestViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения инструктажа."""
+
+    queryset = Tests.objects.all()
+    serializer_class = TestSerializer
     # TODO: IsAuthenticated
     permission_classes = (AllowAny,)

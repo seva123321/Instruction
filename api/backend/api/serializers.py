@@ -31,7 +31,7 @@ class TypeOfInstructionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TypeOfInstruction
-        fields = ('__all__',)
+        fields = ('id', 'name')
 
 
 class InstructionAgreementSerializer(serializers.ModelSerializer):
@@ -39,7 +39,7 @@ class InstructionAgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstructionAgreement
-        fields = ('__all__',)
+        exclude = ('id', 'date')
 
 
 class InstructionSerializer(serializers.ModelSerializer):
@@ -49,7 +49,13 @@ class InstructionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Instruction
-        fields = ('__all__',)
+        fields = (
+            'id',
+            'type_of_instruction',
+            'name',
+            'text',
+            'instruction_agreement'
+        )
 
 
 class InstructionResultSerializer(serializers.ModelSerializer):

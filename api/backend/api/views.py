@@ -1,16 +1,25 @@
-from rest_framework import status
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.backend.api.models import User
-from api.backend.api.serializers import AdminUserSerializer, UserSerializer
-from api.backend.api.permissions import IsAdminPermission
-from api.backend.backend.constants import ME
+from api.models import User, Instruction, InstructionAgreement
+from api.serializers import (
+    AdminUserSerializer,
+    InstructionSerializer,
+    UserSerializer
+)
+from api.permissions import IsAdminPermission
+from backend.constants import ME
 
 
+@extend_schema(
+    tags=['User'],
+    description='Получение, создание, изменение и удаление пользователей.'
+)
 class UserViewSet(ModelViewSet):
     """Представление для операций с пользователями."""
 
@@ -38,3 +47,16 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=['Instruction'],
+    description='Получение интруктажей.'
+)
+class InstructionDetailAPIView(generics.RetrieveAPIView):
+    """Представление для получения инструктажа."""
+
+    queryset = Instruction.objects.all()
+    serializer_class = InstructionSerializer
+    # TODO: IsAuthenticated
+    permission_classes = (AllowAny,)

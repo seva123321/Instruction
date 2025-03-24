@@ -107,8 +107,8 @@ class User(AbstractUser):
         return f'{self.last_name} {self.first_name}'
 
 
-class Publickey(models.Model):
-    """Модель публичного ключа пользователя."""
+class PhotoData(models.Model):
+    """Модель массива данных фото пользователя."""
 
     user = models.OneToOneField(
         User,
@@ -116,8 +116,8 @@ class Publickey(models.Model):
         related_name='publickey',
         verbose_name='Пользователь',
     )
-    public_key = encrypt(models.TextField(
-        'Публичный ключ',
+    photo_data = encrypt(models.TextField(
+        'Массив данных фото пользователя',
     ))
     created_at = models.DateTimeField(
         'Дата создания',
@@ -125,8 +125,8 @@ class Publickey(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Публичный ключ'
-        verbose_name_plural = 'Публичные ключи'
+        verbose_name = 'Массив данных'
+        verbose_name_plural = 'Массивы данных'
 
 
 class TypeOfInstruction(models.Model):

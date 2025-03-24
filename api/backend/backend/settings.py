@@ -12,6 +12,7 @@ DEBUG = True
 # TODO: Add domain, host, etc.
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'api.User'
 
 
 INSTALLED_APPS = [
@@ -22,7 +23,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'myapp',
+    'drf_spectacular',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,8 +82,25 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5,
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '5/day',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Instruction API',
+    'DESCRIPTION': 'API documentation for Instruction',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

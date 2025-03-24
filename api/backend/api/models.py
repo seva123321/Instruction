@@ -1,8 +1,8 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django_cryptography.fields import encrypt
 
-from api.backend.backend.constants import (
+from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
     MAX_LENGTH_FIRST_NAME,
     MAX_LENGTH_LAST_NAME,
@@ -11,8 +11,32 @@ from api.backend.backend.constants import (
     MAX_LENGTH_ROLE,
     MAX_LENGTH_INSTRUCTION_TYPE,
     MAX_LENGTH_INSTRUCTION,
-    MAX_LENGTH_MEDIA_NAME
+    MAX_LENGTH_MEDIA_NAME,
+    MAX_LENGTH_PHONE
 )
+
+
+class UserManager(BaseUserManager):
+    """Кастомный менеджер для модели User."""
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        """Создает и сохраняет пользователя с email и паролем."""
+        if not email:
+            raise ValueError('Email должен быть указан')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        """Создает суперпользователя."""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', User.Role.ADMIN)
+
+        return self._create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -23,11 +47,9 @@ class User(AbstractUser):
         'first_name',
         'last_name',
         'middle_name',
-        'password',
         'birthday',
         'position',
         'mobile_phone',
-        'role',
     )
 
     class Role(models.TextChoices):
@@ -35,6 +57,7 @@ class User(AbstractUser):
         USER = 'user', 'Пользователь'
         MANAGEMENT = 'management', 'Управление'
 
+    username = None
     first_name = models.CharField(
         'Имя',
         max_length=MAX_LENGTH_FIRST_NAME,
@@ -44,11 +67,12 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_LAST_NAME,
     )
     middle_name = models.CharField(
-        'Фамилия',
+        'Отчество',
         max_length=MAX_LENGTH_MIDDLE_NAME,
     )
     birthday = models.DateField(
-        'Дата рождения'
+        'Дата рождения',
+        blank=True,
     )
     position = models.CharField(
         'Должность',
@@ -59,9 +83,10 @@ class User(AbstractUser):
         unique=True,
         max_length=MAX_LENGTH_EMAIL_ADDRESS,
     )
-    mobile_phone = models.IntegerField(
+    mobile_phone = models.CharField(
         'Мобильный телефон',
         unique=True,
+        max_length=MAX_LENGTH_PHONE,
     )
     role = models.CharField(
         'Роль',
@@ -69,6 +94,8 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
     )
+
+    objects = UserManager()
 
     class Meta:
         ordering = ('last_name', 'email')
@@ -80,8 +107,8 @@ class User(AbstractUser):
         return f'{self.last_name} {self.first_name}'
 
 
-class Publickey(models.Model):
-    """Модель публичного ключа пользователя."""
+class PhotoData(models.Model):
+    """Модель массива данных фото пользователя."""
 
     user = models.OneToOneField(
         User,
@@ -89,8 +116,8 @@ class Publickey(models.Model):
         related_name='publickey',
         verbose_name='Пользователь',
     )
-    public_key = encrypt(models.TextField(
-        'Публичный ключ',
+    photo_data = encrypt(models.TextField(
+        'Массив данных фото пользователя',
     ))
     created_at = models.DateTimeField(
         'Дата создания',
@@ -98,8 +125,9 @@ class Publickey(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Публичный ключ'
-        verbose_name_plural = 'Публичные ключи'
+        verbose_name = 'Массив данных'
+        verbose_name_plural = 'Массивы данных'
+
 
 class TypeOfInstruction(models.Model):
     """Модель типов инструктажей."""
@@ -107,6 +135,9 @@ class TypeOfInstruction(models.Model):
     name = models.CharField(
         'Название',
         max_length=MAX_LENGTH_INSTRUCTION_TYPE,
+    )
+    frequency_of_passage = models.IntegerField(
+        'Частота прохождения',
     )
 
     class Meta:
@@ -131,11 +162,14 @@ class Instruction(models.Model):
         related_name='instructions',
         verbose_name='Тип инструктажа',
     )
-    tests = models.OneToOneField(
-        'Tests',
+    text = models.TextField(
+        'Текст инструктажа',
+    )
+    instruction_agreement = models.ForeignKey(
+        'InstructionAgreement',
         on_delete=models.CASCADE,
         related_name='instruction',
-        verbose_name='Тесты',
+        verbose_name='Согласие на инструктаж',
     )
 
     class Meta:
@@ -145,6 +179,65 @@ class Instruction(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта инструктажа."""
         return self.name
+
+
+class InstructionAgreement(models.Model):
+    """Модель согласия на инструктаж."""
+
+    health = models.TextField(
+        'Состояние здоровья',
+        blank=True,
+        null=True
+    )
+    no_alcohol = models.TextField(
+        'Отказ от алкоголя',
+        blank=True,
+        null=True
+    )
+    is_provided = models.TextField(
+        'Предоставлены средства индивидуальной защиты',
+        blank=True,
+        null=True
+    )
+    emergency = models.TextField(
+        'Правила действий при возникновении чрезвычайных ситуаций',
+        blank=True,
+        null=True
+    )
+    compliance = models.TextField(
+        'Соблюдение правил техники безопасности',
+        blank=True,
+        null=True
+    )
+    is_passed = models.TextField(
+        'Прошел инструктаж по безопасности',
+        blank=True,
+        null=True
+    )
+    report = models.TextField(
+        'Доклад',
+        blank=True,
+        null=True
+    )
+    med_aid = models.TextField(
+        'Первая помощь',
+        blank=True,
+        null=True
+    )
+    attention = models.TextField(
+        'Внимание',
+        blank=True,
+        null=True
+    )
+    date = models.DateTimeField(
+        'Дата согласия',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Согласие на инструктаж'
+        verbose_name_plural = 'Согласия на инструктаж'
+
 
 class Tests(models.Model):
     """Модель тестов инструктажа."""
@@ -168,6 +261,7 @@ class Tests(models.Model):
         """Возвращает строковое представление объекта теста."""
         return self.name
 
+
 class Question(models.Model):
     """Модель вопросов теста."""
 
@@ -188,6 +282,7 @@ class Question(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта вопроса."""
         return self.question
+
 
 class Answer(models.Model):
     """Модель ответов на вопросы."""
@@ -212,6 +307,7 @@ class Answer(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта ответа."""
         return self.answer
+
 
 class TestResult(models.Model):
     """Модель результатов тестирования."""
@@ -247,6 +343,42 @@ class TestResult(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта результата тестирования."""
         return f'{self.user} - {self.test} - {self.result}'
+
+
+class InstructionResult(models.Model):
+    """Модель результатов инструктажа."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='instruction_results',
+        verbose_name='Пользователь',
+    )
+    instruction = models.ForeignKey(
+        Instruction,
+        on_delete=models.CASCADE,
+        related_name='instruction_results',
+        verbose_name='Инструктаж',
+    )
+    result = models.BooleanField(
+        'Прошёл инструктаж',
+    )
+    date = models.DateTimeField(
+        'Дата прохождения',
+        auto_now_add=True,
+    )
+    time = models.TimeField(
+        'Время прохождения',
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = 'Результат инструктажа'
+        verbose_name_plural = 'Результаты инструктажа'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта результата инструктажа."""
+        return f'{self.user} - {self.instruction} - {self.result}'
 
 
 class Media(models.Model):

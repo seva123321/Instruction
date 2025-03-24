@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from api.backend.api.models import User
+from api.models import (
+    User,
+    Instruction,
+    InstructionAgreement,
+    InstructionResult,
+    TypeOfInstruction
+)
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -18,3 +24,37 @@ class UserSerializer(AdminUserSerializer):
         read_only_fields = (
             'role'
         )
+
+
+class TypeOfInstructionSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели TypeOfInstruction."""
+
+    class Meta:
+        model = TypeOfInstruction
+        fields = ('name',)
+
+
+class InstructionAgreementSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели InstructionAgreement."""
+
+    class Meta:
+        model = InstructionAgreement
+        exclude = ('id',)
+
+
+class InstructionSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Instruction."""
+    instruction_agreement = InstructionAgreementSerializer(read_only=True)
+    type_of_instruction = TypeOfInstructionSerializer(read_only=True)
+
+    class Meta:
+        model = Instruction
+        exclude = ('id',)
+
+
+class InstructionResultSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели InstructionResult."""
+
+    class Meta:
+        model = InstructionResult
+        fields = '__all__'

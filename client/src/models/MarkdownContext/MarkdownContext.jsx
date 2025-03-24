@@ -148,7 +148,7 @@ function MarkdownContext({ markdown, header }) {
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          <Typography sx={{ textAlign: 'center' }} variant="h6">
+          <Typography sx={{ textAlign: 'center', mt: 2 }} variant="h6">
             Содержание
           </Typography>
           <List sx={{ direction: 'ltr' }}>

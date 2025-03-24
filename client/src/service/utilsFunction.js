@@ -18,10 +18,10 @@ export const formatPhoneNumber = (value) => {
   return value
 }
 
-export const isEmail = (value) => {
-  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
-}
+export const isEmail = (value) =>
+  // eslint-disable-next-line implicit-arrow-linebreak
+  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
 
-export const isPhoneNumber = (value) => {
-  return /^\+?\d{1,3}[- ]?\d{3}[- ]?\d{3}[- ]?\d{2}[- ]?\d{2}$/.test(value)
-}
+export const isPhoneNumber = (value) =>
+  // eslint-disable-next-line implicit-arrow-linebreak
+  /^\+?\d{1,3}[- ]?\d{3}[- ]?\d{3}[- ]?\d{2}[- ]?\d{2}$/.test(value)

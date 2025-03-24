@@ -1,3 +1,23 @@
+// import TabsWrapper from '@/components/TabsWrapper'
+// import OneInstructionPage from '@/models/OneInstructionPage'
+
+// function InstructionPage() {
+//   const tabs = [
+//     {
+//       label: 'Инструктаж 1',
+//       content: <OneInstructionPage />,
+//     },
+//     {
+//       label: 'Инструктаж 2',
+//       content: <OneInstructionPage />,
+//     },
+//   ]
+
+//   return <TabsWrapper tabs={tabs} />
+// }
+
+// export default InstructionPage
+
 import { Grid2, Container } from '@mui/material'
 
 import { agreements, instructionMarkdown } from '@/service/constValues' // @TODO from server
@@ -6,7 +26,7 @@ import MarkdownContext from '@/models/MarkdownContext'
 
 function InstructionPage() {
   return (
-    <div>
+    <>
       <MarkdownContext markdown={instructionMarkdown} header="Инструктаж" />
 
       {/* повтор стиля контейнера MarkdownContext */}
@@ -21,7 +41,7 @@ function InstructionPage() {
           sx={{ display: { xs: 'none', sm: 'flex' } }}
         />
       </Grid2>
-    </div>
+    </>
   )
 }
 
@@ -29,14 +49,13 @@ export default InstructionPage
 
 /*
 
-// ИНСТРУКТАЖ принимающий массив штсруктажей с TABS
+// ИНСТРУКТАЖ принимающий массив инструктажей с TABS
 
 import { Grid2, Container } from '@mui/material'
 
 import { agreements, instructionMarkdown } from '@/service/constValues' // @TODO from server
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
-
 
 import { useState } from 'react'
 import { useTheme } from '@mui/material/styles'
@@ -115,7 +134,7 @@ function InstructionPage() {
         <Tab label="Инструктаж 2" {...a11yProps(1)} />
       </Tabs>
       <TabPanel value={value} index={0} dir={theme.direction}>
-        <OneInstructionPage /> 
+        <OneInstructionPage />
       </TabPanel>
       <TabPanel value={value} index={1} dir={theme.direction}>
         <OneInstructionPage />

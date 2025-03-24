@@ -165,7 +165,12 @@ class Instruction(models.Model):
     text = models.TextField(
         'Текст инструктажа',
     )
-
+    instruction_agreement = models.ForeignKey(
+        'InstructionAgreement',
+        on_delete=models.CASCADE,
+        related_name='instruction',
+        verbose_name='Согласие на инструктаж',
+    )
 
     class Meta:
         verbose_name = 'Инструктаж'
@@ -174,6 +179,7 @@ class Instruction(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта инструктажа."""
         return self.name
+
 
 class InstructionAgreement(models.Model):
     """Модель согласия на инструктаж."""

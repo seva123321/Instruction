@@ -2,13 +2,13 @@ import { FormGroup, FormControlLabel, Checkbox, Button } from '@mui/material'
 import { useForm, useWatch } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 
-import MemoizedCheckbox from '@/components/MemorizedCheckbox'
+import CheckboxList from '@/components/CheckboxList'
 
 function CheckboxFields({ agreements }) {
   // Инициализация значений формы
   const defaultValues = agreements.reduce((acc, item) => {
     const [key] = Object.entries(item)[0]
-    acc[key] = false // Устанавливаем начальное значение false для каждого чекбокса
+    acc[key] = false
     return acc
   }, {})
 
@@ -47,7 +47,6 @@ function CheckboxFields({ agreements }) {
     // console.log('form > ', data)
   }
 
-  // Обработчик для выбора всех чекбоксов
   const handleSelectAll = (e) => {
     const { checked } = e.target
     setAllChecked(checked)
@@ -73,19 +72,7 @@ function CheckboxFields({ agreements }) {
           label="ВЫБРАТЬ ВСЕ ВАРИАНТЫ"
           sx={{ fontSize: 30 }}
         />
-
-        {agreements.map((item) => {
-          const [key] = Object.entries(item)[0]
-          return (
-            <MemoizedCheckbox
-              key={key}
-              name={key}
-              register={register}
-              control={control}
-              data={agreements}
-            />
-          )
-        })}
+        <CheckboxList data={agreements} register={register} control={control} />
       </FormGroup>
       <Button
         type="submit"

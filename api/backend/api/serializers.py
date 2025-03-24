@@ -5,7 +5,10 @@ from api.models import (
     Instruction,
     InstructionAgreement,
     InstructionResult,
-    TypeOfInstruction
+    TypeOfInstruction,
+    Tests,
+    Question,
+    Answer
 )
 
 
@@ -64,3 +67,24 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstructionResult
         fields = '__all__'
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Answer."""
+
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+
+class TestSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели InstructionResult."""
+
+    class Meta:
+        model = Tests
+        fields = (
+            'id',
+            'name',
+            'description',
+            'passing_score',
+        )

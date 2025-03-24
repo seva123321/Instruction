@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework import generics, status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import ModelViewSet
@@ -53,7 +53,7 @@ class UserViewSet(ModelViewSet):
     tags=['Instruction'],
     description='Получение интруктажей.'
 )
-class InstructionDetailAPIView(generics.RetrieveAPIView):
+class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения инструктажа."""
 
     queryset = Instruction.objects.all()

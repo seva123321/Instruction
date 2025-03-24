@@ -17,6 +17,11 @@ import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import MessageAlert from '@/components/MessageAlert' // Импортируем компонент для отображения ошибок
 
+import {
+  formatPhoneNumber,
+  isEmail,
+  isPhoneNumber,
+} from '../../service/utilsFunction'
 import Recognition from '../Recognition/Recognition'
 
 function LoginModel() {
@@ -104,13 +109,19 @@ function LoginModel() {
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
           >
-            <InputLabel htmlFor="username">Логин</InputLabel>
+            <InputLabel htmlFor="username">Почта, номер телефона</InputLabel>
             <Controller
               name="username"
               control={control}
               defaultValue=""
               rules={{
-                required: !faceDescriptor && 'Поле обязательно к заполнению!', // Логин обязателен, если нет дескриптора лица
+                required: 'Поле обязательно к заполнению!',
+                validate: (value) => {
+                  if (!isEmail(value) && !isPhoneNumber(value)) {
+                    return 'Введите корректный адрес электронной почты или номер телефона'
+                  }
+                  return true
+                },
               }}
               render={({ field }) => (
                 <OutlinedInput
@@ -118,8 +129,12 @@ function LoginModel() {
                   inputMode="text"
                   autoComplete="username"
                   id="username"
-                  label="Логин"
-                  disabled={!!faceDescriptor || isLoading}
+                  label="Почта, номер телефона"
+                  value={field.value} // Используем оригинальное значение
+                  onChange={(e) => {
+                    const formattedValue = formatPhoneNumber(e.target.value)
+                    field.onChange(formattedValue) // Форматируем и обновляем значение
+                  }}
                 />
               )}
             />

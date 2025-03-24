@@ -16,7 +16,11 @@ import useAuth from '@/hook/useAuth'
 import CustomLink from '@/components/CustomLink'
 import Recognition from '@/models/Recognition'
 
-import formatPhoneNumber from '../../service/utilsFunction'
+import {
+  formatPhoneNumber,
+  isEmail,
+  isPhoneNumber,
+} from '../../service/utilsFunction'
 import MessageAlert from '../../components/MessageAlert/MessageAlert'
 
 function AuthModel() {
@@ -103,9 +107,7 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.username?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.username?.message}</FormHelperText>
           </FormControl>
 
           {/* Фамилия */}
@@ -136,12 +138,10 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.usersurname?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.usersurname?.message}</FormHelperText>
           </FormControl>
 
-          {/* Почта */}
+          {/* Поле для email */}
           <FormControl
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
@@ -153,9 +153,11 @@ function AuthModel() {
               defaultValue=""
               rules={{
                 required: 'Поле обязательно к заполнению!',
-                pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                  message: 'Введите корректный адрес электронной почты',
+                validate: (value) => {
+                  if (!isEmail(value)) {
+                    return 'Введите корректный адрес электронной почты'
+                  }
+                  return true
                 },
               }}
               render={({ field }) => (
@@ -168,12 +170,10 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.email?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.email?.message}</FormHelperText>
           </FormControl>
 
-          {/* Телефон */}
+          {/* Поле для телефона */}
           <FormControl
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
@@ -185,10 +185,11 @@ function AuthModel() {
               defaultValue=""
               rules={{
                 required: 'Поле обязательно к заполнению!',
-                pattern: {
-                  value: /^\+?\d{1,3}-\d{3}-\d{3}-\d{2}-\d{2}$/,
-                  message:
-                    'Проверьте, что вводите телефон в правильном формате, например +7 900 123-33-55',
+                validate: (value) => {
+                  if (!isPhoneNumber(value)) {
+                    return 'Проверьте, что вводите телефон в правильном формате, например +7 900 123-33-55'
+                  }
+                  return true
                 },
               }}
               render={({ field }) => (
@@ -206,9 +207,7 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.phone?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.phone?.message}</FormHelperText>
           </FormControl>
 
           {/* Пароль */}

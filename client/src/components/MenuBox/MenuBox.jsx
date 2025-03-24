@@ -163,7 +163,7 @@ export default function MenuBox() {
           <ListItemText open={open} primary="Инструктаж" />
         </ListItemButton>
 
-        <ListItemButton component={CustomLink} to="/test">
+        <ListItemButton component={CustomLink} to="/tests">
           <ListItemIcon open={open}>
             <Tooltip title="Тестирование">
               <FactCheckIcon />

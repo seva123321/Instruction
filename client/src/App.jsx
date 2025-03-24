@@ -13,6 +13,7 @@ import RequireAuth from './hoc/RequireAuth'
 import { AuthProvider } from './hoc/AuthProvider'
 // import ThemeProvider from './hoc/ThemeProvider'
 import AuthPage from './pages/AuthPage'
+import TestOnePage from './pages/TestOnePage'
 
 function App() {
   return (
@@ -63,10 +64,18 @@ function App() {
             }
           />
           <Route
-            path="test"
+            path="tests"
             element={
               <RequireAuth>
                 <TestingPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="tests/:id"
+            element={
+              <RequireAuth>
+                <TestOnePage />
               </RequireAuth>
             }
           />

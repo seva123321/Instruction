@@ -163,6 +163,7 @@ function MarkdownContext({ markdown, header }) {
                     width: '100%',
                     justifyContent: 'flex-start',
                     paddingTop: 0.5,
+                    textDecoration: 'none',
                     paddingBottom: 0.5,
                     paddingLeft: `${heading.level * 7}px`,
                     paddingRight: 0.5,

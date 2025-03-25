@@ -138,18 +138,21 @@ class Instruction(models.Model):
     )
     type_of_instruction = models.ForeignKey(
         TypeOfInstruction,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instructions',
         verbose_name='Тип инструктажа',
+        blank=True,
+        null=True
     )
     text = models.TextField(
         'Текст инструктажа',
     )
-    instruction_agreement = models.ForeignKey(
+    instruction_agreement = models.ManyToManyField(
         'InstructionAgreement',
-        on_delete=models.CASCADE,
         related_name='instruction',
         verbose_name='Согласие на инструктаж',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -164,54 +167,15 @@ class Instruction(models.Model):
 class InstructionAgreement(models.Model):
     """Модель согласия на инструктаж."""
 
-    health = models.TextField(
-        'Состояние здоровья',
+    name = models.TextField(
+        'Название согласия',
         blank=True,
         null=True
     )
-    no_alcohol = models.TextField(
-        'Отказ от алкоголя',
+    text = models.TextField(
+        'Текст согласия',
         blank=True,
         null=True
-    )
-    is_provided = models.TextField(
-        'Предоставлены средства индивидуальной защиты',
-        blank=True,
-        null=True
-    )
-    emergency = models.TextField(
-        'Правила действий при возникновении чрезвычайных ситуаций',
-        blank=True,
-        null=True
-    )
-    compliance = models.TextField(
-        'Соблюдение правил техники безопасности',
-        blank=True,
-        null=True
-    )
-    is_passed = models.TextField(
-        'Прошел инструктаж по безопасности',
-        blank=True,
-        null=True
-    )
-    report = models.TextField(
-        'Доклад',
-        blank=True,
-        null=True
-    )
-    med_aid = models.TextField(
-        'Первая помощь',
-        blank=True,
-        null=True
-    )
-    attention = models.TextField(
-        'Внимание',
-        blank=True,
-        null=True
-    )
-    date = models.DateTimeField(
-        'Дата согласия',
-        auto_now_add=True,
     )
 
     class Meta:
@@ -250,9 +214,11 @@ class Question(models.Model):
     )
     tests = models.ForeignKey(
         Tests,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='questions',
         verbose_name='Тест',
+        blank=True,
+        null=True
     )
     explanation = models.TextField(
         'Объяснение',
@@ -279,7 +245,7 @@ class ReferenceLink(models.Model):
     )
     question = models.OneToOneField(
         'Question',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='reference_link',
         verbose_name='Вопрос',
         blank=True,
@@ -306,9 +272,11 @@ class Answer(models.Model):
     )
     question = models.ForeignKey(
         Question,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='answers',
         verbose_name='Вопрос',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -325,15 +293,19 @@ class TestResult(models.Model):
 
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='test_results',
         verbose_name='Пользователь',
+        blank=True,
+        null=True
     )
     test = models.ForeignKey(
         Tests,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='test_results',
         verbose_name='Тест',
+        blank=True,
+        null=True
     )
     result = models.BooleanField(
         'Сдал тест',
@@ -361,15 +333,19 @@ class InstructionResult(models.Model):
 
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instruction_results',
         verbose_name='Пользователь',
+        blank=True,
+        null=True
     )
     instruction = models.ForeignKey(
         Instruction,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instruction_results',
         verbose_name='Инструктаж',
+        blank=True,
+        null=True
     )
     result = models.BooleanField(
         'Прошёл инструктаж',

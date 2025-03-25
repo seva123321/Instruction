@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django_cryptography.fields import encrypt
 
 from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
@@ -46,9 +45,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = (
         'first_name',
         'last_name',
-        'middle_name',
-        'birthday',
-        'position',
         'mobile_phone',
     )
 
@@ -73,6 +69,7 @@ class User(AbstractUser):
     birthday = models.DateField(
         'Дата рождения',
         blank=True,
+        null=True
     )
     position = models.CharField(
         'Должность',
@@ -94,6 +91,11 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
     )
+    face_descriptor = models.TextField(
+        'Дескриптор лица',
+        blank=True,
+        null=True,
+    )
 
     objects = UserManager()
 
@@ -105,28 +107,6 @@ class User(AbstractUser):
     def __str__(self):
         """Возвращает строковое представление объекта пользователя."""
         return f'{self.last_name} {self.first_name}'
-
-
-class PhotoData(models.Model):
-    """Модель массива данных фото пользователя."""
-
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='publickey',
-        verbose_name='Пользователь',
-    )
-    photo_data = encrypt(models.TextField(
-        'Массив данных фото пользователя',
-    ))
-    created_at = models.DateTimeField(
-        'Дата создания',
-        auto_now_add=True,
-    )
-
-    class Meta:
-        verbose_name = 'Массив данных'
-        verbose_name_plural = 'Массивы данных'
 
 
 class TypeOfInstruction(models.Model):
@@ -265,7 +245,7 @@ class Tests(models.Model):
 class Question(models.Model):
     """Модель вопросов теста."""
 
-    question = models.TextField(
+    name = models.TextField(
         'Вопрос',
     )
     tests = models.ForeignKey(
@@ -281,13 +261,13 @@ class Question(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление объекта вопроса."""
-        return self.question
+        return self.name
 
 
 class Answer(models.Model):
     """Модель ответов на вопросы."""
 
-    answer = models.TextField(
+    name = models.TextField(
         'Ответ',
     )
     is_correct = models.BooleanField(
@@ -306,7 +286,7 @@ class Answer(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление объекта ответа."""
-        return self.answer
+        return self.name
 
 
 class TestResult(models.Model):

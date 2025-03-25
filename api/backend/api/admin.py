@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     User, TypeOfInstruction, Instruction, InstructionAgreement,
-    Tests, Question, Answer, TestResult, InstructionResult, Media
+    Tests, Question, Answer, TestResult, InstructionResult, Media,
+    ReferenceLink
 )
 
 
@@ -26,7 +27,7 @@ class InstructionAdmin(admin.ModelAdmin):
 
 @admin.register(InstructionAgreement)
 class InstructionAgreementAdmin(admin.ModelAdmin):
-    list_display = ('date',)
+    list_display = ('name',)
     search_fields = ('email',)
 
 
@@ -45,11 +46,15 @@ class AnswerInline(admin.TabularInline):
     model = Answer
 
 
+class ReferenceLinkInline(admin.TabularInline):
+    model = ReferenceLink
+
+
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ('name', 'tests')
     search_fields = ('name', 'tests__name')
-    inlines = (AnswerInline,)
+    inlines = (ReferenceLinkInline, AnswerInline)
 
 
 @admin.register(Answer)

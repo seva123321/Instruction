@@ -98,6 +98,15 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API documentation for Instruction',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'ENUM_NAME_OVERRIDES': {
+        'ValidationErrorEnum': [
+            'invalid',
+            'not_found',
+            'permission_denied'
+        ]
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_COERCE_PATH_PK': False,
 }
 
 LANGUAGE_CODE = 'ru-RU'

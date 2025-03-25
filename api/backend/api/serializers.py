@@ -68,6 +68,14 @@ class InstructionSerializer(serializers.ModelSerializer):
         )
 
 
+class InstructionListSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка Instruction."""
+
+    class Meta:
+        model = Instruction
+        fields = ('id', 'name', 'type_of_instruction')
+
+
 class InstructionResultSerializer(serializers.ModelSerializer):
     """Сериализатор для модели InstructionResult."""
 

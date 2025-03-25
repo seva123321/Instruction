@@ -16,7 +16,8 @@ from api.models import (
     Tests,
     Question,
     Answer,
-    ReferenceLink
+    ReferenceLink,
+    TestResult
 )
 
 
@@ -138,7 +139,14 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('id', 'name', 'answers', 'reference_link')
+        fields = (
+            'id',
+            'name',
+            'answers',
+            'explanation',
+            'reference_link',
+            'image'
+        )
 
 
 class TestListSerializer(serializers.ModelSerializer):
@@ -149,10 +157,19 @@ class TestListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'description')
 
 
+class TestResultSerializer(serializers.ModelSerializer):
+    """Сериализатор для TestResultSerializer."""
+
+    class Meta:
+        model = TestResult
+        fields = ('id', 'result', 'date', 'time')
+
+
 class TestSerializer(serializers.ModelSerializer):
     """Сериализатор для конкретного Test."""
 
     questions = QuestionSerializer(many=True, read_only=True)
+    test_results = serializers.SerializerMethodField()
 
     class Meta:
         model = Tests
@@ -161,5 +178,16 @@ class TestSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'passing_score',
-            'questions'
+            'test_results',
+            'questions',
         )
+
+    def get_test_results(self, obj):
+        """Возвращает результаты теста только для текущего пользователя."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return TestResultSerializer(
+                obj.test_results.filter(user=request.user),
+                many=True
+            ).data
+        return []

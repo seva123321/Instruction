@@ -1,7 +1,11 @@
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+
 from rest_framework.filters import SearchFilter
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -10,13 +14,18 @@ from api.models import (
     User,
     Instruction,
     InstructionAgreement,
-    Tests
+    Tests,
+    Question
 )
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
+    InstructionListSerializer,
     UserSerializer,
-    TestSerializer
+    TestSerializer,
+    TestListSerializer,
+    QuestionSerializer,
+    SignUpSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -75,7 +84,16 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения инструктажа."""
 
-    queryset = Tests.objects.all()
+    queryset = Tests.objects.prefetch_related(
+        'questions',
+        'questions__answers'
+    ).all()
     serializer_class = TestSerializer
     # TODO: IsAuthenticated
     permission_classes = (AllowAny,)
+
+    def get_serializer_class(self):
+        """Определяет сериализатор в зависимости от действия."""
+        if self.action == 'list':
+            return TestListSerializer
+        return TestSerializer

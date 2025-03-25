@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    User, PhotoData, TypeOfInstruction, Instruction, InstructionAgreement,
+    User, TypeOfInstruction, Instruction, InstructionAgreement,
     Tests, Question, Answer, TestResult, InstructionResult, Media
 )
 
@@ -10,12 +10,6 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('email', 'first_name', 'last_name', 'role')
     search_fields = ('email', 'first_name', 'last_name')
     list_filter = ('role',)
-
-
-@admin.register(PhotoData)
-class PhotoDataAdmin(admin.ModelAdmin):
-    list_display = ('user', 'created_at')
-    search_fields = ('user__email',)
 
 
 @admin.register(TypeOfInstruction)
@@ -36,10 +30,15 @@ class InstructionAgreementAdmin(admin.ModelAdmin):
     search_fields = ('email',)
 
 
+class QuestionInline(admin.TabularInline):
+    model = Question
+
+
 @admin.register(Tests)
 class TestsAdmin(admin.ModelAdmin):
     list_display = ('name', 'passing_score')
     search_fields = ('name',)
+    inlines = (QuestionInline,)
 
 
 class AnswerInline(admin.TabularInline):
@@ -48,15 +47,15 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('question', 'tests')
-    search_fields = ('question', 'tests__name')
+    list_display = ('name', 'tests')
+    search_fields = ('name', 'tests__name')
     inlines = (AnswerInline,)
 
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('answer', 'is_correct', 'question')
-    search_fields = ('answer', 'question__question')
+    list_display = ('name', 'is_correct', 'question')
+    search_fields = ('name',)
 
 
 @admin.register(TestResult)

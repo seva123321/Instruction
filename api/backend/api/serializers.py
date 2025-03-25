@@ -15,7 +15,8 @@ from api.models import (
     TypeOfInstruction,
     Tests,
     Question,
-    Answer
+    Answer,
+    ReferenceLink
 )
 
 
@@ -111,20 +112,28 @@ class InstructionResultSerializer(serializers.ModelSerializer):
 class AnswerSerializer(serializers.ModelSerializer):
     """Сериализатор для ответов."""
 
-    name = serializers.CharField()
-
     class Meta:
         model = Answer
         fields = ('id', 'name', 'is_correct')
 
 
+class ReferenceLinkSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели ReferenceLink."""
+
+    class Meta:
+        model = ReferenceLink
+        fields = ('id', 'title', 'url')
+
+
 class QuestionSerializer(serializers.ModelSerializer):
     """Сериализатор для вопросов с ответами."""
+
     answers = AnswerSerializer(many=True, read_only=True)
+    reference_link = ReferenceLinkSerializer(read_only=True)
 
     class Meta:
         model = Question
-        fields = ('id', 'name', 'answers')
+        fields = ('id', 'name', 'answers', 'reference_link')
 
 
 class TestListSerializer(serializers.ModelSerializer):

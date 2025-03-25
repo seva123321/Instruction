@@ -74,13 +74,18 @@ class InstructionAgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstructionAgreement
-        exclude = ('id', 'date')
+        exclude = ('id',)
 
 
 class InstructionSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Instruction."""
-    instruction_agreement = InstructionAgreementSerializer(read_only=True)
-    type_of_instruction = TypeOfInstructionSerializer(read_only=True)
+    instruction_agreement = InstructionAgreementSerializer(
+        many=True,
+        read_only=True
+    )
+    type_of_instruction = TypeOfInstructionSerializer(
+        read_only=True
+    )
 
     class Meta:
         model = Instruction

@@ -123,7 +123,8 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tests.objects.prefetch_related(
         'questions',
-        'questions__answers'
+        'questions__answers',
+        'questions__reference_link'
     ).all()
     serializer_class = TestSerializer
     # TODO: IsAuthenticated

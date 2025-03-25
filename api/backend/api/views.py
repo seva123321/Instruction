@@ -76,6 +76,12 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     # TODO: IsAuthenticated
     permission_classes = (AllowAny,)
 
+    def get_serializer_class(self):
+        """Определяет сериализатор в зависимости от действия."""
+        if self.action == 'list':
+            return InstructionListSerializer
+        return InstructionSerializer
+
 
 @extend_schema(
     tags=['Tests'],

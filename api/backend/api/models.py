@@ -254,6 +254,10 @@ class Question(models.Model):
         related_name='questions',
         verbose_name='Тест',
     )
+    explanation = models.TextField(
+        'Объяснение',
+        default=''
+    )
 
     class Meta:
         verbose_name = 'Вопрос'
@@ -262,6 +266,33 @@ class Question(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта вопроса."""
         return self.name
+
+
+class ReferenceLink(models.Model):
+    """Модель объяснений вопросов."""
+
+    title = models.TextField(
+        'Заголовок',
+    )
+    url = models.URLField(
+        'URL'
+    )
+    question = models.OneToOneField(
+        'Question',
+        on_delete=models.CASCADE,
+        related_name='reference_link',
+        verbose_name='Вопрос',
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        verbose_name = 'Ссылка на объяснение'
+        verbose_name_plural = 'Ссылки на объяснение'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта объяснения."""
+        return self.title
 
 
 class Answer(models.Model):

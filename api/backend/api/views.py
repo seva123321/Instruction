@@ -65,6 +65,37 @@ class UserViewSet(ModelViewSet):
 
 
 @extend_schema(
+    tags=['SignUp'],
+    description='Регистрация пользователей.'
+)
+class SignUpView(APIView):
+    """Представление для регистрации новых пользователей."""
+
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        """Создает нового пользователя."""
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            user = User.objects.create(
+                email=serializer.validated_data['email'],
+                first_name=serializer.validated_data['first_name'],
+                last_name=serializer.validated_data['last_name'],
+                mobile_phone=serializer.validated_data['mobile_phone'],
+                face_descriptor=serializer.validated_data['face_descriptor']
+            )
+        except IntegrityError as e:
+            raise ValidationError(e)
+
+        return Response(
+            {'id': user.id, 'email': user.email},
+            status=status.HTTP_201_CREATED
+        )
+
+
+@extend_schema(
     tags=['Instruction'],
     description='Получение интруктажей.'
 )

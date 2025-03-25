@@ -1,5 +1,12 @@
 from rest_framework import serializers
 
+from backend.constants import (
+    MAX_LENGTH_FACE_DESCRIPTOR,
+    MAX_LENGTH_EMAIL_ADDRESS,
+    MAX_LENGTH_FIRST_NAME,
+    MAX_LENGTH_LAST_NAME,
+    MAX_LENGTH_PHONE
+)
 from api.models import (
     User,
     Instruction,
@@ -17,7 +24,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('__all__',)
+        exclude = ('password',)
 
 
 class UserSerializer(AdminUserSerializer):
@@ -69,16 +76,37 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AnswerSerializer(serializers.ModelSerializer):
+    """Сериализатор для ответов."""
+
+    name = serializers.CharField()
+
+    class Meta:
+        model = Answer
+        fields = ('id', 'name', 'is_correct')
+
+
 class QuestionSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Answer."""
+    """Сериализатор для вопросов с ответами."""
+    answers = AnswerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
-        fields = '__all__'
+        fields = ('id', 'name', 'answers')
+
+
+class TestListSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка Test."""
+
+    class Meta:
+        model = Tests
+        fields = ('id', 'name', 'description')
 
 
 class TestSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели InstructionResult."""
+    """Сериализатор для конкретного Test."""
+
+    questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tests
@@ -87,4 +115,5 @@ class TestSerializer(serializers.ModelSerializer):
             'name',
             'description',
             'passing_score',
+            'questions'
         )

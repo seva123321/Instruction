@@ -36,6 +36,30 @@ class UserSerializer(AdminUserSerializer):
         )
 
 
+class SignUpSerializer(serializers.Serializer):
+    """Сериализатор для регистрации нового пользователя."""
+
+    email = serializers.EmailField(
+        max_length=MAX_LENGTH_EMAIL_ADDRESS,
+        required=True
+    )
+    first_name = serializers.CharField(
+        max_length=MAX_LENGTH_FIRST_NAME,
+        required=True
+    )
+    last_name = serializers.CharField(
+        max_length=MAX_LENGTH_LAST_NAME,
+        required=True
+    )
+    mobile_phone = serializers.CharField(
+        max_length=MAX_LENGTH_PHONE,
+    )
+    face_descriptor = serializers.ListField(
+        child=serializers.FloatField(),
+        max_length=MAX_LENGTH_FACE_DESCRIPTOR
+    )
+
+
 class TypeOfInstructionSerializer(serializers.ModelSerializer):
     """Сериализатор для модели TypeOfInstruction."""
 

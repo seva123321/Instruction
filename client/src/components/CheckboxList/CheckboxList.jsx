@@ -1,23 +1,23 @@
+// CheckboxList.js
 import React from 'react'
+import { Box } from '@mui/material'
 
-import CheckboxForm from '@/components/CheckboxForm'
+import MemoizedCheckbox from '@/components/CheckboxForm'
 
-function CheckboxList({ data, register, control }) {
+function CheckboxList({ data, register, control, sx }) {
   return (
-    <div>
-      {data?.map((item) => {
-        const [key] = Object.entries(item)[0]
-        return (
-          <CheckboxForm
-            key={key}
-            name={key}
+    <Box>
+      {data.map((item) => (
+        <Box key={item.name} sx={sx}>
+          <MemoizedCheckbox
+            name={item.name}
             register={register}
             control={control}
-            data={data}
+            label={item.text}
           />
-        )
-      })}
-    </div>
+        </Box>
+      ))}
+    </Box>
   )
 }
 

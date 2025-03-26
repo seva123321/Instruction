@@ -1,14 +1,21 @@
-import { FormGroup, FormControlLabel, Checkbox, Button } from '@mui/material'
+import {
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Button,
+  Box,
+  Typography,
+  Divider,
+} from '@mui/material'
 import { useForm, useWatch } from 'react-hook-form'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import PropTypes from 'prop-types'
 
 import CheckboxList from '@/components/CheckboxList'
 
 function CheckboxFields({ agreements }) {
-  // Инициализация значений формы
   const defaultValues = agreements.reduce((acc, item) => {
-    const [key] = Object.entries(item)[0]
-    acc[key] = false
+    acc[item.name] = false
     return acc
   }, {})
 
@@ -17,73 +24,129 @@ function CheckboxFields({ agreements }) {
   })
   const [allChecked, setAllChecked] = useState(false)
 
-  // Подписываемся на изменения всех чекбоксов
-  const watchAllCheckboxes = useWatch({
+  // Отдельно отслеживаем нужные чекбоксы
+  const complianceValue = useWatch({
     control,
-    name: agreements.map((item) => Object.keys(item)[0]),
+    name: 'compliance',
+    defaultValue: false,
   })
 
-  // Эффект для обновления состояния "Выбрать все"
-  useEffect(() => {
-    const allCheckedValue = watchAllCheckboxes.every((value) => value === true)
-    setAllChecked(allCheckedValue)
-  }, [watchAllCheckboxes])
-
-  // Проверяем состояние чекбоксов compliance и isPassed
-  const complianceChecked = watchAllCheckboxes.find((value, index) => {
-    const key = Object.keys(agreements[index])[0]
-    return key === 'compliance' && value === true
+  const isPassedValue = useWatch({
+    control,
+    name: 'is_passed',
+    defaultValue: false,
   })
 
-  const isPassedChecked = watchAllCheckboxes.find((value, index) => {
-    const key = Object.keys(agreements[index])[0]
-    return key === 'isPassed' && value === true
-  })
+  // Проверяем существование нужных чекбоксов
+  const hasCompliance = agreements.some((item) => item.name === 'compliance')
+  const hasIsPassed = agreements.some((item) => item.name === 'is_passed')
 
-  const isSubmitValid = complianceChecked === true && isPassedChecked === true
+  // Проверяем состояние чекбоксов, если они существуют
+  // eslint-disable-next-line operator-linebreak
+  const isSubmitValid =
+    (!hasCompliance || complianceValue) && (!hasIsPassed || isPassedValue)
 
-  const onSubmit = (data, e) => {
-    e.preventDefault()
-    // console.log('form > ', data)
+  const onSubmit = (data) => {
+    console.log('Form data:', data)
+    // Отправка данных формы
   }
 
   const handleSelectAll = (e) => {
     const { checked } = e.target
     setAllChecked(checked)
-
     agreements.forEach((item) => {
-      const [key] = Object.entries(item)[0]
-      setValue(key, checked, { shouldValidate: true })
+      setValue(item.name, checked, { shouldValidate: true })
     })
   }
 
+  const styles = {
+    formContainer: {
+      border: '1px solid',
+      borderColor: 'divider',
+      borderRadius: 2,
+      p: { xs: 2, sm: 3 },
+      mb: 3,
+      backgroundColor: 'background.paper',
+      boxShadow: 1,
+    },
+    selectAll: {
+      py: 1,
+      mb: 1,
+      borderBottom: '1px solid',
+      borderColor: 'divider',
+    },
+    checkboxItem: {
+      py: 1.5,
+      '&:not(:last-child)': {
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+      },
+    },
+    submitButton: {
+      mt: 3,
+      px: 4,
+      py: 1.5,
+      fontSize: '1rem',
+      fontWeight: 'bold',
+    },
+  }
+
   return (
-    <form
+    <Box
+      component="form"
       onSubmit={handleSubmit(onSubmit)}
-      style={{
-        border: '1px solid #1976d2',
-        borderRadius: '10px 10px',
-        padding: '16px',
-      }}
+      sx={styles.formContainer}
     >
       <FormGroup>
-        <FormControlLabel
-          control={<Checkbox checked={allChecked} onChange={handleSelectAll} />}
-          label="ВЫБРАТЬ ВСЕ ВАРИАНТЫ"
-          sx={{ fontSize: 30 }}
+        <Box sx={styles.selectAll}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={allChecked}
+                onChange={handleSelectAll}
+                size="medium"
+              />
+            }
+            label={
+              <Typography variant="subtitle1" fontWeight="bold">
+                ВЫБРАТЬ ВСЕ ВАРИАНТЫ
+              </Typography>
+            }
+          />
+        </Box>
+
+        <Divider sx={{ mb: 1 }} />
+
+        <CheckboxList
+          data={agreements}
+          register={register}
+          control={control}
+          sx={styles.checkboxItem}
         />
-        <CheckboxList data={agreements} register={register} control={control} />
       </FormGroup>
+
       <Button
         type="submit"
         variant="contained"
-        sx={{ m: '24px auto', display: 'block' }}
+        color="primary"
+        size="large"
         disabled={!isSubmitValid}
+        sx={styles.submitButton}
+        fullWidth
       >
         Подписать инструктаж
       </Button>
-    </form>
+    </Box>
   )
+}
+
+CheckboxFields.propTypes = {
+  agreements: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      text: PropTypes.string.isRequired,
+    })
+  ).isRequired,
 }
 
 export default CheckboxFields

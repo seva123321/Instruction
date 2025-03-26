@@ -7,7 +7,9 @@ from api.views import (
     InstructionViewSet,
     UserViewSet,
     TestViewSet,
-    SignUpView
+    SignUpView,
+    LoginView,
+    LogoutView
 )
 
 router_v1 = DefaultRouter()
@@ -18,6 +20,8 @@ router_v1.register('tests', TestViewSet, basename='tests')
 router_v1.register('users', UserViewSet, basename='users')
 auth_urls = [
     path('signup/', SignUpView.as_view(), name='signup'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
 
 urlpatterns = [

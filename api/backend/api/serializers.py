@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from backend.constants import (
@@ -157,7 +158,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     """Сериализатор для вопросов с ответами."""
 
     answers = AnswerSerializer(many=True, read_only=True)
-    reference_link = ReferenceLinkSerializer(read_only=True)
+    reference_link = ReferenceLinkSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
@@ -176,7 +177,7 @@ class TestResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TestResult
-        fields = ('id', 'result','mark', 'date', 'time')
+        fields = ('id', 'result', 'mark', 'date', 'time')
 
 
 class BaseTestSerializer(serializers.ModelSerializer):
@@ -209,7 +210,7 @@ class TestListSerializer(BaseTestSerializer):
 
 class TestSerializer(BaseTestSerializer):
     """Сериализатор для детального просмотра теста"""
-    questions = QuestionSerializer(many=True, read_only=True)
+    questions = serializers.SerializerMethodField()
 
     class Meta:
         model = Tests
@@ -221,3 +222,17 @@ class TestSerializer(BaseTestSerializer):
             'test_results',
             'questions'
         )
+
+    def get_questions(self, obj):
+        """Метод для получения вопросов теста"""
+        questions = obj.questions.all()
+
+        limit = getattr(settings, 'TEST_QUESTIONS_LIMIT')
+        if limit:
+            questions = questions.order_by('?')[:limit]
+
+        return QuestionSerializer(
+            questions,
+            many=True,
+            context=self.context
+        ).data

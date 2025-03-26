@@ -84,7 +84,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 5,
@@ -93,11 +93,28 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_AGE = 1209600
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Instruction API',
     'DESCRIPTION': 'API documentation for Instruction',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'ENUM_NAME_OVERRIDES': {
+        'ValidationErrorEnum': [
+            'invalid',
+            'not_found',
+            'permission_denied'
+        ]
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_COERCE_PATH_PK': False,
 }
 
 LANGUAGE_CODE = 'ru-RU'

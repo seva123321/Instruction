@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django_cryptography.fields import encrypt
 
 from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
@@ -12,7 +11,7 @@ from backend.constants import (
     MAX_LENGTH_INSTRUCTION_TYPE,
     MAX_LENGTH_INSTRUCTION,
     MAX_LENGTH_MEDIA_NAME,
-    MAX_LENGTH_PHONE
+    MAX_LENGTH_PHONE,
 )
 
 
@@ -46,9 +45,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = (
         'first_name',
         'last_name',
-        'middle_name',
-        'birthday',
-        'position',
         'mobile_phone',
     )
 
@@ -73,6 +69,7 @@ class User(AbstractUser):
     birthday = models.DateField(
         'Дата рождения',
         blank=True,
+        null=True
     )
     position = models.CharField(
         'Должность',
@@ -94,6 +91,11 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
     )
+    face_descriptor = models.TextField(
+        'Дескриптор лица',
+        blank=True,
+        null=True,
+    )
 
     objects = UserManager()
 
@@ -105,28 +107,6 @@ class User(AbstractUser):
     def __str__(self):
         """Возвращает строковое представление объекта пользователя."""
         return f'{self.last_name} {self.first_name}'
-
-
-class PhotoData(models.Model):
-    """Модель массива данных фото пользователя."""
-
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='publickey',
-        verbose_name='Пользователь',
-    )
-    photo_data = encrypt(models.TextField(
-        'Массив данных фото пользователя',
-    ))
-    created_at = models.DateTimeField(
-        'Дата создания',
-        auto_now_add=True,
-    )
-
-    class Meta:
-        verbose_name = 'Массив данных'
-        verbose_name_plural = 'Массивы данных'
 
 
 class TypeOfInstruction(models.Model):
@@ -158,18 +138,21 @@ class Instruction(models.Model):
     )
     type_of_instruction = models.ForeignKey(
         TypeOfInstruction,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instructions',
         verbose_name='Тип инструктажа',
+        blank=True,
+        null=True
     )
     text = models.TextField(
         'Текст инструктажа',
     )
-    instruction_agreement = models.ForeignKey(
+    instruction_agreement = models.ManyToManyField(
         'InstructionAgreement',
-        on_delete=models.CASCADE,
         related_name='instruction',
         verbose_name='Согласие на инструктаж',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -184,54 +167,15 @@ class Instruction(models.Model):
 class InstructionAgreement(models.Model):
     """Модель согласия на инструктаж."""
 
-    health = models.TextField(
-        'Состояние здоровья',
+    name = models.TextField(
+        'Название согласия',
         blank=True,
         null=True
     )
-    no_alcohol = models.TextField(
-        'Отказ от алкоголя',
+    text = models.TextField(
+        'Текст согласия',
         blank=True,
         null=True
-    )
-    is_provided = models.TextField(
-        'Предоставлены средства индивидуальной защиты',
-        blank=True,
-        null=True
-    )
-    emergency = models.TextField(
-        'Правила действий при возникновении чрезвычайных ситуаций',
-        blank=True,
-        null=True
-    )
-    compliance = models.TextField(
-        'Соблюдение правил техники безопасности',
-        blank=True,
-        null=True
-    )
-    is_passed = models.TextField(
-        'Прошел инструктаж по безопасности',
-        blank=True,
-        null=True
-    )
-    report = models.TextField(
-        'Доклад',
-        blank=True,
-        null=True
-    )
-    med_aid = models.TextField(
-        'Первая помощь',
-        blank=True,
-        null=True
-    )
-    attention = models.TextField(
-        'Внимание',
-        blank=True,
-        null=True
-    )
-    date = models.DateTimeField(
-        'Дата согласия',
-        auto_now_add=True,
     )
 
     class Meta:
@@ -265,14 +209,26 @@ class Tests(models.Model):
 class Question(models.Model):
     """Модель вопросов теста."""
 
-    question = models.TextField(
+    name = models.TextField(
         'Вопрос',
     )
     tests = models.ForeignKey(
         Tests,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='questions',
         verbose_name='Тест',
+        blank=True,
+        null=True
+    )
+    explanation = models.TextField(
+        'Объяснение',
+        default='',
+        blank=True
+    )
+    image = models.URLField(
+        'Изображение',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -281,13 +237,40 @@ class Question(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление объекта вопроса."""
-        return self.question
+        return self.name
+
+
+class ReferenceLink(models.Model):
+    """Модель объяснений вопросов."""
+
+    title = models.TextField(
+        'Заголовок',
+    )
+    url = models.URLField(
+        'URL'
+    )
+    question = models.OneToOneField(
+        'Question',
+        on_delete=models.SET_NULL,
+        related_name='reference_link',
+        verbose_name='Вопрос',
+        blank=True,
+        null=True
+    )
+
+    class Meta:
+        verbose_name = 'Ссылка на объяснение'
+        verbose_name_plural = 'Ссылки на объяснение'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта объяснения."""
+        return self.title
 
 
 class Answer(models.Model):
     """Модель ответов на вопросы."""
 
-    answer = models.TextField(
+    name = models.TextField(
         'Ответ',
     )
     is_correct = models.BooleanField(
@@ -295,9 +278,11 @@ class Answer(models.Model):
     )
     question = models.ForeignKey(
         Question,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='answers',
         verbose_name='Вопрос',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -306,7 +291,7 @@ class Answer(models.Model):
 
     def __str__(self):
         """Возвращает строковое представление объекта ответа."""
-        return self.answer
+        return self.name
 
 
 class TestResult(models.Model):
@@ -314,15 +299,19 @@ class TestResult(models.Model):
 
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='test_results',
         verbose_name='Пользователь',
+        blank=True,
+        null=True
     )
     test = models.ForeignKey(
         Tests,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='test_results',
         verbose_name='Тест',
+        blank=True,
+        null=True
     )
     result = models.BooleanField(
         'Сдал тест',
@@ -339,6 +328,7 @@ class TestResult(models.Model):
     class Meta:
         verbose_name = 'Результат тестирования'
         verbose_name_plural = 'Результаты тестирования'
+        ordering = ('-date',)
 
     def __str__(self):
         """Возвращает строковое представление объекта результата тестирования."""
@@ -350,15 +340,19 @@ class InstructionResult(models.Model):
 
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instruction_results',
         verbose_name='Пользователь',
+        blank=True,
+        null=True
     )
     instruction = models.ForeignKey(
         Instruction,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='instruction_results',
         verbose_name='Инструктаж',
+        blank=True,
+        null=True
     )
     result = models.BooleanField(
         'Прошёл инструктаж',

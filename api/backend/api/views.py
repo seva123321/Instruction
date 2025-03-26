@@ -81,10 +81,11 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            user = User.objects.create(
+            user = User.objects.create_user(
                 email=serializer.validated_data['email'],
                 first_name=serializer.validated_data['first_name'],
                 last_name=serializer.validated_data['last_name'],
+                password=serializer.validated_data['password'],
                 mobile_phone=serializer.validated_data['mobile_phone'],
                 face_descriptor=serializer.validated_data['face_descriptor']
             )
@@ -102,28 +103,63 @@ class LoginView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
-        serializer = LoginSerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-
         email = request.data.get('email')
         password = request.data.get('password')
 
-        user = authenticate(request, username=email, password=password)
-
-        if user:
-            login(request, user)
+        if not email or not password:
             return Response(
-                {'detail': 'Успешный вход'},
+                {
+                    'detail': 'Требуется email и пароль',
+                    'errors': {
+                        'email': 'Обязательное поле' if not email else None,
+                        'password': 'Обязательное поле' if not password else None
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = authenticate(request, username=email, password=password)
+
+            if user is None:
+                try:
+                    User.objects.get(email=email)
+                    error_msg = 'Неверный пароль'
+                    error_field = 'password'
+                except User.DoesNotExist:
+                    error_msg = 'Пользователь с таким email не найден'
+                    error_field = 'email'
+
+                return Response(
+                    {
+                        'detail': 'Ошибка аутентификации',
+                        'errors': {
+                            error_field: error_msg
+                        }
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
+            login(request, user)
+
+            return Response(
+                {
+                    'detail': 'Успешный вход',
+                    'user_id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name
+                },
                 status=status.HTTP_200_OK
             )
 
-        return Response(
-            {'detail': 'Неправильная почта или пароль'},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+        except Exception as e:
+            return Response(
+                {
+                    'detail': 'Произошла ошибка при входе',
+                    'error': str(e)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class LogoutView(APIView):

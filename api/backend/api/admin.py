@@ -37,7 +37,7 @@ class QuestionInline(admin.TabularInline):
 
 @admin.register(Tests)
 class TestsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'passing_score')
+    list_display = ('name', 'description', 'passing_score', 'test_is_control')
     search_fields = ('name',)
     inlines = (QuestionInline,)
 
@@ -65,7 +65,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'result', 'date', 'time')
+    list_display = ('user', 'test', 'result', 'mark', 'date', 'time')
     search_fields = ('user__email', 'test__name')
 
 

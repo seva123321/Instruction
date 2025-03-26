@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from backend.constants import (
@@ -157,7 +158,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     """Сериализатор для вопросов с ответами."""
 
     answers = AnswerSerializer(many=True, read_only=True)
-    reference_link = ReferenceLinkSerializer(read_only=True)
+    reference_link = ReferenceLinkSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
@@ -171,41 +172,20 @@ class QuestionSerializer(serializers.ModelSerializer):
         )
 
 
-class TestListSerializer(serializers.ModelSerializer):
-    """Сериализатор для списка Test."""
-
-    class Meta:
-        model = Tests
-        fields = ('id', 'name', 'description')
-
-
 class TestResultSerializer(serializers.ModelSerializer):
     """Сериализатор для TestResultSerializer."""
 
     class Meta:
         model = TestResult
-        fields = ('id', 'result', 'date', 'time')
+        fields = ('id', 'result', 'mark', 'date', 'time')
 
 
-class TestSerializer(serializers.ModelSerializer):
-    """Сериализатор для конкретного Test."""
-
-    questions = QuestionSerializer(many=True, read_only=True)
+class BaseTestSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для тестов с общими полями"""
     test_results = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Tests
-        fields = (
-            'id',
-            'name',
-            'description',
-            'passing_score',
-            'test_results',
-            'questions',
-        )
-
     def get_test_results(self, obj):
-        """Возвращает результаты теста только для текущего пользователя."""
+        """Общий метод для получения результатов теста"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return TestResultSerializer(
@@ -213,3 +193,48 @@ class TestSerializer(serializers.ModelSerializer):
                 many=True
             ).data
         return []
+
+
+class TestListSerializer(BaseTestSerializer):
+    """Сериализатор для списка тестов"""
+
+    class Meta:
+        model = Tests
+        fields = (
+            'id',
+            'name',
+            'description',
+            'test_is_control',
+            'test_results'
+        )
+
+
+class TestSerializer(BaseTestSerializer):
+    """Сериализатор для детального просмотра теста"""
+    questions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Tests
+        fields = (
+            'id',
+            'name',
+            'description',
+            'test_is_control',
+            'passing_score',
+            'test_results',
+            'questions'
+        )
+
+    def get_questions(self, obj):
+        """Метод для получения вопросов теста"""
+        questions = obj.questions.all()
+
+        limit = getattr(settings, 'TEST_QUESTIONS_LIMIT')
+        if limit:
+            questions = questions.order_by('?')[:limit]
+
+        return QuestionSerializer(
+            questions,
+            many=True,
+            context=self.context
+        ).data

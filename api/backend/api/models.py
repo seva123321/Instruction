@@ -1,4 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 from django.db import models
 
 from backend.constants import (
@@ -12,6 +14,8 @@ from backend.constants import (
     MAX_LENGTH_INSTRUCTION,
     MAX_LENGTH_MEDIA_NAME,
     MAX_LENGTH_PHONE,
+    MAX_LENGTH_PASSING_SCORE,
+    MIN_LENGTH_PASSING_SCORE
 )
 
 
@@ -193,8 +197,15 @@ class Tests(models.Model):
     description = models.TextField(
         'Описание',
     )
+    test_is_control = models.BooleanField(
+        'Тест является контрольным',
+    )
     passing_score = models.IntegerField(
         'Проходной балл',
+        validators=[
+            MinValueValidator(MIN_LENGTH_PASSING_SCORE),
+            MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
+        ]
     )
 
     class Meta:
@@ -249,7 +260,7 @@ class ReferenceLink(models.Model):
     url = models.URLField(
         'URL'
     )
-    question = models.OneToOneField(
+    question = models.ForeignKey(
         'Question',
         on_delete=models.SET_NULL,
         related_name='reference_link',
@@ -315,6 +326,13 @@ class TestResult(models.Model):
     )
     result = models.BooleanField(
         'Сдал тест',
+    )
+    mark = models.IntegerField(
+        'Оценка',
+        validators=[
+            MinValueValidator(MIN_LENGTH_PASSING_SCORE),
+            MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
+        ]
     )
     date = models.DateTimeField(
         'Дата прохождения',

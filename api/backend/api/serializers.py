@@ -5,7 +5,8 @@ from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
     MAX_LENGTH_FIRST_NAME,
     MAX_LENGTH_LAST_NAME,
-    MAX_LENGTH_PHONE
+    MAX_LENGTH_PHONE,
+    MAX_LENGTH_PASSWORD
 )
 from api.models import (
     User,
@@ -45,6 +46,12 @@ class SignUpSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_EMAIL_ADDRESS,
         required=True
     )
+    password = serializers.CharField(
+        max_length=MAX_LENGTH_PASSWORD,
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'},
+    )
     first_name = serializers.CharField(
         max_length=MAX_LENGTH_FIRST_NAME,
         required=True
@@ -59,6 +66,21 @@ class SignUpSerializer(serializers.Serializer):
     face_descriptor = serializers.ListField(
         child=serializers.FloatField(),
         max_length=MAX_LENGTH_FACE_DESCRIPTOR
+    )
+
+
+class LoginSerializer(serializers.Serializer):
+    """Сериализатор для получения токена аутентификации пользователя."""
+
+    email = serializers.EmailField(
+        max_length=MAX_LENGTH_EMAIL_ADDRESS,
+        required=True
+    )
+    password = serializers.CharField(
+        max_length=MAX_LENGTH_PASSWORD,
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'},
     )
 
 

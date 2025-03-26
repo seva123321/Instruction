@@ -197,6 +197,9 @@ class Tests(models.Model):
     description = models.TextField(
         'Описание',
     )
+    test_is_control = models.BooleanField(
+        'Тест является контрольным',
+    )
     passing_score = models.IntegerField(
         'Проходной балл',
         validators=[

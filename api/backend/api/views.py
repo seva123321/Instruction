@@ -184,6 +184,18 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InstructionSerializer
     permission_classes = (IsAuthenticated,)
 
+    def list(self, request, *args, **kwargs):
+        response = super().list(request, *args, **kwargs)
+
+        first_instruction = Instruction.objects.first()
+        if first_instruction:
+            response.data['first_instruction'] = InstructionSerializer(
+                first_instruction,
+                context=self.get_serializer_context()
+            ).data
+
+        return response
+
     def get_serializer_class(self):
         """Определяет сериализатор в зависимости от действия."""
         if self.action == 'list':

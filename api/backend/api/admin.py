@@ -37,7 +37,7 @@ class QuestionInline(admin.TabularInline):
 
 @admin.register(Tests)
 class TestsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'passing_score')
+    list_display = ('name', 'description', 'passing_score', 'test_is_control')
     search_fields = ('name',)
     inlines = (QuestionInline,)
 

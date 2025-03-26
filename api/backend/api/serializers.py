@@ -204,6 +204,7 @@ class TestListSerializer(BaseTestSerializer):
             'id',
             'name',
             'description',
+            'test_is_control',
             'test_results'
         )
 
@@ -218,6 +219,7 @@ class TestSerializer(BaseTestSerializer):
             'id',
             'name',
             'description',
+            'test_is_control',
             'passing_score',
             'test_results',
             'questions'

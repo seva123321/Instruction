@@ -20,8 +20,8 @@ import {
   formatPhoneNumber,
   isEmail,
   isPhoneNumber,
-} from '../../service/utilsFunction'
-import MessageAlert from '../../components/MessageAlert/MessageAlert'
+} from '@/service/utilsFunction'
+import MessageAlert from '@/components/MessageAlert/MessageAlert'
 
 function AuthModel() {
   const navigate = useNavigate()
@@ -41,7 +41,7 @@ function AuthModel() {
   const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
     useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
-  const fromPage = location.state?.from?.pathname || '/instruction'
+  const fromPage = location.state?.from?.pathname || '/instructions'
 
   const onSubmit = (data) => {
     if (!isFaceDescriptorReceived) {
@@ -50,13 +50,14 @@ function AuthModel() {
 
     const newData = {
       ...data,
-      phone: data.phone.replaceAll('-', ''),
-      faceDescriptor,
+      mobile_phone: data.mobile_phone.replaceAll('-', ''),
+      face_descriptor: faceDescriptor,
     }
-    const { username } = newData
+    delete newData.confirmPassword
+    const { first_name: firstName } = newData
 
-    // alert(JSON.stringify(newData))
-    signIn(username, () => navigate(fromPage), { replace: true })
+    alert(JSON.stringify(newData))
+    signIn(firstName, () => navigate(fromPage), { replace: true })
     reset()
   }
 
@@ -83,9 +84,9 @@ function AuthModel() {
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
           >
-            <InputLabel htmlFor="username">Имя</InputLabel>
+            <InputLabel htmlFor="first_name">Имя</InputLabel>
             <Controller
-              name="username"
+              name="first_name"
               control={control}
               defaultValue=""
               rules={{
@@ -101,13 +102,13 @@ function AuthModel() {
                   {...field}
                   inputMode="text"
                   autoFocus
-                  autoComplete="username"
-                  id="username"
+                  autoComplete="first_name"
+                  id="first_name"
                   label="Имя"
                 />
               )}
             />
-            <FormHelperText error>{errors.username?.message}</FormHelperText>
+            <FormHelperText error>{errors.first_name?.message}</FormHelperText>
           </FormControl>
 
           {/* Фамилия */}
@@ -115,9 +116,9 @@ function AuthModel() {
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
           >
-            <InputLabel htmlFor="usersurname">Фамилия</InputLabel>
+            <InputLabel htmlFor="last_name">Фамилия</InputLabel>
             <Controller
-              name="usersurname"
+              name="last_name"
               control={control}
               defaultValue=""
               rules={{
@@ -132,13 +133,13 @@ function AuthModel() {
                 <OutlinedInput
                   {...field}
                   inputMode="text"
-                  autoComplete="usersurname"
-                  id="usersurname"
+                  autoComplete="last_name"
+                  id="last_name"
                   label="Фамилия"
                 />
               )}
             />
-            <FormHelperText error>{errors.usersurname?.message}</FormHelperText>
+            <FormHelperText error>{errors.last_name?.message}</FormHelperText>
           </FormControl>
 
           {/* Поле для email */}
@@ -178,9 +179,9 @@ function AuthModel() {
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
           >
-            <InputLabel htmlFor="phone">Телефон</InputLabel>
+            <InputLabel htmlFor="mobile_phone">Телефон</InputLabel>
             <Controller
-              name="phone"
+              name="mobile_phone"
               control={control}
               defaultValue=""
               rules={{
@@ -196,8 +197,8 @@ function AuthModel() {
                 <OutlinedInput
                   {...field}
                   inputMode="tel"
-                  autoComplete="phone"
-                  id="phone"
+                  autoComplete="mobile_phone"
+                  id="mobile_phone"
                   label="Телефон"
                   value={formatPhoneNumber(field.value)}
                   onChange={(e) => {
@@ -207,7 +208,9 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText error>{errors.phone?.message}</FormHelperText>
+            <FormHelperText error>
+              {errors.mobile_phone?.message}
+            </FormHelperText>
           </FormControl>
 
           {/* Пароль */}

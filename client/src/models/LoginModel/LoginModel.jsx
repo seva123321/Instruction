@@ -8,21 +8,17 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  CircularProgress, // Добавляем спиннер
+  CircularProgress,
 } from '@mui/material'
 import { useForm, Controller } from 'react-hook-form'
 
 import CustomLink from '@/components/CustomLink'
 import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
-import MessageAlert from '@/components/MessageAlert' // Импортируем компонент для отображения ошибок
+import MessageAlert from '@/components/MessageAlert'
 
-import {
-  formatPhoneNumber,
-  isEmail,
-  isPhoneNumber,
-} from '../../service/utilsFunction'
-import Recognition from '../Recognition/Recognition'
+import { isEmail } from '@/service/utilsFunction'
+import Recognition from '@/models/Recognition'
 
 function LoginModel() {
   const navigate = useNavigate()
@@ -41,11 +37,11 @@ function LoginModel() {
   const [isLoading, setIsLoading] = useState(false)
   const { signIn } = useAuth()
 
-  const fromPage = location.state?.from?.pathname || '/instruction'
+  const fromPage = location.state?.from?.pathname || '/instructions'
 
   const onSubmit = async (data) => {
-    setIsLoading(true) // Включаем спиннер
-    setErrorMessage(null) // Сбрасываем ошибку
+    setIsLoading(true)
+    setErrorMessage(null)
 
     try {
       let authData
@@ -58,7 +54,7 @@ function LoginModel() {
       } else {
         // Авторизация по логину и паролю
         authData = {
-          username: data.username,
+          email: data.email,
           password: data.password,
         }
       }
@@ -67,16 +63,14 @@ function LoginModel() {
       // Вызов функции signIn для авторизации
       await signIn(authData, () => navigate(fromPage), { replace: true })
 
-      // Сброс формы после успешной авторизации
       reset()
     } catch (error) {
-      // Обработка ошибок
       setErrorMessage({
         text: error.message || 'Ошибка авторизации. Попробуйте снова.',
         type: 'error',
       })
     } finally {
-      setIsLoading(false) // Выключаем спиннер
+      setIsLoading(false)
     }
   }
 
@@ -109,16 +103,16 @@ function LoginModel() {
             sx={{ width: '100%', marginBottom: 2 }}
             variant="outlined"
           >
-            <InputLabel htmlFor="username">Почта, номер телефона</InputLabel>
+            <InputLabel htmlFor="email">Логин (почта)</InputLabel>
             <Controller
-              name="username"
+              name="email"
               control={control}
               defaultValue=""
               rules={{
                 required: 'Поле обязательно к заполнению!',
                 validate: (value) => {
-                  if (!isEmail(value) && !isPhoneNumber(value)) {
-                    return 'Введите корректный адрес электронной почты или номер телефона'
+                  if (!isEmail(value)) {
+                    return 'Введите корректный адрес электронной почты'
                   }
                   return true
                 },
@@ -126,19 +120,14 @@ function LoginModel() {
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
-                  inputMode="text"
-                  autoComplete="username"
-                  id="username"
-                  label="Почта, номер телефона"
-                  value={field.value} // Используем оригинальное значение
-                  onChange={(e) => {
-                    const formattedValue = formatPhoneNumber(e.target.value)
-                    field.onChange(formattedValue) // Форматируем и обновляем значение
-                  }}
+                  inputMode="email"
+                  autoComplete="email"
+                  id="email"
+                  label="Логин (почта)"
                 />
               )}
             />
-            <FormHelperText error>{errors.username?.message}</FormHelperText>
+            <FormHelperText error>{errors.email?.message}</FormHelperText>
           </FormControl>
 
           {/* Поле для пароля */}

@@ -171,14 +171,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         )
 
 
-class TestListSerializer(serializers.ModelSerializer):
-    """Сериализатор для списка Test."""
-
-    class Meta:
-        model = Tests
-        fields = ('id', 'name', 'description')
-
-
 class TestResultSerializer(serializers.ModelSerializer):
     """Сериализатор для TestResultSerializer."""
 
@@ -187,11 +179,37 @@ class TestResultSerializer(serializers.ModelSerializer):
         fields = ('id', 'result','mark', 'date', 'time')
 
 
-class TestSerializer(serializers.ModelSerializer):
-    """Сериализатор для конкретного Test."""
-
-    questions = QuestionSerializer(many=True, read_only=True)
+class BaseTestSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для тестов с общими полями"""
     test_results = serializers.SerializerMethodField()
+
+    def get_test_results(self, obj):
+        """Общий метод для получения результатов теста"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return TestResultSerializer(
+                obj.test_results.filter(user=request.user),
+                many=True
+            ).data
+        return []
+
+
+class TestListSerializer(BaseTestSerializer):
+    """Сериализатор для списка тестов"""
+
+    class Meta:
+        model = Tests
+        fields = (
+            'id',
+            'name',
+            'description',
+            'test_results'
+        )
+
+
+class TestSerializer(BaseTestSerializer):
+    """Сериализатор для детального просмотра теста"""
+    questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tests
@@ -201,15 +219,5 @@ class TestSerializer(serializers.ModelSerializer):
             'description',
             'passing_score',
             'test_results',
-            'questions',
+            'questions'
         )
-
-    def get_test_results(self, obj):
-        """Возвращает результаты теста только для текущего пользователя."""
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return TestResultSerializer(
-                obj.test_results.filter(user=request.user),
-                many=True
-            ).data
-        return []

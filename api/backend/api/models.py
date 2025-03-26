@@ -11,7 +11,7 @@ from backend.constants import (
     MAX_LENGTH_INSTRUCTION_TYPE,
     MAX_LENGTH_INSTRUCTION,
     MAX_LENGTH_MEDIA_NAME,
-    MAX_LENGTH_PHONE
+    MAX_LENGTH_PHONE,
 )
 
 
@@ -222,7 +222,13 @@ class Question(models.Model):
     )
     explanation = models.TextField(
         'Объяснение',
-        default=''
+        default='',
+        blank=True
+    )
+    image = models.URLField(
+        'Изображение',
+        blank=True,
+        null=True
     )
 
     class Meta:
@@ -322,6 +328,7 @@ class TestResult(models.Model):
     class Meta:
         verbose_name = 'Результат тестирования'
         verbose_name_plural = 'Результаты тестирования'
+        ordering = ('-date',)
 
     def __str__(self):
         """Возвращает строковое представление объекта результата тестирования."""

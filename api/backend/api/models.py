@@ -257,7 +257,7 @@ class ReferenceLink(models.Model):
     url = models.URLField(
         'URL'
     )
-    question = models.OneToOneField(
+    question = models.ForeignKey(
         'Question',
         on_delete=models.SET_NULL,
         related_name='reference_link',

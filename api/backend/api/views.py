@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -25,7 +26,8 @@ from api.serializers import (
     TestSerializer,
     TestListSerializer,
     QuestionSerializer,
-    SignUpSerializer
+    SignUpSerializer,
+    LoginSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -95,6 +97,46 @@ class SignUpView(APIView):
         )
 
 
+class LoginView(APIView):
+    """Представление для входа через сессии"""
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = LoginSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user:
+            login(request, user)
+            return Response(
+                {'detail': 'Успешный вход'},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {'detail': 'Неправильная почта или пароль'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+
+class LogoutView(APIView):
+    """Представление для выхода из системы"""
+
+    def post(self, request):
+        logout(request)
+        return Response(
+            {'detail': 'Успешный выход'},
+            status=status.HTTP_200_OK
+        )
+
+
 @extend_schema(
     tags=['Instruction'],
     description='Получение интруктажей.'
@@ -104,8 +146,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Instruction.objects.all()
     serializer_class = InstructionSerializer
-    # TODO: IsAuthenticated
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         """Определяет сериализатор в зависимости от действия."""
@@ -127,8 +168,7 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         'questions__reference_link'
     ).all()
     serializer_class = TestSerializer
-    # TODO: IsAuthenticated
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         """Определяет сериализатор в зависимости от действия."""

@@ -13,5 +13,5 @@ class IsAdminPermission(BasePermission):
         """Определяет права доступа на уровне всего запроса."""
         return (
             request.user.is_authenticated
-            and request.user.is_admin
+            and request.user.is_staff
         )

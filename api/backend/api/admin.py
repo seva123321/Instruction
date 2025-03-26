@@ -65,7 +65,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'result', 'date', 'time')
+    list_display = ('user', 'test', 'result', 'mark', 'date', 'time')
     search_fields = ('user__email', 'test__name')
 
 

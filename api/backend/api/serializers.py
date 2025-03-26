@@ -184,7 +184,7 @@ class TestResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TestResult
-        fields = ('id', 'result', 'date', 'time')
+        fields = ('id', 'result','mark', 'date', 'time')
 
 
 class TestSerializer(serializers.ModelSerializer):

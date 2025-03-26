@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
 
-import InstructionPage from '@/pages/InstructionPage'
 import KnowBasePage from '@/pages/KnowBasePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import TestingPage from '@/pages/TestingPage'
@@ -14,6 +13,7 @@ import { AuthProvider } from './hoc/AuthProvider'
 // import ThemeProvider from './hoc/ThemeProvider'
 import AuthPage from './pages/AuthPage'
 import TestOnePage from './pages/TestOnePage'
+import InstructionsPage from './pages/InstructionsPage'
 
 function App() {
   return (
@@ -24,10 +24,18 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/" element={<Layout />}>
           <Route
-            path="instruction"
+            path="instructions"
             element={
               <RequireAuth>
-                <InstructionPage />
+                <InstructionsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="instructions/:id"
+            element={
+              <RequireAuth>
+                <InstructionsPage />
               </RequireAuth>
             }
           />
@@ -63,6 +71,16 @@ function App() {
               </RequireAuth>
             }
           />
+          {/* <Route
+            path="tests"
+            element={
+              <RequireAuth>
+                <TestingPage />
+              </RequireAuth>
+            }
+          >
+            <Route path=":id" element={<TestOnePage />} />
+          </Route> */}
           <Route
             path="tests"
             element={

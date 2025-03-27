@@ -301,6 +301,9 @@ class Answer(models.Model):
     is_correct = models.BooleanField(
         'Правильный ответ',
     )
+    points = models.IntegerField(
+        'Количество баллов за ответ'
+    )
     question = models.ForeignKey(
         Question,
         on_delete=models.SET_NULL,

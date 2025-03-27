@@ -25,3 +25,11 @@ export const isEmail = (value) =>
 export const isPhoneNumber = (value) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   /^\+?\d{1,3}[- ]?\d{3}[- ]?\d{3}[- ]?\d{2}[- ]?\d{2}$/.test(value)
+
+export const calculateMark = (score, totalPoints) => {
+  const percentage = (score / totalPoints) * 100
+  return Math.min(
+    10,
+    Math.floor(percentage / 10) + (percentage % 10 >= 5 ? 1 : 0)
+  )
+}

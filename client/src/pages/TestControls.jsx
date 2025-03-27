@@ -1,0 +1,169 @@
+import React from 'react'
+import PropTypes from 'prop-types'
+import { Button, Stack } from '@mui/material'
+
+function TestControls({
+  onSubmit,
+  onComplete,
+  hasAnswer,
+  showFeedback,
+  isAnswered,
+  isLastQuestion,
+  allQuestionsAnswered,
+  isMobile,
+}) {
+  const isCurrentQuestionChecked = isAnswered && showFeedback
+
+  return (
+    <Stack
+      direction={isMobile ? 'column' : 'row'}
+      spacing={isMobile ? 1.5 : 2}
+      sx={{
+        mt: 2,
+        justifyContent: 'space-between',
+        width: '100%',
+      }}
+    >
+      {/* Кнопка "Проверить" */}
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={onSubmit}
+        disabled={!hasAnswer || isAnswered}
+        fullWidth
+        sx={{
+          py: 1.5,
+          fontWeight: 'bold',
+        }}
+      >
+        {isAnswered ? 'Проверено' : 'Проверить'}
+      </Button>
+
+      {/* Кнопка навигации */}
+      <Button
+        variant={isLastQuestion ? 'contained' : 'outlined'}
+        color={isLastQuestion ? 'secondary' : 'primary'}
+        onClick={onComplete}
+        disabled={
+          isLastQuestion
+            ? !(
+                (isCurrentQuestionChecked && allQuestionsAnswered) ||
+                allQuestionsAnswered
+              )
+            : false
+        }
+        fullWidth
+        sx={{
+          py: 1.5,
+          fontWeight: 'bold',
+        }}
+      >
+        {isLastQuestion
+          ? allQuestionsAnswered
+            ? 'Завершить тест'
+            : 'Ответьте на все вопросы'
+          : 'Следующий вопрос'}
+      </Button>
+    </Stack>
+  )
+}
+
+TestControls.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
+  onComplete: PropTypes.func.isRequired,
+  hasAnswer: PropTypes.bool.isRequired,
+  showFeedback: PropTypes.bool.isRequired,
+  isAnswered: PropTypes.bool.isRequired,
+  isLastQuestion: PropTypes.bool.isRequired,
+  allQuestionsAnswered: PropTypes.bool.isRequired,
+  isMobile: PropTypes.bool.isRequired,
+}
+
+export default React.memo(TestControls)
+
+// import React from 'react'
+// import { Button, Stack } from '@mui/material'
+// import PropTypes from 'prop-types'
+
+// function TestControls({
+//   onSubmit,
+//   onComplete,
+//   hasAnswer,
+//   showFeedback,
+//   isAnswered,
+//   isLastQuestion,
+//   allQuestionsAnswered,
+//   isMobile,
+// }) {
+//   const isCurrentQuestionChecked = isAnswered && showFeedback
+
+//   const getNavigationButtonText = () => {
+//     if (isLastQuestion) {
+//       return allQuestionsAnswered ? 'Завершить тест' : 'Ответьте на все вопросы'
+//     }
+//     return 'Следующий вопрос'
+//   }
+
+//   let isNavigationButtonDisabled = false
+
+//   if (isLastQuestion) {
+//     const isComplete =
+//       (isCurrentQuestionChecked && allQuestionsAnswered) || allQuestionsAnswered
+//     isNavigationButtonDisabled = !isComplete
+//   }
+
+//   return (
+//     <Stack
+//       direction={isMobile ? 'column' : 'row'}
+//       spacing={isMobile ? 1.5 : 2}
+//       sx={{
+//         mt: 2,
+//         justifyContent: 'space-between',
+//         width: '100%',
+//       }}
+//     >
+//       {/* Кнопка "Проверить" */}
+//       <Button
+//         variant="contained"
+//         color="primary"
+//         onClick={onSubmit}
+//         disabled={!hasAnswer || isAnswered}
+//         fullWidth
+//         sx={{
+//           py: 1.5,
+//           fontWeight: 'bold',
+//         }}
+//       >
+//         {isAnswered ? 'Проверено' : 'Проверить'}
+//       </Button>
+
+//       {/* Кнопка навигации */}
+//       <Button
+//         variant={isLastQuestion ? 'contained' : 'outlined'}
+//         color={isLastQuestion ? 'secondary' : 'primary'}
+//         onClick={onComplete}
+//         disabled={isNavigationButtonDisabled}
+//         fullWidth
+//         sx={{
+//           py: 1.5,
+//           fontWeight: 'bold',
+//         }}
+//       >
+//         {getNavigationButtonText()}
+//       </Button>
+//     </Stack>
+//   )
+// }
+
+// TestControls.propTypes = {
+//   onSubmit: PropTypes.func.isRequired,
+//   onComplete: PropTypes.func.isRequired,
+//   hasAnswer: PropTypes.bool.isRequired,
+//   showFeedback: PropTypes.bool.isRequired,
+//   isAnswered: PropTypes.bool.isRequired,
+//   isLastQuestion: PropTypes.bool.isRequired,
+//   allQuestionsAnswered: PropTypes.bool.isRequired,
+//   isMobile: PropTypes.bool.isRequired,
+// }
+
+// export default React.memo(TestControls)

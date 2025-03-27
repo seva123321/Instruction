@@ -9,6 +9,7 @@ django-appconf==1.1.0
 django-cryptography==1.1
 django-filter==24.3
 djangorestframework==3.15.2
+djangorestframework_simplejwt==5.5.0
 drf-spectacular==0.27.2
 filelock==3.18.0
 identify==2.6.9
@@ -17,6 +18,7 @@ iniconfig==2.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 nodeenv==1.9.1
+numpy==2.2.4
 packaging==24.2
 pillow==10.4.0
 platformdirs==4.3.6
@@ -24,11 +26,13 @@ pluggy==1.5.0
 pre-commit==3.6.0
 psycopg2-binary==2.9.10
 pycparser==2.22
+PyJWT==2.9.0
 pytest==8.3.4
 pytest-django==4.10.0
 python-dotenv==1.0.1
 PyYAML==6.0.2
 referencing==0.36.2
+rest-framework-simplejwt==0.0.2
 rpds-py==0.23.1
 sqlparse==0.5.3
 typing_extensions==4.12.2

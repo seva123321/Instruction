@@ -12,6 +12,9 @@ DEBUG = True
 # TODO: Add domain, host, etc.
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = 'api.User'
+TEST_QUESTIONS_LIMIT = 10
+FACE_MATCH_THRESHOLD = 0.6
 
 
 INSTALLED_APPS = [
@@ -22,7 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'myapp',
+    'drf_spectacular',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,8 +84,42 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication'
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5,
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '5/day',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_AGE = 1209600
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
 
-LANGUAGE_CODE = 'en-us'
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Instruction API',
+    'DESCRIPTION': 'API documentation for Instruction',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'ENUM_NAME_OVERRIDES': {
+        'ValidationErrorEnum': [
+            'invalid',
+            'not_found',
+            'permission_denied'
+        ]
+    },
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_COERCE_PATH_PK': False,
+}
+
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

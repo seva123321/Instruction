@@ -15,7 +15,8 @@ from backend.constants import (
     MAX_LENGTH_MEDIA_NAME,
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSING_SCORE,
-    MIN_LENGTH_PASSING_SCORE
+    MIN_LENGTH_PASSING_SCORE,
+    MAX_LENGTH_TYPE_QUESTION
 )
 
 
@@ -207,6 +208,9 @@ class Tests(models.Model):
             MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
         ]
     )
+    total_points = models.IntegerField(
+        'Максимальное количество баллов за тест',
+    )
 
     class Meta:
         verbose_name = 'Тест'
@@ -219,6 +223,10 @@ class Tests(models.Model):
 
 class Question(models.Model):
     """Модель вопросов теста."""
+
+    class Type(models.TextChoices):
+        SINGLE = 'single', 'Один вариант'
+        SEVERAL = 'several', 'Несколько вариантов'
 
     name = models.TextField(
         'Вопрос',
@@ -240,6 +248,12 @@ class Question(models.Model):
         'Изображение',
         blank=True,
         null=True
+    )
+    question_type = models.CharField(
+        'Тип вопроса',
+        max_length=MAX_LENGTH_TYPE_QUESTION,
+        choices=Type.choices,
+        default=Type.SINGLE,
     )
 
     class Meta:

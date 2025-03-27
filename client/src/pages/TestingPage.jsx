@@ -1,89 +1,71 @@
+// TestingPage.js
 import { useState, useEffect } from 'react'
-import { List, ListItem, ListItemText } from '@mui/material'
+import { List, ListItem, Typography, Box } from '@mui/material'
 import { Link } from 'react-router-dom'
-// import GenericList from '@/components/GenericList'
 
-// const testsList = [
-//   { test_id: 1, test_title: 'Для сварки на высоте', test_result: 'не пройден' },
-//   { test_id: 2, test_title: 'Для сварки под водой', test_result: 'не пройден' },
-//   {
-//     test_id: 3,
-//     test_title: 'Для сварки под землей',
-//     test_result: 'не пройден',
-//   },
-//   { test_id: 4, test_title: 'Для сварки под водой', test_result: 'не пройден' },
-//   {
-//     test_id: 5,
-//     test_title: 'Для сварки под землей',
-//     test_result: 'не пройден',
-//   },
-//   { test_id: 6, test_title: 'Для сварки под водой', test_result: 'не пройден' },
-//   {
-//     test_id: 7,
-//     test_title: 'Для сварки под землей',
-//     test_result: 'не пройден',
-//   },
-//   { test_id: 8, test_title: 'Для сварки под водой', test_result: 'не пройден' },
-//   {
-//     test_id: 9,
-//     test_title: 'Для сварки под землей',
-//     test_result: 'не пройден',
-//   },
-//   {
-//     test_id: 10,
-//     test_title: 'Для сварки под водой',
-//     test_result: 'не пройден',
-//   },
-//   {
-//     test_id: 11,
-//     test_title: 'Для сварки под землей',
-//     test_result: 'не пройден',
-//   },
-// ]
+import ColoredBadge from '@/components/ColoredBadge'
+
+import { testingList } from '../service/constValues'
 
 function TestingPage() {
   const [tests, setTests] = useState([])
+
   useEffect(() => {
-    // fetch('https://jsonplaceholder.typicode.com/posts')
-    fetch('https://jsonplaceholder.typicode.com/comments')
-      .then((res) => res.json())
-      .then((data) => setTests(data))
+    const loadTests = () => {
+      const testResults = JSON.parse(localStorage.getItem('testResults')) || {}
+      const updatedTests = testingList.map((test) => {
+        const result = testResults[test.id]
+        return result ? { ...test, ...result } : test
+      })
+      setTests(updatedTests)
+    }
+
+    setTimeout(loadTests, 300)
   }, [])
 
-  // console.log('tests > ', tests.slice(0, 5))
-
   return (
-    <>
-      <h1> Список всех тестов</h1>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Список всех тестов
+      </Typography>
 
-      <List sx={{ width: '70vw', maxWidth: 660 }}>
-        {tests?.slice(0, 20).map((test) => (
-          <Link key={test.id} to={`/tests/${test.id}`}>
-            <ListItem
-              sx={{
-                textAlign: 'center',
-                mb: 2,
-                bgcolor: 'background.paper',
-                borderRadius: '10px',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <ListItemText>{test.name}</ListItemText>
-            </ListItem>
-          </Link>
+      <List sx={{ width: '100%', maxWidth: 800 }}>
+        {tests.map((test) => (
+          <ListItem
+            key={test.id}
+            component={Link}
+            to={`/tests/${test.id}`}
+            sx={{
+              mb: 2,
+              bgcolor: 'background.paper',
+              borderRadius: '10px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              textDecoration: 'none',
+              color: 'inherit',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Box>
+              <Typography variant="subtitle1">{test.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {test.description}
+              </Typography>
+              {test.is_passed && (
+                <Typography variant="caption" color="text.secondary">
+                  Пройден:
+                  {new Date(test.date).toLocaleDateString()}
+                </Typography>
+              )}
+            </Box>
+
+            {test.is_passed && <ColoredBadge mark={test.mark} />}
+          </ListItem>
         ))}
       </List>
-    </>
+    </Box>
   )
-  // return (
-  //   <GenericList
-  //   data={tests.slice(0, 20)}
-  //   primaryKey="name"
-  //   secondaryKey="body"
-  //   linkKey="id"
-  //   linkPrefix="/tests/"
-  // />
-  // )
 }
 
 export default TestingPage

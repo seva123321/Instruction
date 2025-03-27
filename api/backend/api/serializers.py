@@ -171,6 +171,15 @@ class QuestionSerializer(serializers.ModelSerializer):
             'image'
         )
 
+    def to_representation(self, instance):
+        """Переопределяем представление для исключения
+        explanation при необходимости."""
+        data = super().to_representation(instance)
+        if self.context.get('test_is_control', False):
+            data.pop('explanation', None)
+        return data
+
+
 
 class TestResultSerializer(serializers.ModelSerializer):
     """Сериализатор для TestResultSerializer."""
@@ -233,8 +242,11 @@ class TestSerializer(BaseTestSerializer):
         if limit:
             questions = questions.order_by('?')[:limit]
 
+        question_context = self.context.copy()
+        question_context['test_is_control'] = obj.test_is_control
+
         return QuestionSerializer(
             questions,
             many=True,
-            context=self.context
+            context=question_context
         ).data

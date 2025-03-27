@@ -16,7 +16,6 @@ import CustomLink from '@/components/CustomLink'
 import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import MessageAlert from '@/components/MessageAlert'
-
 import { isEmail } from '@/service/utilsFunction'
 import Recognition from '@/models/Recognition'
 

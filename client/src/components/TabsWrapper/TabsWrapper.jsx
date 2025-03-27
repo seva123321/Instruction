@@ -48,6 +48,7 @@ export default function TabsWrapper({
   const [internalValue, setInternalValue] = useState(0)
 
   // Определяем, используем ли внешнее или внутреннее управление состоянием
+  // eslint-disable-next-line operator-linebreak
   const isControlled =
     externalValue !== undefined && externalOnChange !== undefined
   const value = isControlled ? externalValue : internalValue
@@ -94,6 +95,7 @@ export default function TabsWrapper({
       </Tabs>
 
       {/* Показываем TabPanel только если не используется роутер */}
+      {/*  eslint-disable-next-line operator-linebreak */}
       {!useRouter &&
         tabs.map((tab, index) => (
           <TabPanel

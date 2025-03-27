@@ -154,7 +154,7 @@ export default function MenuBox() {
       <Divider />
 
       <List component="nav" aria-labelledby="nested-list-subheader">
-        <ListItemButton component={CustomLink} to="/instruction">
+        <ListItemButton component={CustomLink} to="/instructions">
           <ListItemIcon open={open}>
             <Tooltip title="Инструктаж">
               <NoteAltIcon />

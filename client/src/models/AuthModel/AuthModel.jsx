@@ -15,7 +15,6 @@ import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import CustomLink from '@/components/CustomLink'
 import Recognition from '@/models/Recognition'
-
 import {
   formatPhoneNumber,
   isEmail,

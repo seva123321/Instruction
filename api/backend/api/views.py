@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
+import numpy as np
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -160,6 +162,63 @@ class LoginView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class FaceLoginView(APIView):
+    """Аутентификация по лицу"""
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # 1. Получаем дескриптор лица из запроса
+        face_descriptor = request.data.get('face_descriptor')
+        if not face_descriptor or len(face_descriptor) != 128:
+            return Response(
+                {'error': 'Invalid face descriptor'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2. Преобразуем в numpy array
+        try:
+            input_descriptor = np.array(face_descriptor, dtype=np.float32)
+        except:
+            return Response(
+                {'error': 'Invalid descriptor format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 3. Ищем ближайшего пользователя
+        best_match = None
+        min_distance = float('inf')
+
+        for user in User.objects.exclude(face_descriptor__isnull=True):
+            # Преобразуем дескриптор из БД
+            stored_descriptor = np.array(
+                eval(user.face_descriptor),
+                dtype=np.float32
+            )
+
+            # Вычисляем евклидово расстояние
+            distance = np.linalg.norm(input_descriptor - stored_descriptor)
+
+            # Проверяем пороговое значение (обычно 0.6)
+            if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
+                min_distance = distance
+                best_match = user
+
+        # 4. Проверяем результат
+        if best_match:
+            login(request, best_match)
+            return Response({
+                'status': 'success',
+                'user_id': best_match.id,
+                'distance': float(min_distance),
+                'threshold': settings.FACE_MATCH_THRESHOLD
+            })
+
+        return Response(
+            {'error': 'Face not recognized'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 class LogoutView(APIView):

@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 
 from api.views import (
     InstructionViewSet,
+    FaceLoginView,
     UserViewSet,
     TestViewSet,
     SignUpView,
@@ -21,6 +22,7 @@ router_v1.register('users', UserViewSet, basename='users')
 auth_urls = [
     path('signup/', SignUpView.as_view(), name='signup'),
     path('login/', LoginView.as_view(), name='login'),
+    path('face_login/', FaceLoginView.as_view(), name='face_login'),
     path('logout/', LogoutView.as_view(), name='logout'),
 ]
 

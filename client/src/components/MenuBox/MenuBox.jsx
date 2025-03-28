@@ -140,7 +140,7 @@ export default function MenuBox() {
   }
 
   const handleSignOutClick = () => {
-    signOut(() => navigate('/', { replace: true }))
+    signOut(() => navigate('/auth/login', { replace: true }))
   }
 
   return (

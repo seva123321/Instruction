@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 import KnowBasePage from '@/pages/KnowBasePage'
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -20,8 +20,9 @@ function App() {
     <AuthProvider>
       {/* <ThemeProvider> */}
       <Routes>
-        <Route index element={<RegPage />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/" element={<Navigate to="/auth/login" replace />} />
+        <Route path="/auth/login" element={<RegPage />} />
+        <Route path="/auth/signup" element={<AuthPage />} />
         <Route path="/" element={<Layout />}>
           <Route
             path="instructions"

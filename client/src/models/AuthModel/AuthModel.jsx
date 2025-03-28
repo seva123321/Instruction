@@ -34,7 +34,7 @@ function AuthModel() {
   } = useForm({
     mode: 'onBlur',
   })
-  const { signIn } = useAuth()
+  const { signIn, auth } = useAuth()
   const [faceDescriptor, setFaceDescriptor] = useState(null)
   // eslint-disable-next-line operator-linebreak
   const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
@@ -56,7 +56,8 @@ function AuthModel() {
     const { first_name: firstName } = newData
 
     alert(JSON.stringify(newData))
-    signIn(firstName, () => navigate(fromPage), { replace: true })
+    // signIn(firstName, () => navigate(fromPage), { replace: true })
+    auth(newData, () => navigate(fromPage), { replace: true })
     reset()
   }
 
@@ -69,7 +70,7 @@ function AuthModel() {
         sx={{ mb: 2 }}
       >
         <Typography variant="h5">Зарегистрироваться</Typography>
-        <CustomLink to="/">Войти</CustomLink>
+        <CustomLink to="/auth/login">Войти</CustomLink>
       </Box>
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
         <Box

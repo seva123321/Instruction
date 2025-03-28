@@ -48,7 +48,7 @@ function LoginModel() {
       if (data?.faceDescriptor) {
         // Авторизация по лицу
         authData = {
-          faceDescriptor: data.faceDescriptor,
+          face_descriptor: data.faceDescriptor,
         }
       } else {
         // Авторизация по логину и паролю
@@ -57,7 +57,7 @@ function LoginModel() {
           password: data.password,
         }
       }
-      // alert(JSON.stringify(authData))
+      alert(JSON.stringify(authData))
 
       // Вызов функции signIn для авторизации
       await signIn(authData, () => navigate(fromPage), { replace: true })
@@ -88,7 +88,7 @@ function LoginModel() {
         sx={{ mb: 2 }}
       >
         <Typography variant="h5">Войти</Typography>
-        <CustomLink to="/auth">Зарегистрироваться</CustomLink>
+        <CustomLink to="/auth/signup">Зарегистрироваться</CustomLink>
       </Box>
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
         <Box

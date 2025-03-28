@@ -15,7 +15,7 @@ export default function RegistrationPage() {
             padding: 2,
             position: 'relative',
             background:
-              'rgb(74, 84, 86) url(@/../img/enterpriseDawn2.jpg) no-repeat center / cover',
+              'rgb(74, 84, 86) url(@/public/img/enterpriseDawn2.jpg) no-repeat center / cover',
           }}
         >
           <Box

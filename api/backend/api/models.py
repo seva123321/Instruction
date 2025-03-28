@@ -34,6 +34,13 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def create_user(self, email, password=None, **extra_fields):
+        """Создает обычного пользователя."""
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('role', User.Role.USER)
+        return self._create_user(email, password, **extra_fields)
+
     def create_superuser(self, email, password, **extra_fields):
         """Создает суперпользователя."""
         extra_fields.setdefault('is_staff', True)

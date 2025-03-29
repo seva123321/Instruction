@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Container } from '@mui/material'
+import { Grid2, Container } from '@mui/material'
 import { agreements, instructionMarkdown } from '@/service/constValues'
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
@@ -7,28 +7,40 @@ import { useGetInstructionByIdQuery } from '../slices/instructionApi'
 import { useParams } from 'react-router-dom'
 
 function OneInstructionPage() {
-  // Получаем ID инструкции из URL параметров
   const { id } = useParams()
 
-  // Делаем запрос к API через RTK Query
-  const { data: instruction, isLoading, error } = useGetInstructionByIdQuery(id)
+  // Добавляем skip и проверку id
+  const {
+    data: instruction,
+    isLoading,
+    error,
+    isUninitialized, // Новое состояние
+  } = useGetInstructionByIdQuery(id, {
+    skip: !id, // Пропускаем запрос если id отсутствует
+  })
 
-  // Показываем загрузку пока данные не получены
-  if (isLoading) {
+  console.log('id > ', id)
+
+  // Состояния загрузки
+  if (isUninitialized || isLoading) {
     return <div>Загрузка инструкции...</div>
   }
 
-  // Показываем ошибку если запрос не удался
+  // Обработка ошибок
   if (error) {
     console.error('Ошибка загрузки инструкции:', error)
-    return <div>Произошла ошибка при загрузке инструкции</div>
+    return (
+      <div>
+        Произошла ошибка при загрузке инструкции:
+        {'status' in error ? error.status : error.message}
+      </div>
+    )
   }
 
-  // Если инструкция не найдена
+  // Если данные не получены
   if (!instruction) {
     return <div>Инструкция не найдена</div>
   }
-
   return (
     <div>
       {/* Передаем контент инструкции или fallback */}
@@ -37,24 +49,23 @@ function OneInstructionPage() {
         header={instruction.title || 'Инструктаж'}
       />
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={9} sx={{ padding: 3 }}>
+      <Grid2 container spacing={2}>
+        <Grid2 size={{ xs: 12, sm: 9 }} sx={{ padding: 3 }}>
           <Container maxWidth="lg" sx={{ padding: 3 }}>
             <CheckboxFields agreements={agreements} />
           </Container>
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          sm={3}
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, sm: 3 }}
           sx={{ display: { xs: 'none', sm: 'flex' } }}
         />
-      </Grid>
+      </Grid2>
     </div>
   )
 }
 
 export default OneInstructionPage
+
 // import { Grid2, Container } from '@mui/material'
 // import { agreements, instructionMarkdown } from '@/service/constValues'
 // import CheckboxFields from '@/models/CheckboxFields'

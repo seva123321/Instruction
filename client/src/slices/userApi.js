@@ -1,14 +1,20 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import { API_CONFIG } from '../config'
+import { getCsrfToken } from '../utils/cookies'
 
 const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.FULL_URL}api/auth/`,
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/auth/`, // Теперь будет /api/auth/
     credentials: 'include',
     prepareHeaders: (headers) => {
+      const csrfToken = getCsrfToken()
+
       headers.set('Content-Type', 'application/json')
+      if (csrfToken) {
+        headers.set('X-CSRFToken', csrfToken)
+      }
       return headers
     },
   }),

@@ -1,19 +1,16 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { API_CONFIG } from '../config'
 
-export const instructionApi = createApi({
+import { API_CONFIG } from '../config'
+import { getCsrfToken } from '../utils/cookies'
+
+const instructionApi = createApi({
   reducerPath: 'instructionApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.BASE_URL}:${API_CONFIG.PORT}/api/`,
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, // Теперь будет /api/
     credentials: 'include',
     prepareHeaders: (headers) => {
-      // Получаем CSRF токен из куков
-      const csrfToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('csrftoken='))
-        ?.split('=')[1]
+      const csrfToken = getCsrfToken()
 
-      // Устанавливаем обязательные заголовки
       headers.set('Content-Type', 'application/json')
       if (csrfToken) {
         headers.set('X-CSRFToken', csrfToken)
@@ -28,17 +25,22 @@ export const instructionApi = createApi({
       providesTags: ['Instruction'],
     }),
     getInstructionById: build.query({
-      query: (id) => `instructions/${id}/`,
-      providesTags: (result, error, id) => [{ type: 'Instruction', id }],
+      query: (id) => {
+        if (!id) {
+          throw new Error('ID is required') // Явная ошибка если id отсутствует
+        }
+        return `instructions/${id}/`
+      },
+      // Убедитесь что transformErrorResponse обрабатывает ошибки
+      transformErrorResponse: (response) => {
+        return response.data
+      },
     }),
   }),
 })
 
-export const {
-  useGetInstructionsQuery,
-  useGetInstructionByIdQuery,
-  useLazyGetInstructionsQuery,
-} = instructionApi
+export const { useGetInstructionsQuery, useGetInstructionByIdQuery } =
+  instructionApi
 
 export default instructionApi
 // import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react' // Изменили импорт

@@ -9,7 +9,7 @@ import {
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(null) //@TODO null
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()

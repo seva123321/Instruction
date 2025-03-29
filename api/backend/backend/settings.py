@@ -101,9 +101,15 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-CSRF_USE_SESSIONS = True
+SESSION_COOKIE_HTTPONLY = True # Защита от XSS (но JS не сможет читать sessionid)
+# SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False  # Для http://
+SESSION_COOKIE_SAMESITE = 'Lax'
+# CSRF_USE_SESSIONS = True
+CSRF_USE_SESSIONS = False     # Хранить токен в куках, а не в сессии
+CSRF_COOKIE_SECURE = False    # Для http://localhost (в продакшене True)
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # Нужно для доступа из JS
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Instruction API',
@@ -142,3 +148,4 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Для работы с куками/session
+CORS_EXPOSE_HEADERS = ['Set-Cookie']  # Чтобы браузер видел куки

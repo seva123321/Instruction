@@ -241,7 +241,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Instruction.objects.all()
     serializer_class = InstructionSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,) #(AllowAny,) #IsAuthenticated
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)

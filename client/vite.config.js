@@ -34,7 +34,43 @@ export default defineConfig(({ mode }) => {
 })
 
 /*
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
+export default defineConfig(({ mode }) => {
+  const isDev = mode === 'development'
+
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src'),
+        '@components': resolve(__dirname, 'src/components'),
+        '@pages': resolve(__dirname, 'src/pages'),
+      },
+    },
+    server: isDev
+      ? {
+          proxy: {
+            '/api': {
+              target: 'http://localhost:8000',
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+          },
+        }
+      : undefined,
+    build: {
+      outDir: '../backend/static/frontend',
+      emptyOutDir: true,
+    },
+    base: isDev ? '/' : '/static/frontend/',
+  }
+})
+*/
+
+/*
 
 В dev-режиме (npm run dev):
 

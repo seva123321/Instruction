@@ -1,11 +1,12 @@
 /* eslint-disable operator-linebreak */
-import React from 'react'
+import { memo, useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { Button, Stack } from '@mui/material'
 
 function TestControls({
   onSubmit,
   onComplete,
+  onNextQuestion,
   hasAnswer,
   showFeedback,
   isAnswered,
@@ -14,6 +15,39 @@ function TestControls({
   isMobile,
 }) {
   const isCurrentQuestionChecked = isAnswered && showFeedback
+  const [canCompleteTest, setCanCompleteTest] = useState(false)
+
+  // Отслеживаем, когда все вопросы отвечены и проверены
+  useEffect(() => {
+    if (allQuestionsAnswered && isCurrentQuestionChecked) {
+      setCanCompleteTest(true)
+    }
+  }, [allQuestionsAnswered, isCurrentQuestionChecked])
+
+  const getButtonText = () => {
+    if (!allQuestionsAnswered) {
+      return isLastQuestion ? 'Ответьте на все вопросы' : 'Следующий вопрос'
+    }
+
+    // Все вопросы отвечены
+    return canCompleteTest || isCurrentQuestionChecked
+      ? 'Завершить тест'
+      : 'Проверьте ответ'
+  }
+
+  // Определяем состояние disabled
+  const isDisabled = allQuestionsAnswered
+    ? !canCompleteTest && !isCurrentQuestionChecked
+    : isLastQuestion && (!allQuestionsAnswered || !isCurrentQuestionChecked)
+
+  // const canFinishTest = canCompleteTest || isCurrentQuestionChecked
+  // let isDisabled
+
+  // if (allQuestionsAnswered) {
+  //   isDisabled = !canFinishTest
+  // } else {
+  //   isDisabled = isLastQuestion && !canFinishTest
+  // }
 
   return (
     <Stack
@@ -42,28 +76,19 @@ function TestControls({
 
       {/* Кнопка навигации */}
       <Button
-        variant={isLastQuestion ? 'contained' : 'outlined'}
-        color={isLastQuestion ? 'secondary' : 'primary'}
-        onClick={onComplete}
-        disabled={
-          isLastQuestion
-            ? !(
-                (isCurrentQuestionChecked && allQuestionsAnswered) ||
-                allQuestionsAnswered
-              )
-            : false
+        variant={allQuestionsAnswered ? 'contained' : 'outlined'}
+        color={allQuestionsAnswered ? 'secondary' : 'primary'}
+        onClick={
+          allQuestionsAnswered && canCompleteTest ? onComplete : onNextQuestion
         }
+        disabled={isDisabled}
         fullWidth
         sx={{
           py: 1.5,
           fontWeight: 'bold',
         }}
       >
-        {isLastQuestion
-          ? allQuestionsAnswered
-            ? 'Завершить тест'
-            : 'Ответьте на все вопросы'
-          : 'Следующий вопрос'}
+        {getButtonText()}
       </Button>
     </Stack>
   )
@@ -72,6 +97,7 @@ function TestControls({
 TestControls.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   onComplete: PropTypes.func.isRequired,
+  onNextQuestion: PropTypes.func.isRequired,
   hasAnswer: PropTypes.bool.isRequired,
   showFeedback: PropTypes.bool.isRequired,
   isAnswered: PropTypes.bool.isRequired,
@@ -80,7 +106,7 @@ TestControls.propTypes = {
   isMobile: PropTypes.bool.isRequired,
 }
 
-export default React.memo(TestControls)
+export default memo(TestControls)
 
 // import React from 'react'
 // import { Button, Stack } from '@mui/material'

@@ -28,10 +28,17 @@ function CheckboxFields({ agreements = [] }) {
     [agreements]
   )
 
-  const { register, handleSubmit, setValue, reset, control } = useForm({
+  const { register, handleSubmit, setValue, control } = useForm({
     defaultValues,
   })
   const [allChecked, setAllChecked] = useState(false)
+
+  const handleReset = () => {
+    Object.keys(defaultValues).forEach((name) => {
+      setValue(name, false, { shouldDirty: false })
+    })
+    setAllChecked(false)
+  }
 
   // Отдельно отслеживаем нужные чекбоксы
   const complianceValue = useWatch({
@@ -63,8 +70,7 @@ function CheckboxFields({ agreements = [] }) {
       ...data,
     }
     console.log('Form data:', newData)
-    reset(defaultValues)
-    setAllChecked(false)
+    handleReset()
   }
 
   const handleSelectAll = (e) => {

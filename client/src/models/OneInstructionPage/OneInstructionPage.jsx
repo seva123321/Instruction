@@ -1,9 +1,7 @@
 import { Grid2, Container } from '@mui/material'
 import { useParams } from 'react-router-dom'
-
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
-
 import { useGetInstructionByIdQuery } from '../slices/instructionApi'
 
 function OneInstructionPage() {
@@ -13,15 +11,18 @@ function OneInstructionPage() {
     isLoading,
     error,
     isUninitialized,
+    isError,
   } = useGetInstructionByIdQuery(id, {
     skip: !id,
   })
 
-  // Безопасное извлечение данных
-  const safeData = {
-    text: responseData?.text || '',
-    name: responseData?.name || 'Инструктаж',
-    instruction_agreement: responseData?.instruction_agreement || [],
+  // Полная защита от undefined
+  const pageData = {
+    text: responseData?.text ?? '',
+    name: responseData?.name ?? 'Инструктаж',
+    agreements: Array.isArray(responseData?.instruction_agreement)
+      ? responseData.instruction_agreement
+      : [],
   }
 
   // Состояния загрузки
@@ -30,47 +31,32 @@ function OneInstructionPage() {
   }
 
   // Обработка ошибок
-  if (error) {
+  if (isError) {
     console.error('Ошибка загрузки инструкции:', error)
     return (
       <div>
         Произошла ошибка при загрузке инструкции:
-        {error.status || error.message}
+        {error?.status || error?.message || 'Неизвестная ошибка'}
       </div>
     )
   }
 
+  // Если данные не получены (дополнительная проверка)
+  if (!responseData) {
+    return <div>Инструкция не найдена</div>
+  }
+
   return (
     <div>
-      <MarkdownContext markdown={safeData.text} header={safeData.name} />
+      <MarkdownContext markdown={pageData.text} header={pageData.name} />
 
       <Grid2 container spacing={2}>
-        <Grid2
-          size={{
-            xs: 12,
-            sm: 9,
-          }}
-          sx={{ padding: 3 }}
-        >
-          <Container maxWidth="lg" sx={{ padding: 3 }}>
-            <CheckboxFields
-              key={id} // Важно для сброса состояния при смене инструкции
-              agreements={safeData.instruction_agreement}
-            />
+        <Grid2 xs={12} sm={9} sx={{ p: 3 }}>
+          <Container maxWidth="lg" sx={{ p: 3 }}>
+            <CheckboxFields key={id} agreements={pageData.agreements} />
           </Container>
         </Grid2>
-        <Grid2
-          size={{
-            xs: 12,
-            sm: 3,
-          }}
-          sx={{
-            display: {
-              xs: 'none',
-              sm: 'flex',
-            },
-          }}
-        />
+        <Grid2 xs={12} sm={3} sx={{ display: { xs: 'none', sm: 'flex' } }} />
       </Grid2>
     </div>
   )

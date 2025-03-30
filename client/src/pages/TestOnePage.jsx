@@ -1,6 +1,4 @@
-import React, {
- useMemo, useCallback 
-} from 'react'
+import React, { useMemo, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -9,9 +7,7 @@ import {
   Typography,
   Divider,
 } from '@mui/material'
-import {
- Link, useParams 
-} from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
 
 import { calculateMark } from '@/service/utilsFunction'
@@ -153,26 +149,28 @@ function TestOnePage() {
 
       const results = await saveTestResults(id, testResults, testStartTime)
       if (results) {
-      { updateState({
-        completed: true,
-          finalResults: results,
-      })
+        {
+          updateState({
+            completed: true,
+            finalResults: results,
+          })
+        }
+        return
       }
-      return
-    }
 
-    if (isLastQuestion) {
-      const firstUnansweredIndex = test.questions.findIndex(
-        (q) => answers[q.id] === undefined
-      )
-      updateState({
-        currentQuestionIndex: firstUnansweredIndex,
-        showFeedback: false,
-      })
-      return
-    }
+      if (isLastQuestion) {
+        const firstUnansweredIndex = test.questions.findIndex(
+          (q) => answers[q.id] === undefined
+        )
+        updateState({
+          currentQuestionIndex: firstUnansweredIndex,
+          showFeedback: false,
+        })
+        return
+      }
 
-    navigateQuestion(1)
+      navigateQuestion(1)
+    }
   }, [
     isLastQuestion,
     allQuestionsAnswered,

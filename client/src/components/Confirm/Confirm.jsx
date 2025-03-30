@@ -68,7 +68,12 @@ export default function AlertDialog({
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             {titleIcon}
             {textTitle}
           </Box>

@@ -41,7 +41,11 @@ function QuestionFeedback({
       {!isCorrect && explanation && (
         <Paper
           elevation={2}
-          sx={{ p: 2, mb: 2, bgcolor: 'background.default' }}
+          sx={{
+            p: 2,
+            mb: 2,
+            bgcolor: 'background.default',
+          }}
         >
           <Typography variant="subtitle2" gutterBottom>
             Объяснение:
@@ -58,7 +62,13 @@ function QuestionFeedback({
               </Typography>
               <List dense sx={{ py: 0 }}>
                 {referenceLink.map((link) => (
-                  <ListItem key={link.url} sx={{ py: 0.5, px: 0 }}>
+                  <ListItem
+                    key={link.url}
+                    sx={{
+                      py: 0.5,
+                      px: 0,
+                    }}
+                  >
                     <a
                       href={link.url}
                       target="_blank"

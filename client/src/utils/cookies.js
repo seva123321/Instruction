@@ -1,12 +1,16 @@
 export function getCookie(name) {
   const value = `; ${document.cookie}`
   const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop().split(';').shift()
+
+  if (parts.length === 2) {
+    return parts.pop().split(';').shift()
+  }
+
+  return undefined
 }
 
-export const getCsrfToken = () => {
-  return document.cookie
+export const getCsrfToken = () =>
+  document.cookie
     .split('; ')
     .find((row) => row.startsWith('csrftoken='))
     ?.split('=')[1]
-}

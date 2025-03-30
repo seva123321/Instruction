@@ -245,7 +245,13 @@ export default function MenuBox() {
 
       <Box sx={{ flexGrow: 1 }} />
 
-      <ListItem onClick={handleSignOutClick} sx={{ mb: 3, p: 0 }}>
+      <ListItem
+        onClick={handleSignOutClick}
+        sx={{
+          mb: 3,
+          p: 0,
+        }}
+      >
         <ListItemButton>
           <ListItemIcon open={open}>
             <Tooltip title="Выйти">

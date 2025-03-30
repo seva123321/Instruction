@@ -6,11 +6,10 @@ import { getCsrfToken } from '../utils/cookies'
 const instructionApi = createApi({
   reducerPath: 'instructionApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, // Теперь будет /api/
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`,
     credentials: 'include',
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
-
       headers.set('Content-Type', 'application/json')
       if (csrfToken) {
         headers.set('X-CSRFToken', csrfToken)
@@ -27,21 +26,17 @@ const instructionApi = createApi({
     getInstructionById: build.query({
       query: (id) => {
         if (!id) {
-          throw new Error('ID is required') // Явная ошибка если id отсутствует
+          throw new Error('ID is required')
         }
         return `instructions/${id}/`
       },
-      // Убедитесь что transformErrorResponse обрабатывает ошибки
-      transformErrorResponse: (response) => {
-        return response.data
-      },
+      transformErrorResponse: (response) => response.data,
     }),
   }),
 })
 
 export const { useGetInstructionsQuery, useGetInstructionByIdQuery } =
   instructionApi
-
 export default instructionApi
 // import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react' // Изменили импорт
 // import { API_CONFIG } from '../config'

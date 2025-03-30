@@ -1,5 +1,6 @@
 import { Box, Grid2 } from '@mui/material'
 import PropTypes from 'prop-types'
+
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
 
@@ -16,7 +17,10 @@ function OneInstructionPage({ data }) {
     },
     formContainer: {
       width: '100%',
-      p: { xs: 2, md: 3 },
+      p: {
+        xs: 2,
+        md: 3,
+      },
     },
   }
 

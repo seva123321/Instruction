@@ -1,25 +1,28 @@
-import React from 'react'
 import { Grid2, Container } from '@mui/material'
-import { agreements, instructionMarkdown } from '@/service/constValues'
+import { useParams } from 'react-router-dom'
+
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
+
 import { useGetInstructionByIdQuery } from '../slices/instructionApi'
-import { useParams } from 'react-router-dom'
 
 function OneInstructionPage() {
   const { id } = useParams()
-
-  // Добавляем skip и проверку id
   const {
-    data: instruction,
+    data: responseData,
     isLoading,
     error,
-    isUninitialized, // Новое состояние
+    isUninitialized,
   } = useGetInstructionByIdQuery(id, {
-    skip: !id, // Пропускаем запрос если id отсутствует
+    skip: !id,
   })
 
-  console.log('id > ', id)
+  // Безопасное извлечение данных
+  const safeData = {
+    text: responseData?.text || '',
+    name: responseData?.name || 'Инструктаж',
+    instruction_agreement: responseData?.instruction_agreement || [],
+  }
 
   // Состояния загрузки
   if (isUninitialized || isLoading) {
@@ -32,32 +35,41 @@ function OneInstructionPage() {
     return (
       <div>
         Произошла ошибка при загрузке инструкции:
-        {'status' in error ? error.status : error.message}
+        {error.status || error.message}
       </div>
     )
   }
 
-  // Если данные не получены
-  if (!instruction) {
-    return <div>Инструкция не найдена</div>
-  }
   return (
     <div>
-      {/* Передаем контент инструкции или fallback */}
-      <MarkdownContext
-        markdown={instruction.content || instructionMarkdown}
-        header={instruction.title || 'Инструктаж'}
-      />
+      <MarkdownContext markdown={safeData.text} header={safeData.name} />
 
       <Grid2 container spacing={2}>
-        <Grid2 size={{ xs: 12, sm: 9 }} sx={{ padding: 3 }}>
+        <Grid2
+          size={{
+            xs: 12,
+            sm: 9,
+          }}
+          sx={{ padding: 3 }}
+        >
           <Container maxWidth="lg" sx={{ padding: 3 }}>
-            <CheckboxFields agreements={agreements} />
+            <CheckboxFields
+              key={id} // Важно для сброса состояния при смене инструкции
+              agreements={safeData.instruction_agreement}
+            />
           </Container>
         </Grid2>
         <Grid2
-          size={{ xs: 12, sm: 3 }}
-          sx={{ display: { xs: 'none', sm: 'flex' } }}
+          size={{
+            xs: 12,
+            sm: 3,
+          }}
+          sx={{
+            display: {
+              xs: 'none',
+              sm: 'flex',
+            },
+          }}
         />
       </Grid2>
     </div>
@@ -66,25 +78,29 @@ function OneInstructionPage() {
 
 export default OneInstructionPage
 
+// import React from 'react'
 // import { Grid2, Container } from '@mui/material'
-// import { agreements, instructionMarkdown } from '@/service/constValues'
+// // import { agreements, instructionMarkdown } from '@/service/constValues'
 // import CheckboxFields from '@/models/CheckboxFields'
 // import MarkdownContext from '@/models/MarkdownContext'
 // import { useGetInstructionByIdQuery } from '../slices/instructionApi'
 // import { useParams } from 'react-router-dom'
 
-// function OneInstructionPage() {
-//   // используем instructionAPI
-//   const {id} = useParams()
-//   console.log(id);
-
-//   const { data: apiData, isLoading, error } = useGetInstructionByIdQuery(id)
-//   debugger
-//   console.log('oneInstruction > ', apiData)
+// function OneInstructionPage({ data }) {
+//   const {
+//     type_of_instruction: instrType,
+//     name,
+//     text: instructionMarkdown,
+//     instruction_agreement: agreements,
+//   } = data
 
 //   return (
 //     <div>
-//       <MarkdownContext markdown={instructionMarkdown} header="Инструктаж" />
+//       {/* Передаем контент инструкции или fallback */}
+//       <MarkdownContext
+//         markdown={instructionMarkdown}
+//         header={name || 'Инструктаж'}
+//       />
 
 //       <Grid2 container spacing={2}>
 //         <Grid2 size={{ xs: 12, sm: 9 }} sx={{ padding: 3 }}>

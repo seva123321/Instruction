@@ -1,4 +1,5 @@
 import { createContext, useMemo, useState } from 'react'
+
 import {
   useSignUpMutation,
   useLoginMutation,
@@ -9,7 +10,7 @@ import {
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null) //@TODO null
+  const [user, setUser] = useState(null) // @TODO null
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()

@@ -50,7 +50,10 @@ function LoginModel() {
     try {
       const authData = faceDescriptor
         ? { face_descriptor: faceDescriptor }
-        : { email: data.email, password: data.password }
+        : {
+            email: data.email,
+            password: data.password,
+          }
 
       const success = await signIn(authData)
 
@@ -91,14 +94,20 @@ function LoginModel() {
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
         <Box
           display="flex"
-          sx={{ width: '40ch', margin: '0 auto' }}
+          sx={{
+            width: '40ch',
+            margin: '0 auto',
+          }}
           flexDirection="column"
           alignItems="center"
         >
           {!faceDescriptor && (
             <>
               <FormControl
-                sx={{ width: '100%', marginBottom: 2 }}
+                sx={{
+                  width: '100%',
+                  marginBottom: 2,
+                }}
                 variant="outlined"
               >
                 <InputLabel htmlFor="email">Логин (почта)</InputLabel>
@@ -168,7 +177,10 @@ function LoginModel() {
             type="submit"
             variant="contained"
             disabled={(!isValid && !faceDescriptor) || isLoading}
-            sx={{ marginTop: 2, width: '100%' }}
+            sx={{
+              marginTop: 2,
+              width: '100%',
+            }}
           >
             {isLoading ? <CircularProgress size={24} /> : 'Войти'}
           </Button>

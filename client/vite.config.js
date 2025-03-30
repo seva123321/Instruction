@@ -19,9 +19,18 @@ export default defineConfig(({ mode }) => {
             '/api': {
               target: 'http://localhost:8000',
               changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/api/, '/api') // Не удаляем /api
-            }
-          }
+              rewrite: (path) => path.replace(/^\/api/, '/api'), // Не удаляем /api
+              configure: (proxy) => {
+                // Логирование прокси-запросов
+                proxy.on('proxyReq', (proxyReq) => {
+                  console.log('Proxy Request:', proxyReq.method, proxyReq.path)
+                })
+                proxy.on('proxyRes', (proxyRes) => {
+                  console.log('Proxy Response:', proxyRes.statusCode)
+                })
+              },
+            },
+          },
         }
       : undefined,
     build: {
@@ -82,4 +91,3 @@ export default defineConfig(({ mode }) => {
 --React собирается в backend/static/.
 --Django раздаёт статику из этой папки.
 */
-

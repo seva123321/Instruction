@@ -1,4 +1,6 @@
-import React, { useMemo, useCallback } from 'react'
+import React, {
+ useMemo, useCallback 
+} from 'react'
 import {
   Box,
   Button,
@@ -7,7 +9,9 @@ import {
   Typography,
   Divider,
 } from '@mui/material'
-import { Link, useParams } from 'react-router-dom'
+import {
+ Link, useParams 
+} from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
 
 import { calculateMark } from '@/service/utilsFunction'
@@ -59,7 +63,10 @@ function TestOnePage() {
     (direction) => {
       const newIndex = currentQuestionIndex + direction
       if (newIndex >= 0 && newIndex < test.questions.length) {
-        updateState({ currentQuestionIndex: newIndex, showFeedback: false })
+        updateState({
+          currentQuestionIndex: newIndex,
+          showFeedback: false,
+        })
       }
     },
     [currentQuestionIndex, updateState]
@@ -86,7 +93,10 @@ function TestOnePage() {
   const handleAnswerChange = useCallback(
     (event) => {
       updateState({
-        answers: { ...answers, [currentQuestion.id]: event.target.value },
+        answers: {
+          ...answers,
+          [currentQuestion.id]: event.target.value,
+        },
       })
     },
     [answers, currentQuestion.id, updateState]
@@ -99,7 +109,10 @@ function TestOnePage() {
     )
 
     updateState({
-      correctAnswers: { ...correctAnswers, [currentQuestion.id]: isCorrect },
+      correctAnswers: {
+        ...correctAnswers,
+        [currentQuestion.id]: isCorrect,
+      },
       score: isCorrect ? score + currentQuestion.points : score,
       showFeedback: true,
     })
@@ -107,7 +120,10 @@ function TestOnePage() {
 
   const handleTabChange = useCallback(
     (_, newIndex) => {
-      updateState({ currentQuestionIndex: newIndex, showFeedback: false })
+      updateState({
+        currentQuestionIndex: newIndex,
+        showFeedback: false,
+      })
     },
     [updateState]
   )
@@ -136,7 +152,12 @@ function TestOnePage() {
       }
 
       const results = await saveTestResults(id, testResults, testStartTime)
-      if (results) updateState({ completed: true, finalResults: results })
+      if (results) {
+      { updateState({
+        completed: true,
+          finalResults: results,
+      })
+      }
       return
     }
 
@@ -169,17 +190,17 @@ function TestOnePage() {
   const questionTabs = useMemo(
     () =>
       test.questions.map((question, index) => ({
-      label: `${index + 1}`,
-      content: (
-        <QuestionView
-          question={question}
-          selectedAnswer={answers[question.id] || null}
-          showFeedback={index === currentQuestionIndex && showFeedback}
-          disabled={correctAnswers[question.id] !== undefined}
-          onChange={handleAnswerChange}
-        />
-      ),
-    })),
+        label: `${index + 1}`,
+        content: (
+          <QuestionView
+            question={question}
+            selectedAnswer={answers[question.id] || null}
+            showFeedback={index === currentQuestionIndex && showFeedback}
+            disabled={correctAnswers[question.id] !== undefined}
+            onChange={handleAnswerChange}
+          />
+        ),
+      })),
     [
       answers,
       correctAnswers,

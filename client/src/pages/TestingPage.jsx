@@ -29,7 +29,12 @@ function TestingPage() {
         Список всех тестов
       </Typography>
 
-      <List sx={{ width: '100%', maxWidth: 800 }}>
+      <List
+        sx={{
+          width: '100%',
+          maxWidth: 800,
+        }}
+      >
         {tests.map((test) => (
           <ListItem
             key={test.id}

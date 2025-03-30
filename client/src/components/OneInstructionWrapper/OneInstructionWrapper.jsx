@@ -8,14 +8,20 @@ import TabsWrapper from '@/components/TabsWrapper'
 const instructionServer = [
   {
     id: 1,
-    type_of_instruction: { id: 1, name: 'Первичный' },
+    type_of_instruction: {
+      id: 1,
+      name: 'Первичный',
+    },
     name: 'Тестовый инструктаж',
     text: instructionMarkdown,
     instruction_agreement: agreements,
   },
   {
     id: 2,
-    type_of_instruction: { id: 2, name: 'Повторный' },
+    type_of_instruction: {
+      id: 2,
+      name: 'Повторный',
+    },
     name: 'New',
     text: instructionMarkdown,
     instruction_agreement: agreements,

@@ -84,14 +84,19 @@ function MarkdownContext({ markdown, header }) {
   useEffect(() => {
     const headingRegex = /^(#{1,3})\s+(.*)$/gm
     const matches = markdown.match(headingRegex)
-
+    setHeadings([])
     if (matches) {
       const extractedHeadings = matches.map((heading) => {
         const level = heading.match(/#/g).length
         const text = heading.replace(/^(#{1,3})\s+/, '')
         const id = text.toLowerCase().replace(/\s+/g, '-')
-        return { level, text, id }
+        return {
+          level,
+          text,
+          id,
+        }
       })
+
       setHeadings(extractedHeadings)
     }
   }, [markdown])
@@ -168,7 +173,10 @@ function MarkdownContext({ markdown, header }) {
       bgcolor: 'background.paper',
       boxShadow: 1,
       p: 2,
-      display: { xs: 'none', md: 'block' },
+      display: {
+        xs: 'none',
+        md: 'block',
+      },
       borderRight: '1px solid',
       borderColor: 'divider',
       direction: 'rtl',
@@ -265,7 +273,10 @@ function MarkdownContext({ markdown, header }) {
           keepMounted: true,
         }}
         sx={{
-          display: { xs: 'block', md: 'none' },
+          display: {
+            xs: 'block',
+            md: 'none',
+          },
           '& .MuiDrawer-paper': styles.sidebarMobile,
         }}
         anchor="right"

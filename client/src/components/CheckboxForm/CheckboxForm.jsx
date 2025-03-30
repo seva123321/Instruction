@@ -12,7 +12,10 @@ const MemoizedCheckbox = memo(({ name, register, control, label }) => {
     <FormControlLabel
       control={<Checkbox checked={checked} {...register(name)} size="medium" />}
       label={<Typography variant="body1">{label}</Typography>}
-      sx={{ width: '100%', m: 0 }}
+      sx={{
+        width: '100%',
+        m: 0,
+      }}
     />
   )
 })

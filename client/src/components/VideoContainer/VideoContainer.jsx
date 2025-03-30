@@ -10,7 +10,10 @@ function VideoContainer({ videoRef }) {
         alignItems: 'center',
         padding: '0',
         justifyContent: 'center',
-        width: { sm: '100%', md: '80%' },
+        width: {
+          sm: '100%',
+          md: '80%',
+        },
         height: '80vh',
       }}
     >

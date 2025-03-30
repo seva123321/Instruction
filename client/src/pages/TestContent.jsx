@@ -23,13 +23,7 @@ function TestContent({
     return (
       <>
         <Typography variant="subtitle1" gutterBottom>
-          Вопрос
-          {' '}
-          {currentQuestionIndex + 1}
-{' '}
-из 
-{' '}
-          {questions.length}
+          {`Вопрос ${currentQuestionIndex + 1} из ${questions.length}`}
         </Typography>
         <Divider sx={{ my: 2 }} />
         <TabsWrapper

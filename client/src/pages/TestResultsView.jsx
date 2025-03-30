@@ -39,7 +39,15 @@ function TestResultsView({
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 800, mx: 'auto', my: 4 }}>
+    <Paper
+      elevation={3}
+      sx={{
+        p: 4,
+        maxWidth: 800,
+        mx: 'auto',
+        my: 4,
+      }}
+    >
       <Typography variant="h4" component="h1" gutterBottom>
         {`Результаты теста: ${testTitle}`}
       </Typography>
@@ -49,7 +57,13 @@ function TestResultsView({
           <Typography variant="h6" gutterBottom>
             Общий результат
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
             <Chip
               label={`${score}/${totalPoints}`}
               color="primary"
@@ -178,12 +192,21 @@ function TestResultsView({
         })}
       </List>
 
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          mt: 4,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
         <Button
           variant="contained"
           size="large"
           onClick={handleBack}
-          sx={{ px: 4, py: 1.5 }}
+          sx={{
+            px: 4,
+            py: 1.5,
+          }}
         >
           Вернуться к списку тестов
         </Button>

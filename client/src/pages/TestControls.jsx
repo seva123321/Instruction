@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Button, Stack } from '@mui/material'

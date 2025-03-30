@@ -54,7 +54,12 @@ function QuestionCard({
         },
       }}
     >
-      <CardContent sx={{ py: 2, px: 3 }}>
+      <CardContent
+        sx={{
+          py: 2,
+          px: 3,
+        }}
+      >
         <Typography
           variant="body1"
           sx={{

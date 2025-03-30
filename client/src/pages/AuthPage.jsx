@@ -7,9 +7,15 @@ export default function RegistrationPage() {
     <Box sx={{ height: '100vh' }}>
       <Grid2 container spacing={2} sx={{ height: '100vh' }}>
         <Grid2
-          size={{ xs: 12, sm: 6 }}
+          size={{
+            xs: 12,
+            sm: 6,
+          }}
           sx={{
-            display: { xs: 'none', sm: 'flex' },
+            display: {
+              xs: 'none',
+              sm: 'flex',
+            },
             alignItems: 'center',
             justifyContent: 'center',
             padding: 2,
@@ -29,7 +35,11 @@ export default function RegistrationPage() {
             }}
           />
           <Box
-            sx={{ position: 'relative', color: 'white', textAlign: 'center' }}
+            sx={{
+              position: 'relative',
+              color: 'white',
+              textAlign: 'center',
+            }}
           >
             <Typography
               variant="h4"
@@ -42,7 +52,12 @@ export default function RegistrationPage() {
             </p>
           </Box>
         </Grid2>
-        <Grid2 size={{ xs: 12, sm: 6 }}>
+        <Grid2
+          size={{
+            xs: 12,
+            sm: 6,
+          }}
+        >
           <Box
             sx={{
               flex: 1,

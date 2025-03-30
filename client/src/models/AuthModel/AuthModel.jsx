@@ -74,13 +74,19 @@ function AuthModel() {
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
         <Box
           display="flex"
-          sx={{ width: '40ch', margin: '0 auto' }}
+          sx={{
+            width: '40ch',
+            margin: '0 auto',
+          }}
           flexDirection="column"
           alignItems="center"
         >
           {/* Имя */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
             <InputLabel htmlFor="first_name">Имя</InputLabel>
@@ -112,7 +118,10 @@ function AuthModel() {
 
           {/* Фамилия */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
             <InputLabel htmlFor="last_name">Фамилия</InputLabel>
@@ -143,7 +152,10 @@ function AuthModel() {
 
           {/* Поле для email */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
             <InputLabel htmlFor="email">Почта</InputLabel>
@@ -172,7 +184,10 @@ function AuthModel() {
 
           {/* Поле для телефона */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
             <InputLabel htmlFor="mobile_phone">Телефон</InputLabel>

@@ -166,10 +166,26 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 1, name: '<a>', is_correct: true },
-        { id: 2, name: '<link>', is_correct: false },
-        { id: 3, name: '<href>', is_correct: false },
-        { id: 4, name: '<url>', is_correct: false },
+        {
+          id: 1,
+          name: '<a>',
+          is_correct: true,
+        },
+        {
+          id: 2,
+          name: '<link>',
+          is_correct: false,
+        },
+        {
+          id: 3,
+          name: '<href>',
+          is_correct: false,
+        },
+        {
+          id: 4,
+          name: '<url>',
+          is_correct: false,
+        },
       ],
       explanation:
         'Тег <code>&lt;a&gt;</code> создаёт гиперссылку. Атрибут <code>href</code> указывает URL.',
@@ -186,10 +202,26 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 5, name: '#id', is_correct: false },
-        { id: 6, name: '.class', is_correct: true },
-        { id: 7, name: 'tag', is_correct: false },
-        { id: 8, name: '*', is_correct: false },
+        {
+          id: 5,
+          name: '#id',
+          is_correct: false,
+        },
+        {
+          id: 6,
+          name: '.class',
+          is_correct: true,
+        },
+        {
+          id: 7,
+          name: 'tag',
+          is_correct: false,
+        },
+        {
+          id: 8,
+          name: '*',
+          is_correct: false,
+        },
       ],
       explanation:
         'Селектор <code>.class</code> выбирает элементы с указанным классом.',
@@ -207,9 +239,21 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 9, name: 'var', is_correct: false },
-        { id: 10, name: 'let', is_correct: false },
-        { id: 11, name: 'const', is_correct: true },
+        {
+          id: 9,
+          name: 'var',
+          is_correct: false,
+        },
+        {
+          id: 10,
+          name: 'let',
+          is_correct: false,
+        },
+        {
+          id: 11,
+          name: 'const',
+          is_correct: true,
+        },
       ],
       explanation:
         '<code>const</code> создаёт константу, которую нельзя изменить после объявления.',
@@ -228,10 +272,26 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 12, name: 'push()', is_correct: true },
-        { id: 13, name: 'pop()', is_correct: false },
-        { id: 14, name: 'shift()', is_correct: false },
-        { id: 15, name: 'unshift()', is_correct: false },
+        {
+          id: 12,
+          name: 'push()',
+          is_correct: true,
+        },
+        {
+          id: 13,
+          name: 'pop()',
+          is_correct: false,
+        },
+        {
+          id: 14,
+          name: 'shift()',
+          is_correct: false,
+        },
+        {
+          id: 15,
+          name: 'unshift()',
+          is_correct: false,
+        },
       ],
       explanation:
         '<code>push()</code> добавляет элемент в конец, а <code>pop()</code> удаляет последний элемент.',
@@ -251,10 +311,26 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 16, name: 'src', is_correct: true },
-        { id: 17, name: 'alt', is_correct: false },
-        { id: 18, name: 'width', is_correct: false },
-        { id: 19, name: 'title', is_correct: false },
+        {
+          id: 16,
+          name: 'src',
+          is_correct: true,
+        },
+        {
+          id: 17,
+          name: 'alt',
+          is_correct: false,
+        },
+        {
+          id: 18,
+          name: 'width',
+          is_correct: false,
+        },
+        {
+          id: 19,
+          name: 'title',
+          is_correct: false,
+        },
       ],
       explanation:
         'Атрибут <code>src</code> указывает путь к изображению. <code>alt</code> рекомендуется для доступности, но не обязателен.',
@@ -275,10 +351,26 @@ export const test = {
       question_type: 'single_choice',
       points: 1,
       answers: [
-        { id: 20, name: 'background-color', is_correct: false },
-        { id: 21, name: 'color', is_correct: true },
-        { id: 22, name: 'font-color', is_correct: false },
-        { id: 23, name: 'text-color', is_correct: false },
+        {
+          id: 20,
+          name: 'background-color',
+          is_correct: false,
+        },
+        {
+          id: 21,
+          name: 'color',
+          is_correct: true,
+        },
+        {
+          id: 22,
+          name: 'font-color',
+          is_correct: false,
+        },
+        {
+          id: 23,
+          name: 'text-color',
+          is_correct: false,
+        },
       ],
       explanation:
         'Свойство <code>color</code> задаёт цвет текста. <code>background-color</code> меняет фон.',
@@ -296,9 +388,21 @@ export const test = {
       question_type: 'single_choice',
       points: 2,
       answers: [
-        { id: 24, name: '4', is_correct: false },
-        { id: 25, name: '22', is_correct: true },
-        { id: 26, name: 'NaN', is_correct: false },
+        {
+          id: 24,
+          name: '4',
+          is_correct: false,
+        },
+        {
+          id: 25,
+          name: '22',
+          is_correct: true,
+        },
+        {
+          id: 26,
+          name: 'NaN',
+          is_correct: false,
+        },
       ],
       explanation:
         'JavaScript преобразует число в строку и выполняет конкатенацию: <code>String(2) + 2..toString() = String(22)</code>.',

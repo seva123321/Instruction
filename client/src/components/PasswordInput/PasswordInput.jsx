@@ -20,7 +20,13 @@ function PasswordInput({ name, label, control, errors, ...props }) {
   }
 
   return (
-    <FormControl sx={{ width: '100%', marginBottom: 2 }} variant="outlined">
+    <FormControl
+      sx={{
+        width: '100%',
+        marginBottom: 2,
+      }}
+      variant="outlined"
+    >
       <InputLabel htmlFor={name}>{label}</InputLabel>
       <Controller
         name={name}

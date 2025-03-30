@@ -8,13 +8,20 @@ function OneQuestionPage({ data }) {
   return (
     <>
       <Box
-        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
         {image && (
           <img
             src={image}
             alt="Иллюстрация к вопросу"
-            style={{ height: 'auto', maxWidth: '400px' }}
+            style={{
+              height: 'auto',
+              maxWidth: '400px',
+            }}
           />
         )}
       </Box>

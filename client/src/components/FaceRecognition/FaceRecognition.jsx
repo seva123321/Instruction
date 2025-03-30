@@ -264,7 +264,7 @@ const FaceRecognition = forwardRef(
     return (
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
@@ -274,6 +274,7 @@ const FaceRecognition = forwardRef(
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
+          zIndex: 2000,
           backgroundColor: 'rgba(65, 101, 207, 0.77)',
         }}
       >

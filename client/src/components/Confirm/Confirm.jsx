@@ -16,6 +16,7 @@ export default function AlertDialog({
   titleIcon,
   buttonName,
   btnIcon = '',
+  disabledBtn,
   onAllowAccess,
 }) {
   const [open, setOpen] = useState(false)
@@ -51,6 +52,7 @@ export default function AlertDialog({
         fullWidth
         startIcon={btnIcon}
         size="large"
+        disabled={disabledBtn}
         onClick={handleClickOpen}
       >
         {buttonName}

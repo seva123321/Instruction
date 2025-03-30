@@ -32,6 +32,16 @@ const instructionApi = createApi({
       },
       transformErrorResponse: (response) => response.data,
     }),
+    postAgreements: build.mutation({
+      query: (body) => ({
+        url: 'instruction_result/',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body,
+      }),
+    }),
   }),
 })
 

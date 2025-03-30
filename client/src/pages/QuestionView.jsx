@@ -1,14 +1,5 @@
 import React from 'react'
-import {
-  Box,
-  Typography,
-  FormControl,
-  RadioGroup,
-  Card,
-  CardContent,
-  Skeleton,
-  useTheme,
-} from '@mui/material'
+import { Box, Typography, FormControl, RadioGroup } from '@mui/material'
 
 import QuestionCard from './QuestionCard'
 
@@ -52,7 +43,6 @@ function QuestionView({
   onChange,
 }) {
   const [imageError, setImageError] = React.useState(false)
-  const theme = useTheme()
 
   const handleAnswerClick = (answerId) => {
     if (!disabled) {

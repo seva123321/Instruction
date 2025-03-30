@@ -23,7 +23,7 @@ const useTestResults = () =>
       return testResults
     } catch (error) {
       // Можно заменить на отправку ошибки в сервис мониторинга
-      console.error('Failed to save test results:', error)
+      // console.error('Failed to save test results:', error)
       return null
     }
   }, [])

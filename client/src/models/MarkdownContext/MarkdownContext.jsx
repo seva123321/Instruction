@@ -117,8 +117,9 @@ function MarkdownContext({ markdown, header }) {
       }
     )
 
-    headingRefs.current = headings.map((heading) =>
-      document.getElementById(heading.id)
+    headingRefs.current = headings.map(
+      (heading) => document.getElementById(heading.id)
+      // eslint-disable-next-line function-paren-newline
     )
 
     headingRefs.current.forEach((heading) => {

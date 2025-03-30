@@ -1,22 +1,21 @@
-// /*
 import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  Button,
   Box,
   Typography,
   Divider,
+  Alert,
 } from '@mui/material'
-import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useMemo, useCallback } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import PropTypes from 'prop-types'
+import LinkedCameraIcon from '@mui/icons-material/LinkedCamera'
 
+import Recognition from '@/models/Recognition'
 import CheckboxList from '@/components/CheckboxList'
 
-function CheckboxFields({ agreements = [] }) {
-  const { id } = useParams()
+function CheckboxFields({ agreements = [], id }) {
   const defaultValues = useMemo(
     () =>
       (agreements || []).reduce((acc, item) => {
@@ -28,17 +27,21 @@ function CheckboxFields({ agreements = [] }) {
     [agreements]
   )
 
-  const { register, handleSubmit, setValue, control } = useForm({
+  const { register, handleSubmit, setValue, control, getValues } = useForm({
     defaultValues,
   })
   const [allChecked, setAllChecked] = useState(false)
+  const [faceDescriptor, setFaceDescriptor] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     Object.keys(defaultValues).forEach((name) => {
       setValue(name, false, { shouldDirty: false })
     })
     setAllChecked(false)
-  }
+    setFaceDescriptor(null)
+  }, [defaultValues, setValue])
 
   // Отдельно отслеживаем нужные чекбоксы
   const complianceValue = useWatch({
@@ -57,20 +60,51 @@ function CheckboxFields({ agreements = [] }) {
   const hasCompliance = agreements.some((item) => item.name === 'compliance')
   const hasIsPassed = agreements.some((item) => item.name === 'is_passed')
 
-  // Проверяем состояние чекбоксов, если они существуют
-  // eslint-disable-next-line operator-linebreak
   const isSubmitValid =
     (!hasCompliance || complianceValue) && (!hasIsPassed || isPassedValue)
 
-  const onSubmit = (data) => {
-    // Отправка данных формы
+  const submitFormData = useCallback(
+    async (descriptor = null) => {
+      try {
+        setIsSubmitting(true)
+        setErrorMessage(null)
 
-    const newData = {
-      instructionId: id,
-      ...data,
-    }
-    console.log('Form data:', newData)
-    handleReset()
+        // Получаем текущие значения формы
+        const formValues = getValues()
+
+        // Формируем данные для отправки
+        const submissionData = {
+          instructionId: id,
+          instruction_agreement: Object.entries(formValues)
+            // .filter(([key, value]) => value === true)
+            .map(([key, value]) => ({
+              [key]: value,
+            })),
+          face_descriptor: descriptor || faceDescriptor,
+        }
+
+        console.log('Form data:', submissionData)
+        // postAgreements(submissionData)
+        // Здесь должна быть логика отправки данных
+        // await api.submitForm(submissionData);
+
+        // Сброс формы после успешной отправки
+        handleReset()
+      } catch (error) {
+        setErrorMessage({
+          text: error.message || 'Произошла непредвиденная ошибка',
+          type: 'error',
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [getValues, id, faceDescriptor, handleReset]
+  )
+
+  const onSubmit = async () => {
+    await submitFormData()
+    // console.log('id > ', id)
   }
 
   const handleSelectAll = (e) => {
@@ -79,6 +113,11 @@ function CheckboxFields({ agreements = [] }) {
     agreements.forEach((item) => {
       setValue(item.name, checked, { shouldValidate: true })
     })
+  }
+
+  const handleFaceDescriptor = async (data) => {
+    setFaceDescriptor(data)
+    await submitFormData(data) // Отправляем данные сразу после распознавания
   }
 
   const styles = {
@@ -150,17 +189,34 @@ function CheckboxFields({ agreements = [] }) {
         />
       </FormGroup>
 
-      <Button
-        type="submit"
-        variant="contained"
-        color="primary"
-        size="large"
-        disabled={!isSubmitValid}
-        sx={styles.submitButton}
-        fullWidth
-      >
-        Подписать инструктаж
-      </Button>
+      <Recognition
+        buttonName="Подписать инструктаж"
+        btnIcon={<LinkedCameraIcon />}
+        disabled={!isSubmitValid || isSubmitting}
+        onFaceDescriptor={handleFaceDescriptor}
+        onCameraError={(err) => {
+          setErrorMessage({
+            text: `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`,
+            type: 'error',
+          })
+        }}
+      />
+      {errorMessage && (
+        <Alert
+          severity={errorMessage.type}
+          onClose={() => setErrorMessage(null)}
+          sx={{
+            position: 'fixed',
+            bottom: 40,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: '600px',
+            zIndex: 1000,
+          }}
+        >
+          {errorMessage.text}
+        </Alert>
+      )}
     </Box>
   )
 }
@@ -175,7 +231,6 @@ CheckboxFields.propTypes = {
 }
 
 export default CheckboxFields
-// */
 
 // import {
 //   FormGroup,

@@ -1,64 +1,84 @@
-import { Grid2, Container } from '@mui/material'
+/* eslint-disable operator-linebreak */
+import { Box, Grid2, CircularProgress } from '@mui/material'
 import { useParams } from 'react-router-dom'
+
+import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
 import CheckboxFields from '@/models/CheckboxFields'
 import MarkdownContext from '@/models/MarkdownContext'
-import { useGetInstructionByIdQuery } from '../slices/instructionApi'
 
-function OneInstructionPage() {
+function OneInstructionPage({ data, isLoading, error }) {
+  // Если данные переданы через props (из first_instruction), используем их
+  // Иначе делаем запрос по ID
   const { id } = useParams()
   const {
     data: responseData,
-    isLoading,
-    error,
+    isLoading: isQueryLoading,
+    error: queryError,
     isUninitialized,
-    isError,
+    // isError,
   } = useGetInstructionByIdQuery(id, {
-    skip: !id,
+    skip: !id || !!data, // Пропускаем если есть данные или нет ID
   })
+
+  // Определяем какие данные использовать
+  const finalData = data || responseData
+  const finalIsLoading = isLoading || (isQueryLoading && !data)
+  const finalError = error || queryError
 
   // Полная защита от undefined
   const pageData = {
-    text: responseData?.text ?? '',
-    name: responseData?.name ?? 'Инструктаж',
-    agreements: Array.isArray(responseData?.instruction_agreement)
-      ? responseData.instruction_agreement
+    text: finalData?.text ?? '',
+    id: finalData?.id,
+    name: finalData?.name ?? 'Инструктаж',
+    agreements: Array.isArray(finalData?.instruction_agreement)
+      ? finalData.instruction_agreement
       : [],
   }
 
   // Состояния загрузки
-  if (isUninitialized || isLoading) {
-    return <div>Загрузка инструкции...</div>
+  if (finalIsLoading) {
+    return <CircularProgress size={60} />
   }
 
   // Обработка ошибок
-  if (isError) {
-    console.error('Ошибка загрузки инструкции:', error)
+  if (finalError) {
     return (
       <div>
         Произошла ошибка при загрузке инструкции:
-        {error?.status || error?.message || 'Неизвестная ошибка'}
+        {finalError?.status || finalError?.message || 'Неизвестная ошибка'}
       </div>
     )
   }
 
-  // Если данные не получены (дополнительная проверка)
-  if (!responseData) {
+  if (!finalData && isUninitialized) {
     return <div>Инструкция не найдена</div>
   }
 
+  const styles = {
+    root: {
+      width: '100%',
+    },
+    formContainer: {
+      width: '100%',
+      p: {
+        xs: 2,
+        md: 3,
+      },
+    },
+  }
+
   return (
-    <div>
+    <Box sx={styles.root}>
       <MarkdownContext markdown={pageData.text} header={pageData.name} />
 
-      <Grid2 container spacing={2}>
-        <Grid2 xs={12} sm={9} sx={{ p: 3 }}>
-          <Container maxWidth="lg" sx={{ p: 3 }}>
-            <CheckboxFields key={id} agreements={pageData.agreements} />
-          </Container>
+      <Grid2 container spacing={0}>
+        <Grid2 size={{ xs: 12 }}>
+          <Box sx={styles.formContainer}>
+            <CheckboxFields id={pageData.id} agreements={pageData.agreements} />
+          </Box>
         </Grid2>
-        <Grid2 xs={12} sm={3} sx={{ display: { xs: 'none', sm: 'flex' } }} />
       </Grid2>
-    </div>
+    </Box>
   )
 }
 

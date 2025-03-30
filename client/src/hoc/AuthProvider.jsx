@@ -1,4 +1,4 @@
-import { createContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useMemo, useState } from 'react'
 
 import {
   useSignUpMutation,
@@ -23,39 +23,46 @@ export function AuthProvider({ children }) {
   const [postLogout, { isLoading: isLoadingLogout, error: logoutError }] =
     useLogoutMutation()
 
-  const auth = async (userData) => {
-    try {
-      await postSignup(userData).unwrap()
-      setUser(userData)
-      return true
-    } catch (error) {
-      console.error('Registration error:', error)
-      return false
-    }
-  }
-
-  const signIn = async (authData) => {
-    try {
-      if (authData.face_descriptor) {
-        await postFaceLogin(authData).unwrap()
-      } else {
-        await postLogin(authData).unwrap()
+  const auth = useCallback(
+    async (userData) => {
+      try {
+        await postSignup(userData).unwrap()
+        setUser(userData)
+        return true
+      } catch (error) {
+        return false
       }
-      setUser(authData)
-      return true
-    } catch (error) {
-      console.error('Login error:', error)
-      return false
-    }
-  }
+    },
+    [postSignup]
+  )
 
-  const signOut = async (cb) => {
-    const result = await postLogout()
-    if (!result.error) {
-      setUser(null)
-      cb?.()
-    }
-  }
+  const signIn = useCallback(
+    async (authData) => {
+      try {
+        if (authData.face_descriptor) {
+          await postFaceLogin(authData).unwrap()
+        } else {
+          await postLogin(authData).unwrap()
+        }
+        setUser(authData)
+        return true
+      } catch (error) {
+        return false
+      }
+    },
+    [postFaceLogin, postLogin]
+  )
+
+  const signOut = useCallback(
+    async (cb) => {
+      const result = await postLogout()
+      if (!result.error) {
+        setUser(null)
+        cb?.()
+      }
+    },
+    [postLogout]
+  )
 
   const value = useMemo(
     () => ({

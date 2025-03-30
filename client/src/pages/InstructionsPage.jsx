@@ -1,7 +1,8 @@
+/* eslint-disable indent */
 /* eslint-disable operator-linebreak */
 import { useParams } from 'react-router-dom'
 
-import OneInstructionPage from '@/components/OneInstructionPage/OneInstructionPage'
+import OneInstructionPage from '@/models/OneInstructionPage'
 import TabsWrapper from '@/components/TabsWrapper'
 
 import {
@@ -36,8 +37,7 @@ function InstructionsPage() {
 
   if (isLoading) return <div>Loading...</div>
   if (error) {
-    console.error('Error loading instructions:', error)
-    return <div>Error loading instructions</div>
+    return <div>Ошибка в загрузке Инструкции</div>
   }
 
   // Определяем какие данные передавать в компонент
@@ -58,7 +58,7 @@ function InstructionsPage() {
       {tabs && <TabsWrapper centered tabs={tabs} useRouter />}
       <OneInstructionPage
         data={instructionToRender}
-        isLoading={isSingleLoading}
+        isLoading={isSingleLoading && !!id} // Показываем загрузку только при запросе по ID
         error={singleError}
       />
     </div>

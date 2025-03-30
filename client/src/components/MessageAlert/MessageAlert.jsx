@@ -4,8 +4,6 @@ import { Alert } from '@mui/material'
 function MessageAlert({ message, duration = 3000 }) {
   const [visible, setVisible] = useState(true)
 
-  console.log('message > ', message)
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false)

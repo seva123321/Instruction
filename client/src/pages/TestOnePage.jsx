@@ -19,7 +19,6 @@ import TabsWrapper from '@/components/TabsWrapper'
 import QuestionFeedback from './QuestionFeedback'
 import TestResultsView from './TestResultsView'
 import QuestionView from './QuestionView'
-import QuestionPagination from './QuestionPagination'
 import TestControls from './TestControls'
 
 function TestOnePage() {
@@ -187,14 +186,24 @@ function TestOnePage() {
       test.questions.map((question, index) => ({
         label: `${index + 1}`,
         content: (
-          <QuestionView
-            question={question}
-            selectedAnswer={answers[question.id] || null}
-            showFeedback={index === currentQuestionIndex && showFeedback}
-            disabled={correctAnswers[question.id] !== undefined}
-            onChange={handleAnswerChange}
-            // onChange={(answerId) => handleAnswerChange(question.id, answerId)}
-          />
+          <Box
+            sx={{
+              p: isMobile ? 1 : 2,
+              '& *': {
+                maxWidth: '100%',
+                wordBreak: 'break-word',
+              },
+            }}
+          >
+            <QuestionView
+              question={question}
+              selectedAnswer={answers[question.id] || null}
+              showFeedback={index === currentQuestionIndex && showFeedback}
+              disabled={correctAnswers[question.id] !== undefined}
+              onChange={handleAnswerChange}
+              isMobile={isMobile}
+            />
+          </Box>
         ),
       })),
     [
@@ -203,6 +212,7 @@ function TestOnePage() {
       currentQuestionIndex,
       handleAnswerChange,
       showFeedback,
+      isMobile,
     ]
   )
 
@@ -226,76 +236,56 @@ function TestOnePage() {
   return (
     <Box
       sx={{
-        p: 2,
         maxWidth: 800,
+        width: '80vw',
         margin: '0 auto',
+        // px: isMobile ? 1 : 3,
+        py: 2,
         touchAction: isMobile ? 'pan-y' : 'auto',
       }}
       {...(isMobile ? swipeHandlers : {})}
     >
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Link to="/tests">
-          <Button variant="outlined">Назад к тестам</Button>
+          <Button
+            variant="outlined"
+            size={isMobile ? 'small' : 'medium'}
+            sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+          >
+            Назад к тестам
+          </Button>
         </Link>
       </Box>
 
-      <Typography variant="h5" gutterBottom>
+      <Typography
+        variant={isMobile ? 'h6' : 'h5'}
+        gutterBottom
+        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}
+      >
         {test.name}
       </Typography>
 
-      {!isMobile ? (
-        <>
-          <Typography variant="subtitle1" gutterBottom>
-            {`Вопрос ${currentQuestionIndex + 1} из ${test.questions.length}`}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <TabsWrapper
-            tabs={questionTabs}
-            value={currentQuestionIndex}
-            onChange={handleTabChange}
-          />
-        </>
-      ) : (
-        <>
-          <Box
-            sx={{
-              position: 'relative',
-              overflow: 'hidden',
-              width: '100%',
-              minHeight: '60vh',
-              mb: 3,
-            }}
-          >
-            {test.questions.map((question, index) => (
-              <Box
-                key={question.id}
-                sx={{
-                  position: 'absolute',
-                  width: '100%',
-                  transition: theme.transitions.create('transform'),
-                  transform: `translateX(${(index - currentQuestionIndex) * 100}%)`,
-                  ...(index === currentQuestionIndex && {
-                    position: 'relative',
-                  }),
-                }}
-              >
-                <QuestionView
-                  question={question}
-                  selectedAnswer={answers[question.id] || null}
-                  showFeedback={index === currentQuestionIndex && showFeedback}
-                  disabled={correctAnswers[question.id] !== undefined}
-                  onChange={handleAnswerChange}
-                />
-              </Box>
-            ))}
-          </Box>
-          <QuestionPagination
-            currentIndex={currentQuestionIndex}
-            totalQuestions={test.questions.length}
-            onDotClick={(index) => updateState({ currentQuestionIndex: index })}
-          />
-        </>
-      )}
+      <Typography
+        variant="subtitle1"
+        gutterBottom
+        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+      >
+        {`Вопрос ${currentQuestionIndex + 1} из ${test.questions.length}`}
+      </Typography>
+
+      <Divider sx={{ my: isMobile ? 1 : 2 }} />
+
+      <TabsWrapper
+        tabs={questionTabs}
+        value={currentQuestionIndex}
+        onChange={handleTabChange}
+        checkedTabs={test.questions
+          .map((q, index) => (correctAnswers[q.id] !== undefined ? index : -1))
+          .filter((index) => index !== -1)}
+        correctAnswers={test.questions.map(
+          (q) => correctAnswers[q.id] || false
+        )}
+      />
 
       <QuestionFeedback
         showFeedback={showFeedback}
@@ -307,7 +297,6 @@ function TestOnePage() {
 
       <TestControls
         onSubmit={handleSubmit}
-        // onComplete={handleCompleteTest}
         onComplete={handleCompleteTest}
         onNextQuestion={handleNextQuestion}
         hasAnswer={answers[currentQuestion.id] !== undefined}

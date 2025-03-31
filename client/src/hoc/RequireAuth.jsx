@@ -11,7 +11,7 @@ function RequireAuth({ children }) {
   if (!user) {
     return <Navigate to="/auth/login" state={{ from: location }} />
   }
-  return <Box sx={{ padding: 3 }}>{children}</Box>
+  return <Box sx={{ p: 1 }}>{children}</Box>
 }
 
 export default RequireAuth

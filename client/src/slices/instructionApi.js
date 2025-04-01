@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { API_CONFIG } from '../config'
+import API_CONFIG from '../config'
 import { getCsrfToken } from '../utils/cookies'
 
 const instructionApi = createApi({

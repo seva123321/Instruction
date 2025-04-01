@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
-import { API_CONFIG } from '../config'
+import API_CONFIG from '../config'
 import { getCsrfToken } from '../utils/cookies'
 
 const userApi = createApi({
@@ -68,7 +68,7 @@ export const {
 export default userApi
 /*
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { API_CONFIG } from '../config'
+import  API_CONFIG  from '../config'
 import { getCookie } from '../utils/cookies'
 
 export const userApi = createApi({

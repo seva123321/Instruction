@@ -602,7 +602,7 @@ export const testingList = [
     description: 'Правила работы с высоким напряжением',
     is_passed: true,
     mark: '2.1',
-    date: '2023-06-20',
+    date: '2025-03-25T14:16:11.276414Z',
   },
   {
     id: 3,
@@ -733,3 +733,23 @@ export const instructionsData = {
     ],
   },
 }
+
+export const videoData = [
+  {
+    id: 1,
+    title: 'Основы гражданского права в РФ',
+    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '15:30',
+    views: '1.2K',
+    date: '12.05.2023',
+  },
+  {
+    id: 2,
+    title: 'Налоговое законодательство 2023',
+    url: 'https://www.youtube.com/watch?v=C0fBnil_Im4&t=4s',
+    duration: '22:45',
+    views: '3.4K',
+    date: '20.06.2023',
+  },
+  // ... другие видео
+]

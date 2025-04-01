@@ -55,7 +55,7 @@ function InstructionsPage() {
 
   return (
     <div>
-      {tabs && <TabsWrapper centered tabs={tabs} useRouter />}
+      {tabs && <TabsWrapper tabs={tabs} centered useRouter />}
       <OneInstructionPage
         data={instructionToRender}
         isLoading={isSingleLoading && !!id} // Показываем загрузку только при запросе по ID

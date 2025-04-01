@@ -7,7 +7,8 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material'
-import QuestionCard from './QuestionCard'
+
+import QuestionCard from '../QuestionCard/QuestionCard'
 
 function ImagePlaceholder() {
   return (

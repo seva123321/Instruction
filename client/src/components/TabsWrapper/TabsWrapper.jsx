@@ -4,13 +4,12 @@
 /* eslint-disable react/no-array-index-key */
 
 import { useState, useEffect } from 'react'
-import { useTheme } from '@mui/material/styles'
+import { useTheme, styled } from '@mui/material/styles'
 import { Link, useLocation } from 'react-router-dom'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
 import PropTypes from 'prop-types'
-import { styled } from '@mui/material/styles'
 import { useMediaQuery } from '@mui/material'
 
 const StyledTab = styled(Tab, {
@@ -46,26 +45,6 @@ const StyledTab = styled(Tab, {
     margin: theme.spacing(0.5),
   },
 }))
-
-// const StyledTab = styled(Tab, {
-//   shouldForwardProp: (prop) => prop !== 'isChecked' && prop !== 'isCorrect',
-// })(({ theme, isChecked, isCorrect }) => ({
-//   borderRadius: theme.shape.borderRadius,
-//   margin: theme.spacing(0.5),
-//   fontSize: '0.875rem', // Уменьшаем размер шрифта для мобильных устройств
-//   ...(isChecked && {
-//     backgroundColor: isCorrect
-//       ? theme.palette.success.main
-//       : theme.palette.error.main,
-//     '&:hover': {
-//       backgroundColor: theme.palette.action.selected,
-//     },
-//   }),
-//   [theme.breakpoints.down('sm')]: {
-//     fontSize: '0.75rem', // Еще больше уменьшаем размер шрифта на маленьких экранах
-//     margin: theme.spacing(0.25),
-//   },
-// }))
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props
@@ -123,10 +102,12 @@ export default function TabsWrapper({
         textColor="inherit"
         aria-label="tabs wrapper"
         scrollButtons="auto"
-        centered={!isMobile && centered}
-        variant={'scrollable'}
+        variant="scrollable"
         allowScrollButtonsMobile
         sx={{
+          '& .MuiTabs-flexContainer': {
+            justifyContent: centered && !isMobile ? 'center' : 'flex-start',
+          },
           '& .MuiTabs-scrollButtons': {
             width: 32,
             '&.Mui-disabled': { opacity: 0.3 },
@@ -195,7 +176,7 @@ TabsWrapper.propTypes = {
   correctAnswers: PropTypes.arrayOf(PropTypes.bool),
 }
 
-/******************************************************************** */
+/** ****************************************************************** */
 
 // /* eslint-disable react/no-array-index-key */
 // /* eslint-disable react/no-array-index-key */

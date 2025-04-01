@@ -1,4 +1,4 @@
-export const API_CONFIG = {
+const API_CONFIG = {
   PORT: 8000,
   // BASE_URL: 'http://127.0.0.1',
   BASE_URL: '', // Оставляем пустым для относительных путей
@@ -7,7 +7,7 @@ export const API_CONFIG = {
     return `${this.BASE_URL}:${this.PORT}/`
   },
 }
-
+export default API_CONFIG
 /*
 const isDev = import.meta.env.MODE === 'development'
 

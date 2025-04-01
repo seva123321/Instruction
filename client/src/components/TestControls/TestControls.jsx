@@ -40,15 +40,6 @@ function TestControls({
     ? !canCompleteTest && !isCurrentQuestionChecked
     : isLastQuestion && (!allQuestionsAnswered || !isCurrentQuestionChecked)
 
-  // const canFinishTest = canCompleteTest || isCurrentQuestionChecked
-  // let isDisabled
-
-  // if (allQuestionsAnswered) {
-  //   isDisabled = !canFinishTest
-  // } else {
-  //   isDisabled = isLastQuestion && !canFinishTest
-  // }
-
   return (
     <Stack
       direction={isMobile ? 'column' : 'row'}

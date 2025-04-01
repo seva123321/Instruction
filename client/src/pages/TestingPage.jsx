@@ -1,3 +1,5 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable indent */
 import { useState, useEffect } from 'react'
 import { List, ListItem, Typography, Box } from '@mui/material'
 import { Link } from 'react-router-dom'
@@ -14,7 +16,16 @@ function TestingPage() {
       const testResults = JSON.parse(localStorage.getItem('testResults')) || {}
       const updatedTests = testingList.map((test) => {
         const result = testResults[test.id]
-        return result ? { ...test, ...result } : test
+        return result
+          ? {
+              ...test, // Данные из testingList
+              ...result, // Данные из localStorage
+              name: result.test_title || test.name, // Используем test_title, если он есть
+              is_passed: result.is_passed || test.is_passed, // Обновляем статус прохождения
+              mark: result.mark || test.mark, // Используем оценку из localStorage, если она есть
+              date: result.completion_time || test.date, // Используем completion_time, если он есть
+            }
+          : test
       })
       setTests(updatedTests)
     }
@@ -56,10 +67,10 @@ function TestingPage() {
               <Typography variant="body2" color="text.secondary">
                 {test.description}
               </Typography>
-              {test.is_passed && (
+              {test.is_passed && test.date && (
                 <Typography variant="caption" color="text.secondary">
-                  Пройден:
-                  {new Date(test.date).toLocaleDateString()}
+                  {`Пройден: ${new Date(test.date).toLocaleString()}`}
+                  {/* Форматируем дату и время */}
                 </Typography>
               )}
             </Box>

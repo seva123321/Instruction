@@ -16,10 +16,10 @@ import useTestResults from '@/hook/useTestResults'
 import { test } from '@/service/constValues'
 import TabsWrapper from '@/components/TabsWrapper'
 
-import QuestionFeedback from './QuestionFeedback'
-import TestResultsView from './TestResultsView'
-import QuestionView from './QuestionView'
-import TestControls from './TestControls'
+import TestControls from '../../components/TestControls/TestControls'
+import QuestionView from '../../components/QuestionView/QuestionView'
+import TestResultsView from '../../components/TestResultsView/TestResultsView'
+import QuestionFeedback from '../../components/QuestionFeedback/QuestionFeedback'
 
 function TestOnePage() {
   const { id } = useParams()
@@ -174,8 +174,8 @@ function TestOnePage() {
     id,
     score,
     saveTestResults,
-    test.questions,
-    test.name,
+    // test.questions,
+    // test.name,
     testStartTime,
     totalPoints,
     updateState,

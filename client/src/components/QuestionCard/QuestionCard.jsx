@@ -1,5 +1,5 @@
 import React from 'react'
-import { Typography, Card, CardContent, useTheme } from '@mui/material'
+import { Typography, Card, CardContent } from '@mui/material'
 
 function QuestionCard({
   answer,
@@ -8,12 +8,19 @@ function QuestionCard({
   disabled,
   onClick,
   isMobile,
+  isControlTest,
 }) {
-  const theme = useTheme()
   const isSelected = selectedAnswer === answer.id.toString()
   const isCorrect = answer.is_correct
 
   const getCardStyle = () => {
+    if (isControlTest) {
+      return {
+        bgcolor: isSelected ? 'action.selected' : 'background.paper',
+        borderColor: isSelected ? 'primary.main' : 'divider',
+      }
+    }
+
     if (!showFeedback) {
       return {
         bgcolor: isSelected ? 'action.selected' : 'background.paper',

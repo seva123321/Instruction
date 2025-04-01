@@ -48,6 +48,7 @@ function QuestionView({
   showFeedback,
   disabled,
   onChange,
+  isControlTest = false,
 }) {
   const [imageError, setImageError] = React.useState(false)
   const theme = useTheme()
@@ -121,6 +122,7 @@ function QuestionView({
               disabled={disabled}
               onClick={handleAnswerClick}
               isMobile={isMobile}
+              isControlTest={isControlTest}
             />
           ))}
         </RadioGroup>

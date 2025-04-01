@@ -1,6 +1,6 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable operator-linebreak */
-import React, { useState } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import {
   Box,
@@ -18,7 +18,7 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -35,8 +35,9 @@ function TestResultsView({
   startTime,
   completionTime,
   duration,
+  refetch,
+  isControlTest = false,
 }) {
-  const { id } = useParams()
   const navigate = useNavigate()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -177,7 +178,7 @@ function TestResultsView({
           >
             Вернуться к списку тестов
           </Button>
-          <Link to={`/tests/${id}`}>
+          {/* <Link to={`/tests/${id}`}>
             <Button
               variant="contained"
               size={isMobile ? 'small' : 'medium'}
@@ -191,158 +192,171 @@ function TestResultsView({
             >
               Решить еще раз
             </Button>
-          </Link>
+          </Link> */}
+          {!isControlTest && (
+            <Button
+              variant="contained"
+              size={isMobile ? 'small' : 'medium'}
+              sx={{ px: 4, py: 1.5, mb: 2 }}
+              onClick={() => refetch()}
+            >
+              Решить еще раз
+            </Button>
+          )}
         </Box>
 
         {/* Детализация вопросов */}
-        <Accordion>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1-content"
-            id="panel1-header"
-          >
-            <Typography
-              variant={isMobile ? 'h6' : 'h5'}
-              component="h2"
-              gutterBottom
-              sx={{ fontWeight: 500 }}
+        {!isControlTest && (
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel1-content"
+              id="panel1-header"
             >
-              Ответы на вопросы (Ваше решение)
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <List sx={{ width: '100%', p: 0 }}>
-              {questions.map((question, index) => {
-                const userAnswer = answers.find((a) => a.id === question.id)
-                const isCorrect = userAnswer?.is_correct || false
-                const selectedAnswerId = userAnswer?.selected_id
-                const selectedAnswer = question.answers.find(
-                  (a) => a.id.toString() === selectedAnswerId
-                )
-                const correctAnswer = question.answers.find((a) => a.is_correct)
+              <Typography
+                variant={isMobile ? 'h6' : 'h5'}
+                component="h3"
+                sx={{ fontWeight: 500 }}
+              >
+                Ответы на вопросы (Ваше решение)
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List sx={{ width: '100%', p: 0 }}>
+                {questions.map((question, index) => {
+                  const userAnswer = answers.find((a) => a.id === question.id)
+                  const isCorrect = userAnswer?.is_correct || false
+                  const selectedAnswerId = userAnswer?.selected_id
+                  const selectedAnswer = question.answers.find(
+                    (a) => a.id.toString() === selectedAnswerId
+                  )
+                  const correctAnswer = question.answers.find(
+                    (a) => a.is_correct
+                  )
 
-                return (
-                  <React.Fragment key={question.id}>
-                    <ListItem
-                      alignItems="flex-start"
-                      sx={{
-                        py: 2,
-                        px: isMobile ? 0 : 2,
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        component="div"
+                  return (
+                    <React.Fragment key={question.id}>
+                      <ListItem
+                        alignItems="flex-start"
                         sx={{
-                          fontWeight: 500,
-                          mb: 1,
-                          color: 'text.primary',
+                          py: 2,
+                          px: isMobile ? 0 : 2,
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
                         }}
                       >
-                        {`${index + 1}. ${question.name}`}
-                      </Typography>
-
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="center"
-                        sx={{ mb: 1 }}
-                      >
-                        {isCorrect ? (
-                          <CheckCircleOutline
-                            color="success"
-                            fontSize={isMobile ? 'small' : 'medium'}
-                          />
-                        ) : (
-                          <ErrorOutline
-                            color="error"
-                            fontSize={isMobile ? 'small' : 'medium'}
-                          />
-                        )}
                         <Typography
-                          component="span"
-                          variant="body2"
-                          color={isCorrect ? 'success.main' : 'error.main'}
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {isCorrect
-                            ? `Правильно (+${question.points} балл)`
-                            : 'Неправильно (0 баллов)'}
-                        </Typography>
-                      </Stack>
-
-                      <Box
-                        sx={{
-                          width: '100%',
-                          pl: isMobile ? 0 : 3,
-                          mb: 1,
-                        }}
-                      >
-                        <Typography variant="body2" component="div">
-                          <Box component="span" fontWeight="500">
-                            Ваш ответ:&nbsp;
-                          </Box>
-                          <Box
-                            component="span"
-                            color={isCorrect ? 'success.main' : 'error.main'}
-                          >
-                            {selectedAnswer?.name || 'Нет ответа'}
-                          </Box>
-                        </Typography>
-
-                        {!isCorrect && correctAnswer && (
-                          <Typography
-                            variant="body2"
-                            component="div"
-                            sx={{ mt: 1 }}
-                          >
-                            <Box component="span" fontWeight="500">
-                              Правильный ответ:&nbsp;
-                            </Box>
-                            <Box component="span" color="success.main">
-                              {correctAnswer.name}
-                            </Box>
-                          </Typography>
-                        )}
-                      </Box>
-                      {question?.explanation && (
-                        <Paper
-                          elevation={0}
+                          variant="subtitle1"
+                          component="div"
                           sx={{
-                            p: 2,
-                            mt: 1,
-                            width: '100%',
-                            bgcolor: 'grey.100',
-                            borderRadius: 1,
-                            display: 'flex',
+                            fontWeight: 500,
+                            mb: 1,
+                            color: 'text.primary',
                           }}
                         >
-                          <Box component="span" fontWeight="500">
-                            Объяснение:&nbsp;
-                          </Box>
-                          <Typography variant="body2" component="div">
-                            {question.explanation}
+                          {`${index + 1}. ${question.name}`}
+                        </Typography>
+
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          sx={{ mb: 1 }}
+                        >
+                          {isCorrect ? (
+                            <CheckCircleOutline
+                              color="success"
+                              fontSize={isMobile ? 'small' : 'medium'}
+                            />
+                          ) : (
+                            <ErrorOutline
+                              color="error"
+                              fontSize={isMobile ? 'small' : 'medium'}
+                            />
+                          )}
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color={isCorrect ? 'success.main' : 'error.main'}
+                            sx={{ fontWeight: 500 }}
+                          >
+                            {isCorrect
+                              ? `Правильно (+${question.points} балл)`
+                              : 'Неправильно (0 баллов)'}
                           </Typography>
-                        </Paper>
+                        </Stack>
+
+                        <Box
+                          sx={{
+                            width: '100%',
+                            pl: isMobile ? 0 : 3,
+                            mb: 1,
+                          }}
+                        >
+                          <Typography variant="body2" component="div">
+                            <Box component="span" fontWeight="500">
+                              Ваш ответ:&nbsp;
+                            </Box>
+                            <Box
+                              component="span"
+                              color={isCorrect ? 'success.main' : 'error.main'}
+                            >
+                              {selectedAnswer?.name || 'Нет ответа'}
+                            </Box>
+                          </Typography>
+
+                          {!isCorrect && correctAnswer && (
+                            <Typography
+                              variant="body2"
+                              component="div"
+                              sx={{ mt: 1 }}
+                            >
+                              <Box component="span" fontWeight="500">
+                                Правильный ответ:&nbsp;
+                              </Box>
+                              <Box component="span" color="success.main">
+                                {correctAnswer.name}
+                              </Box>
+                            </Typography>
+                          )}
+                        </Box>
+                        {question?.explanation && (
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              mt: 1,
+                              width: '100%',
+                              bgcolor: 'grey.100',
+                              borderRadius: 1,
+                              display: 'flex',
+                            }}
+                          >
+                            <Box component="span" fontWeight="500">
+                              Объяснение:&nbsp;
+                            </Box>
+                            <Typography variant="body2" component="div">
+                              {question.explanation}
+                            </Typography>
+                          </Paper>
+                        )}
+                      </ListItem>
+                      {index < questions.length - 1 && (
+                        <Divider
+                          component="li"
+                          sx={{
+                            my: isMobile ? 1 : 2,
+                            ml: isMobile ? 0 : 4,
+                          }}
+                        />
                       )}
-                    </ListItem>
-                    {index < questions.length - 1 && (
-                      <Divider
-                        component="li"
-                        sx={{
-                          my: isMobile ? 1 : 2,
-                          ml: isMobile ? 0 : 4,
-                        }}
-                      />
-                    )}
-                  </React.Fragment>
-                )
-              })}
-            </List>
-          </AccordionDetails>
-        </Accordion>
+                    </React.Fragment>
+                  )
+                })}
+              </List>
+            </AccordionDetails>
+          </Accordion>
+        )}
       </Paper>
     </Box>
   )
@@ -382,6 +396,7 @@ TestResultsView.propTypes = {
     PropTypes.instanceOf(Date),
   ]).isRequired,
   duration: PropTypes.number.isRequired,
+  isControlTest: PropTypes.bool.isRequired,
 }
 
 export default React.memo(TestResultsView)

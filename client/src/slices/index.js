@@ -3,18 +3,20 @@ import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './userSlice'
 import userApi from './userApi'
 import instructionApi from './instructionApi'
+import testApi from './testApi'
 
 export default configureStore({
   reducer: {
     user: userReducer,
     [userApi.reducerPath]: userApi.reducer,
     [instructionApi.reducerPath]: instructionApi.reducer,
-    // tests: testsReducer
+    [testApi.reducerPath]: testApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       userApi.middleware,
-      instructionApi.middleware
+      instructionApi.middleware,
+      testApi.middleware
     ),
 })
 

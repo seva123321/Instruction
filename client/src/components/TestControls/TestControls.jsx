@@ -13,6 +13,7 @@ function TestControls({
   isLastQuestion,
   allQuestionsAnswered,
   isMobile,
+  isControlTest,
 }) {
   const isCurrentQuestionChecked = isAnswered && showFeedback
   const [canCompleteTest, setCanCompleteTest] = useState(false)
@@ -33,6 +34,12 @@ function TestControls({
     return canCompleteTest || isCurrentQuestionChecked
       ? 'Завершить тест'
       : 'Проверьте ответ'
+  }
+
+  const getCheckButtonText = (controlTest, answered) => {
+    if (controlTest) return 'Ответить'
+    if (answered) return 'Проверено'
+    return 'Проверить'
   }
 
   // Определяем состояние disabled
@@ -62,7 +69,8 @@ function TestControls({
           fontWeight: 'bold',
         }}
       >
-        {isAnswered ? 'Проверено' : 'Проверить'}
+        {/* {isControlTest ? 'Ответить' : isAnswered ? 'Проверено' : 'Проверить'} */}
+        {getCheckButtonText(isControlTest, isAnswered)}
       </Button>
 
       {/* Кнопка навигации */}
@@ -95,6 +103,7 @@ TestControls.propTypes = {
   isLastQuestion: PropTypes.bool.isRequired,
   allQuestionsAnswered: PropTypes.bool.isRequired,
   isMobile: PropTypes.bool.isRequired,
+  isControlTest: PropTypes.bool.isRequired,
 }
 
 export default memo(TestControls)

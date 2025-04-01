@@ -3,7 +3,7 @@ import React from 'react'
 import Badge from '@mui/material/Badge'
 import { styled } from '@mui/material/styles'
 
-const StyledBadge = styled(Badge)(({ theme, mark }) => {
+const StyledBadge = styled(Badge)(({ theme, mark, size }) => {
   const getColor = () => {
     const numericMark = parseFloat(mark)
     if (numericMark >= 8.5) return theme.palette.success.main
@@ -20,8 +20,8 @@ const StyledBadge = styled(Badge)(({ theme, mark }) => {
       backgroundColor: getColor(),
       color: theme.palette.getContrastText(getColor()),
       borderRadius: '50%',
-      width: 30,
-      height: 30,
+      width: size ? size.width : 30,
+      height: size ? size.height : 30,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

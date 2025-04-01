@@ -110,7 +110,6 @@ function UniversalVideoPlayer({
           height="100%"
           src={embedUrl}
           title={title}
-          frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           onLoad={() => setLoading(false)}

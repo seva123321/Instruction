@@ -28,7 +28,6 @@ import {
   Login as LoginIcon,
   SmartDisplay as SmartDisplayIcon,
   ImportContacts as ImportContactsIcon,
-  KeyboardArrowRight as KeyboardArrowRightIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material'

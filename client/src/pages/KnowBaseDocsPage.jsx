@@ -44,13 +44,15 @@ const legalDocuments = [
   },
   {
     id: 5,
+    // eslint-disable-next-line quotes
     title: "Федеральный закон 'О персональных данных'",
     description: 'Регулирует обработку персональных данных операторами.',
     date: '27.07.2006',
   },
   {
     id: 6,
-    title: "Федеральный закон 'О защите прав потребителей'",
+    // eslint-disable-next-line quotes
+    title: "Федеральный закон 'О защите прав потребителей '",
     description:
       'Регулирует отношения между потребителями и изготовителями, исполнителями, продавцами.',
     date: '07.02.1992',
@@ -170,8 +172,9 @@ function KnowBasePageDocs() {
                   variant="contained"
                   size={isMobile ? 'small' : 'medium'}
                   sx={buttonStyles}
-                  onClick={() =>
-                    console.log(`Открыт документ: ${document.title}`)
+                  onClick={
+                    () => console.log(`Открыт документ: ${document.title}`)
+                    // eslint-disable-next-line react/jsx-curly-newline
                   }
                 >
                   Подробнее

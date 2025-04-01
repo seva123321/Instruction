@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import {
   useEffect,
   useRef,

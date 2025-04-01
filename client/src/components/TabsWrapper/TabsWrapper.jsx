@@ -1,6 +1,5 @@
-/* eslint-disable react/no-array-index-key */
-/* eslint-disable react/no-array-index-key */
-
+/* eslint-disable operator-linebreak */
+/* eslint-disable indent */
 /* eslint-disable react/no-array-index-key */
 
 import { useState, useEffect } from 'react'
@@ -13,38 +12,57 @@ import PropTypes from 'prop-types'
 import { useMediaQuery } from '@mui/material'
 
 const StyledTab = styled(Tab, {
-  shouldForwardProp: (prop) => prop !== 'isChecked' && prop !== 'isCorrect',
-})(({ theme, isChecked, isCorrect }) => ({
-  borderRadius: theme.shape.borderRadius,
-  margin: theme.spacing(0.25),
-  padding: theme.spacing(0.75, 1),
-  minWidth: 'auto',
-  minHeight: 'auto',
-  fontSize: '0.8125rem',
-  fontWeight: 500,
-  transition: 'all 0.2s ease',
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-  },
-  ...(isChecked && {
-    backgroundColor: isCorrect
-      ? theme.palette.success.main
-      : theme.palette.error.main,
-    color: theme.palette.getContrastText(
-      isCorrect ? theme.palette.success.main : theme.palette.error.main
-    ),
+  shouldForwardProp: (prop) =>
+    !['isChecked', 'isCorrect', 'isControlTest'].includes(prop),
+})(({ theme, isChecked, isCorrect, isControlTest }) => {
+  // Базовые стили
+  const baseStyles = {
+    borderRadius: theme.shape.borderRadius,
+    margin: theme.spacing(0.25),
+    padding: theme.spacing(0.75, 1),
+    minWidth: 'auto',
+    minHeight: 'auto',
+    fontSize: '0.8125rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: isCorrect
-        ? theme.palette.success.dark
-        : theme.palette.error.dark,
+      backgroundColor: theme.palette.action.hover,
     },
-  }),
-  [theme.breakpoints.up('sm')]: {
-    fontSize: '0.875rem',
-    padding: theme.spacing(1, 2.5),
-    margin: theme.spacing(0.5),
-  },
-}))
+    [theme.breakpoints.up('sm')]: {
+      fontSize: '0.875rem',
+      padding: theme.spacing(1, 2.5),
+      margin: theme.spacing(0.5),
+    },
+  }
+
+  // Стили для проверенного теста (не контрольного)
+  const checkedTestStyles = !isControlTest &&
+    isChecked && {
+      backgroundColor: isCorrect
+        ? theme.palette.success.main
+        : theme.palette.error.main,
+      color: theme.palette.getContrastText(
+        isCorrect ? theme.palette.success.main : theme.palette.error.main
+      ),
+      '&:hover': {
+        backgroundColor: isCorrect
+          ? theme.palette.success.dark
+          : theme.palette.error.dark,
+      },
+    }
+
+  // Стили для контрольного теста
+  const controlTestStyles = isControlTest &&
+    isChecked && {
+      backgroundColor: theme.palette.action.disabled,
+    }
+
+  return {
+    ...baseStyles,
+    ...checkedTestStyles,
+    ...controlTestStyles,
+  }
+})
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props
@@ -69,6 +87,7 @@ export default function TabsWrapper({
   value: externalValue,
   onChange: externalOnChange,
   checkedTabs = [],
+  isControlTest = false,
   correctAnswers = [],
 }) {
   const theme = useTheme()
@@ -140,6 +159,7 @@ export default function TabsWrapper({
               label={tab.label}
               isChecked={isChecked}
               isCorrect={isCorrect}
+              isControlTest={isControlTest}
               sx={{ flexShrink: 0 }}
             />
           )

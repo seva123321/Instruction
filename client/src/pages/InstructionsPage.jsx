@@ -1,6 +1,8 @@
 /* eslint-disable indent */
 /* eslint-disable operator-linebreak */
 import { useParams } from 'react-router-dom'
+import { useTheme } from '@mui/material/styles'
+import { Box, CircularProgress } from '@mui/material'
 
 import OneInstructionPage from '@/models/OneInstructionPage'
 import TabsWrapper from '@/components/TabsWrapper'
@@ -9,10 +11,10 @@ import {
   useGetInstructionsQuery,
   useGetInstructionByIdQuery,
 } from '../slices/instructionApi'
-import { instructionsData } from '../service/constValues'
 
 function InstructionsPage() {
   const { id } = useParams()
+  const theme = useTheme()
 
   // Запрос для получения списка инструкций
   const {
@@ -32,10 +34,7 @@ function InstructionsPage() {
     skip: !id, // Пропускаем запрос если нет ID
   })
 
-  // Используем данные из API или fallback
-  const currentInstructions = instructions || instructionsData
-
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading) return <CircularProgress size={50} />
   if (error) {
     return <div>Ошибка в загрузке Инструкции</div>
   }
@@ -43,25 +42,31 @@ function InstructionsPage() {
   // Определяем какие данные передавать в компонент
   const instructionToRender = id
     ? singleInstruction
-    : currentInstructions?.first_instruction
+    : instructions?.first_instruction
 
   const tabs =
-    currentInstructions?.results?.length > 1
-      ? currentInstructions.results.map((instruction) => ({
+    instructions?.results?.length > 1
+      ? instructions.results.map((instruction) => ({
           label: instruction.name,
           to: `/instructions/${instruction.id}`,
         }))
       : null
 
   return (
-    <div>
+    <Box
+      sx={{
+        [theme.breakpoints.down('sm')]: {
+          mt: 3,
+        },
+      }}
+    >
       {tabs && <TabsWrapper tabs={tabs} centered useRouter />}
       <OneInstructionPage
         data={instructionToRender}
         isLoading={isSingleLoading && !!id} // Показываем загрузку только при запросе по ID
         error={singleError}
       />
-    </div>
+    </Box>
   )
 }
 

@@ -3,8 +3,7 @@ import { useOutletContext, useParams } from 'react-router-dom'
 
 import { agreements, instructionMarkdown } from '@/service/constValues'
 import TabsWrapper from '@/components/TabsWrapper'
-
-import OneInstructionPage from '@/components/OneInstructionPage/OneInstructionPage'
+import OneInstructionPage from '@/models/OneInstructionPage'
 
 const instructionServer = [
   {

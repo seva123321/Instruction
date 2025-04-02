@@ -7,7 +7,9 @@ from backend.constants import (
     MAX_LENGTH_FIRST_NAME,
     MAX_LENGTH_LAST_NAME,
     MAX_LENGTH_PHONE,
-    MAX_LENGTH_PASSWORD
+    MAX_LENGTH_PASSWORD,
+    MAX_LENGTH_PASSING_SCORE,
+    MIN_LENGTH_PASSING_SCORE
 )
 from api.models import (
     User,

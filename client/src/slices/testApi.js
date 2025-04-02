@@ -48,6 +48,7 @@ const testApi = createApi({
 export const {
   useGetTestsQuery,
   useGetTestByIdQuery,
+  useLazyGetTestByIdQuery,
   usePostTestResultMutation,
 } = testApi
 export default testApi

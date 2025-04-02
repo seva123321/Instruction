@@ -18,6 +18,8 @@ FACE_MATCH_THRESHOLD = 0.6
 
 
 INSTALLED_APPS = [
+    'unfold',
+    'unfold.contrib.filters',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,9 +103,12 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-CSRF_USE_SESSIONS = True
+SESSION_COOKIE_HTTPONLY = False
+# TODO: Change before production
+SESSION_COOKIE_SECURE = False
+CSRF_USE_SESSIONS = False
+
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Instruction API',
@@ -135,10 +140,19 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Настройки CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Ваш фронтенд
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-CORS_ALLOW_CREDENTIALS = True  # Для работы с куками/session
+CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = ['Set-Cookie'] 
+
+UNFOLD = {
+    "SITE_TITLE": "Аналитика инструктажей",
+    "SITE_HEADER": "Панель администратора",
+    "SITE_ICON": {
+        "light": lambda request: "/icon-light.svg",
+        "dark": lambda request: "/icon-dark.svg",
+    },
+}

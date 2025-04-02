@@ -18,7 +18,8 @@ from api.models import (
     Instruction,
     InstructionAgreement,
     Tests,
-    Question
+    Question,
+    TestResult
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -29,7 +30,8 @@ from api.serializers import (
     TestListSerializer,
     QuestionSerializer,
     SignUpSerializer,
-    LoginSerializer
+    LoginSerializer,
+    TestResultSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -223,6 +225,8 @@ class FaceLoginView(APIView):
 
 class LogoutView(APIView):
     """Представление для выхода из системы"""
+
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         logout(request)

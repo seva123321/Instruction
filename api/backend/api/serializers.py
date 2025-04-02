@@ -21,7 +21,8 @@ from api.models import (
     Question,
     Answer,
     ReferenceLink,
-    TestResult
+    TestResult,
+    Video
 )
 
 
@@ -252,3 +253,9 @@ class TestSerializer(BaseTestSerializer):
             many=True,
             context=question_context
         ).data
+
+
+class VideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = ('id', 'type', 'url', 'title', 'date')

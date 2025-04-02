@@ -19,7 +19,8 @@ from api.models import (
     InstructionAgreement,
     Tests,
     Question,
-    TestResult
+    TestResult,
+    Video,
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -31,7 +32,8 @@ from api.serializers import (
     QuestionSerializer,
     SignUpSerializer,
     LoginSerializer,
-    TestResultSerializer
+    TestResultSerializer,
+    VideoSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -286,3 +288,12 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return TestListSerializer
         return TestSerializer
+
+
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = (IsAuthenticated,)
+

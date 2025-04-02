@@ -17,6 +17,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  CircularProgress,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -26,31 +27,47 @@ import {
 } from '@mui/icons-material'
 
 function TestResultsView({
-  testTitle,
-  score,
-  totalPoints,
-  mark,
-  answers,
-  questions,
-  startTime,
-  completionTime,
-  duration,
-  refetch,
+  testId = '',
+  testTitle = '',
+  score = 0,
+  totalPoints = 0,
+  mark = '0',
+  answers = [],
+  questions = [],
+  startTime = new Date().toISOString(),
+  completionTime = new Date().toISOString(),
+  duration = 0,
+  onRestart = () => {},
   isControlTest = false,
 }) {
   const navigate = useNavigate()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [loading, setLoading] = React.useState(false)
   const handleBack = () => navigate('/tests')
 
-  const formatTime = (time) =>
-    new Date(time).toLocaleString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  // Проверка наличия необходимых данных
+  if (!questions.length || !answers.length) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  const formatTime = (time) => {
+    try {
+      return new Date(time).toLocaleString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    } catch {
+      return 'Нет данных'
+    }
+  }
 
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -58,15 +75,17 @@ function TestResultsView({
     return `${mins > 0 ? `${mins} мин ` : ''}${secs} сек`
   }
 
+  const handleRestart = async () => {
+    setLoading(true)
+    try {
+      await onRestart()
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <Box
-      sx={{
-        width: '100%',
-        // minHeight: '100vh',
-        // p: isMobile ? 2 : 4,
-        // bgcolor: 'background.default',
-      }}
-    >
+    <Box sx={{ width: '100%' }}>
       <Paper
         elevation={isMobile ? 0 : 3}
         sx={{
@@ -85,7 +104,7 @@ function TestResultsView({
           gutterBottom
           sx={{ fontWeight: 600 }}
         >
-          {`Результаты теста: ${testTitle}`}
+          {`Результаты теста: ${testTitle || 'Без названия'}`}
         </Typography>
 
         {/* Основная статистика */}
@@ -107,13 +126,11 @@ function TestResultsView({
                 label={`${score}/${totalPoints}`}
                 color="primary"
                 size={isMobile ? 'medium' : 'large'}
-                sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
               />
               <Chip
                 label={`Оценка: ${mark}/10`}
-                color={mark >= 6 ? 'success' : 'error'}
+                color={parseFloat(mark) >= 6 ? 'success' : 'error'}
                 size={isMobile ? 'medium' : 'large'}
-                sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
               />
             </Stack>
           </Box>
@@ -124,81 +141,57 @@ function TestResultsView({
               Время прохождения
             </Typography>
             <Stack spacing={1}>
-              <Box sx={{ display: 'flex' }}>
+              <Typography variant="body2">
                 <Box component="span" fontWeight="500">
                   Начало:&nbsp;
                 </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {formatTime(startTime)}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex' }}>
+                {formatTime(startTime)}
+              </Typography>
+              <Typography variant="body2">
                 <Box component="span" fontWeight="500">
                   Завершение:&nbsp;
                 </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {formatTime(completionTime)}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex' }}>
+                {formatTime(completionTime)}
+              </Typography>
+              <Typography variant="body2">
                 <Box component="span" fontWeight="500">
                   Продолжительность:&nbsp;
                 </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {formatDuration(duration)}
-                </Typography>
-              </Box>
+                {formatDuration(duration)}
+              </Typography>
             </Stack>
           </Box>
         </Box>
 
         <Divider sx={{ my: 3 }} />
 
-        {/* Кнопка возврата */}
+        {/* Кнопки управления */}
         <Box
           sx={{
             mt: 4,
             display: 'flex',
-            flexDirection: isMobile && 'column',
-            justifyContent: 'space-around',
-            alignItems: 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 2,
+            justifyContent: 'center',
           }}
         >
           <Button
             variant="contained"
             size={isMobile ? 'small' : 'medium'}
             onClick={handleBack}
-            sx={{
-              px: 4,
-              py: 1.5,
-              mb: 2,
-              fontWeight: 500,
-              minWidth: isMobile ? '100%' : 'auto',
-            }}
+            fullWidth={isMobile}
           >
             Вернуться к списку тестов
           </Button>
-          {/* <Link to={`/tests/${id}`}>
-            <Button
-              variant="contained"
-              size={isMobile ? 'small' : 'medium'}
-              sx={{
-                px: 4,
-                py: 1.5,
-                mb: 2,
-                fontWeight: 500,
-                minWidth: isMobile ? '100%' : 'auto',
-              }}
-            >
-              Решить еще раз
-            </Button>
-          </Link> */}
+
           {!isControlTest && (
             <Button
-              variant="contained"
+              variant="outlined"
               size={isMobile ? 'small' : 'medium'}
-              sx={{ px: 4, py: 1.5, mb: 2 }}
-              onClick={() => refetch()}
+              onClick={handleRestart}
+              disabled={loading}
+              fullWidth={isMobile}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
             >
               Решить еще раз
             </Button>
@@ -207,28 +200,20 @@ function TestResultsView({
 
         {/* Детализация вопросов */}
         {!isControlTest && (
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1-content"
-              id="panel1-header"
-            >
-              <Typography
-                variant={isMobile ? 'h6' : 'h5'}
-                component="h3"
-                sx={{ fontWeight: 500 }}
-              >
-                Ответы на вопросы (Ваше решение)
+          <Accordion defaultExpanded sx={{ mt: 4 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                Ответы на вопросы
               </Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              <List sx={{ width: '100%', p: 0 }}>
+            <AccordionDetails sx={{ p: 0 }}>
+              <List>
                 {questions.map((question, index) => {
                   const userAnswer = answers.find((a) => a.id === question.id)
-                  const isCorrect = userAnswer?.is_correct || false
-                  const selectedAnswerId = userAnswer?.selected_id
+                  const isCorrect = userAnswer?.is_correct ?? false
                   const selectedAnswer = question.answers.find(
-                    (a) => a.id.toString() === selectedAnswerId
+                    (a) =>
+                      a.id.toString() === userAnswer?.selected_id?.toString()
                   )
                   const correctAnswer = question.answers.find(
                     (a) => a.is_correct
@@ -237,119 +222,73 @@ function TestResultsView({
                   return (
                     <React.Fragment key={question.id}>
                       <ListItem
-                        alignItems="flex-start"
                         sx={{
-                          py: 2,
-                          px: isMobile ? 0 : 2,
                           flexDirection: 'column',
                           alignItems: 'flex-start',
                         }}
                       >
-                        <Typography
-                          variant="subtitle1"
-                          component="div"
-                          sx={{
-                            fontWeight: 500,
-                            mb: 1,
-                            color: 'text.primary',
-                          }}
-                        >
+                        <Typography variant="subtitle1" fontWeight={500}>
                           {`${index + 1}. ${question.name}`}
                         </Typography>
 
                         <Stack
                           direction="row"
-                          spacing={1}
                           alignItems="center"
-                          sx={{ mb: 1 }}
+                          spacing={1}
+                          sx={{ my: 1 }}
                         >
                           {isCorrect ? (
-                            <CheckCircleOutline
-                              color="success"
-                              fontSize={isMobile ? 'small' : 'medium'}
-                            />
+                            <CheckCircleOutline color="success" />
                           ) : (
-                            <ErrorOutline
-                              color="error"
-                              fontSize={isMobile ? 'small' : 'medium'}
-                            />
+                            <ErrorOutline color="error" />
                           )}
                           <Typography
-                            component="span"
-                            variant="body2"
                             color={isCorrect ? 'success.main' : 'error.main'}
-                            sx={{ fontWeight: 500 }}
                           >
                             {isCorrect
-                              ? `Правильно (+${question.points} балл)`
+                              ? `Правильно (+${question.points} баллов)`
                               : 'Неправильно (0 баллов)'}
                           </Typography>
                         </Stack>
 
-                        <Box
-                          sx={{
-                            width: '100%',
-                            pl: isMobile ? 0 : 3,
-                            mb: 1,
-                          }}
-                        >
-                          <Typography variant="body2" component="div">
-                            <Box component="span" fontWeight="500">
-                              Ваш ответ:&nbsp;
+                        <Typography variant="body2">
+                          <Box component="span" fontWeight={500}>
+                            Ваш ответ:{' '}
+                          </Box>
+                          <Box
+                            component="span"
+                            color={isCorrect ? 'success.main' : 'error.main'}
+                          >
+                            {selectedAnswer?.name || 'Нет ответа'}
+                          </Box>
+                        </Typography>
+
+                        {!isCorrect && correctAnswer && (
+                          <Typography variant="body2" sx={{ mt: 1 }}>
+                            <Box component="span" fontWeight={500}>
+                              Правильный ответ:{' '}
                             </Box>
-                            <Box
-                              component="span"
-                              color={isCorrect ? 'success.main' : 'error.main'}
-                            >
-                              {selectedAnswer?.name || 'Нет ответа'}
+                            <Box component="span" color="success.main">
+                              {correctAnswer.name}
                             </Box>
                           </Typography>
+                        )}
 
-                          {!isCorrect && correctAnswer && (
-                            <Typography
-                              variant="body2"
-                              component="div"
-                              sx={{ mt: 1 }}
-                            >
-                              <Box component="span" fontWeight="500">
-                                Правильный ответ:&nbsp;
-                              </Box>
-                              <Box component="span" color="success.main">
-                                {correctAnswer.name}
-                              </Box>
-                            </Typography>
-                          )}
-                        </Box>
-                        {question?.explanation && (
+                        {userAnswer?.explanation && (
                           <Paper
                             elevation={0}
-                            sx={{
-                              p: 2,
-                              mt: 1,
-                              width: '100%',
-                              bgcolor: 'grey.100',
-                              borderRadius: 1,
-                              display: 'flex',
-                            }}
+                            sx={{ p: 2, mt: 2, bgcolor: 'grey.100' }}
                           >
-                            <Box component="span" fontWeight="500">
-                              Объяснение:&nbsp;
-                            </Box>
-                            <Typography variant="body2" component="div">
-                              {question.explanation}
+                            <Typography variant="body2">
+                              <Box component="span" fontWeight={500}>
+                                Объяснение:{' '}
+                              </Box>
+                              {userAnswer.explanation}
                             </Typography>
                           </Paper>
                         )}
                       </ListItem>
-                      {index < questions.length - 1 && (
-                        <Divider
-                          component="li"
-                          sx={{
-                            my: isMobile ? 1 : 2,
-                            ml: isMobile ? 0 : 4,
-                          }}
-                        />
-                      )}
+                      {index < questions.length - 1 && <Divider />}
                     </React.Fragment>
                   )
                 })}
@@ -363,40 +302,46 @@ function TestResultsView({
 }
 
 TestResultsView.propTypes = {
-  testTitle: PropTypes.string.isRequired,
-  score: PropTypes.number.isRequired,
-  totalPoints: PropTypes.number.isRequired,
-  mark: PropTypes.number.isRequired,
+  testId: PropTypes.string,
+  testTitle: PropTypes.string,
+  score: PropTypes.number,
+  totalPoints: PropTypes.number,
+  mark: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   answers: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      selected_id: PropTypes.string,
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      selected_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       is_correct: PropTypes.bool,
+      points: PropTypes.number,
       explanation: PropTypes.string,
     })
-  ).isRequired,
+  ),
   questions: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      points: PropTypes.number.isRequired,
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      name: PropTypes.string,
+      points: PropTypes.number,
       answers: PropTypes.arrayOf(
         PropTypes.shape({
-          id: PropTypes.string.isRequired,
-          name: PropTypes.string.isRequired,
+          id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+          name: PropTypes.string,
           is_correct: PropTypes.bool,
         })
-      ).isRequired,
+      ),
+      explanation: PropTypes.string,
     })
-  ).isRequired,
-  startTime: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)])
-    .isRequired,
+  ),
+  startTime: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.instanceOf(Date),
+  ]),
   completionTime: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.instanceOf(Date),
-  ]).isRequired,
-  duration: PropTypes.number.isRequired,
-  isControlTest: PropTypes.bool.isRequired,
+  ]),
+  duration: PropTypes.number,
+  onRestart: PropTypes.func,
+  isControlTest: PropTypes.bool,
 }
 
 export default React.memo(TestResultsView)

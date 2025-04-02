@@ -45,5 +45,9 @@ const testApi = createApi({
   }),
 })
 
-export const { useGetTestsQuery, useGetTestByIdQuery } = testApi
+export const {
+  useGetTestsQuery,
+  useGetTestByIdQuery,
+  usePostTestResultMutation,
+} = testApi
 export default testApi

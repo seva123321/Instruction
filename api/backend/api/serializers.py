@@ -74,6 +74,28 @@ class SignUpSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_FACE_DESCRIPTOR
     )
 
+    def validate(self, data):
+        errors = {}
+
+        if User.objects.filter(email=data["email"]).exists():
+            errors["email"] = "Пользователь с таким email уже существует"
+
+        if User.objects.filter(mobile_phone=data["mobile_phone"]).exists():
+            errors["mobile_phone"] = (
+                "Пользователь с таким номером телефона уже существует"
+            )
+
+        try:
+            input_descriptor = np.array(data["face_descriptor"], dtype=np.float32)
+            if is_face_already_registered(input_descriptor):
+                errors["face_descriptor"] = "Пользователь с таким лицом уже существует"
+        except Exception as e:
+            errors["face_descriptor"] = str(e)
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
 
     def validate_face_descriptor(self, value):
         try:
@@ -94,6 +116,21 @@ class SignUpSerializer(serializers.Serializer):
             )
 
         return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return value
+
+    def validate_mobile_phone(self, value):
+        if User.objects.filter(mobile_phone=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким номером телефона уже существует'
+            )
+        return value
+
 
 
 class LoginSerializer(serializers.Serializer):

@@ -14,22 +14,45 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='question_type',
-            field=models.CharField(choices=[('single', 'Один вариант'), ('several', 'Несколько вариантов')], default='single', max_length=20, verbose_name='Тип вопроса'),
+            field=models.CharField(
+                choices=[
+                    ('single', 'Один вариант'),
+                    ('several', 'Несколько вариантов'),
+                ],
+                default='single',
+                max_length=20,
+                verbose_name='Тип вопроса',
+            ),
         ),
         migrations.AddField(
             model_name='tests',
             name='total_points',
-            field=models.IntegerField(default=1, verbose_name='Максимальное количество баллов за тест'),
+            field=models.IntegerField(
+                default=1,
+                verbose_name='Максимальное количество баллов за тест',
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
             model_name='testresult',
             name='mark',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)], verbose_name='Оценка'),
+            field=models.IntegerField(
+                validators=[
+                    django.core.validators.MinValueValidator(1),
+                    django.core.validators.MaxValueValidator(100),
+                ],
+                verbose_name='Оценка',
+            ),
         ),
         migrations.AlterField(
             model_name='tests',
             name='passing_score',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)], verbose_name='Проходной балл'),
+            field=models.IntegerField(
+                validators=[
+                    django.core.validators.MinValueValidator(1),
+                    django.core.validators.MaxValueValidator(100),
+                ],
+                verbose_name='Проходной балл',
+            ),
         ),
     ]

@@ -14,6 +14,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='referencelink',
             name='question',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='reference_link', to='api.question', verbose_name='Вопрос'),
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='reference_link',
+                to='api.question',
+                verbose_name='Вопрос',
+            ),
         ),
     ]

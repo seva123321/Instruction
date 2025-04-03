@@ -28,7 +28,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tests',
             name='question',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='tests', to='api.question', verbose_name='Вопрос'),
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='tests',
+                to='api.question',
+                verbose_name='Вопрос',
+            ),
             preserve_default=False,
         ),
     ]

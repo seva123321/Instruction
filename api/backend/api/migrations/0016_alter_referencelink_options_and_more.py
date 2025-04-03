@@ -13,11 +13,21 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='referencelink',
-            options={'verbose_name': 'Ссылка на объяснение', 'verbose_name_plural': 'Ссылки на объяснение'},
+            options={
+                'verbose_name': 'Ссылка на объяснение',
+                'verbose_name_plural': 'Ссылки на объяснение',
+            },
         ),
         migrations.AlterField(
             model_name='referencelink',
             name='question',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='referenceLinks', to='api.question', verbose_name='Вопрос'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='referenceLinks',
+                to='api.question',
+                verbose_name='Вопрос',
+            ),
         ),
     ]

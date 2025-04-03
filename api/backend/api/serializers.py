@@ -10,7 +10,7 @@ from backend.constants import (
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSWORD,
     MAX_LENGTH_PASSING_SCORE,
-    MIN_LENGTH_PASSING_SCORE
+    MIN_LENGTH_PASSING_SCORE,
 )
 from api.models import (
     User,
@@ -24,10 +24,10 @@ from api.models import (
     ReferenceLink,
     TestResult,
     Video,
-    UserAnswer
+    UserAnswer,
 )
-from api.utils import is_face_already_registered, normalize_phone_number
-
+from api.utils.utils import is_face_already_registered
+from api.utils.validators import normalize_phone_number
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -42,17 +42,14 @@ class UserSerializer(AdminUserSerializer):
     """Сериализатор для базовых операций с моделью User."""
 
     class Meta:
-        read_only_fields = (
-            'role'
-        )
+        read_only_fields = 'role'
 
 
 class SignUpSerializer(serializers.Serializer):
     """Сериализатор для регистрации нового пользователя."""
 
     email = serializers.EmailField(
-        max_length=MAX_LENGTH_EMAIL_ADDRESS,
-        required=True
+        max_length=MAX_LENGTH_EMAIL_ADDRESS, required=True
     )
     password = serializers.CharField(
         max_length=MAX_LENGTH_PASSWORD,
@@ -61,20 +58,16 @@ class SignUpSerializer(serializers.Serializer):
         style={'input_type': 'password'},
     )
     first_name = serializers.CharField(
-        max_length=MAX_LENGTH_FIRST_NAME,
-        required=True
+        max_length=MAX_LENGTH_FIRST_NAME, required=True
     )
     last_name = serializers.CharField(
-        max_length=MAX_LENGTH_LAST_NAME,
-        required=True
+        max_length=MAX_LENGTH_LAST_NAME, required=True
     )
     mobile_phone = serializers.CharField(
-        max_length=MAX_LENGTH_PHONE,
-        required=True
+        max_length=MAX_LENGTH_PHONE, required=True
     )
     face_descriptor = serializers.ListField(
-        child=serializers.FloatField(),
-        max_length=MAX_LENGTH_FACE_DESCRIPTOR
+        child=serializers.FloatField(), max_length=MAX_LENGTH_FACE_DESCRIPTOR
     )
 
     def validate(self, data):
@@ -89,9 +82,13 @@ class SignUpSerializer(serializers.Serializer):
             )
 
         try:
-            input_descriptor = np.array(data["face_descriptor"], dtype=np.float32)
+            input_descriptor = np.array(
+                data["face_descriptor"], dtype=np.float32
+            )
             if is_face_already_registered(input_descriptor):
-                errors["face_descriptor"] = "Пользователь с таким лицом уже существует"
+                errors["face_descriptor"] = (
+                    "Пользователь с таким лицом уже существует"
+                )
         except Exception as e:
             errors["face_descriptor"] = str(e)
 
@@ -104,9 +101,7 @@ class SignUpSerializer(serializers.Serializer):
         try:
             input_descriptor = np.array(value, dtype=np.float32)
         except:
-            raise serializers.ValidationError(
-                'Invalid face descriptor format'
-            )
+            raise serializers.ValidationError('Invalid face descriptor format')
 
         if len(input_descriptor) != 128:
             raise serializers.ValidationError(
@@ -144,13 +139,11 @@ class SignUpSerializer(serializers.Serializer):
         return normalized_phone
 
 
-
 class LoginSerializer(serializers.Serializer):
     """Сериализатор для получения токена аутентификации пользователя."""
 
     email = serializers.EmailField(
-        max_length=MAX_LENGTH_EMAIL_ADDRESS,
-        required=True
+        max_length=MAX_LENGTH_EMAIL_ADDRESS, required=True
     )
     password = serializers.CharField(
         max_length=MAX_LENGTH_PASSWORD,
@@ -178,13 +171,11 @@ class InstructionAgreementSerializer(serializers.ModelSerializer):
 
 class InstructionSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Instruction."""
+
     instruction_agreement = InstructionAgreementSerializer(
-        many=True,
-        read_only=True
+        many=True, read_only=True
     )
-    type_of_instruction = TypeOfInstructionSerializer(
-        read_only=True
-    )
+    type_of_instruction = TypeOfInstructionSerializer(read_only=True)
 
     class Meta:
         model = Instruction
@@ -193,7 +184,7 @@ class InstructionSerializer(serializers.ModelSerializer):
             'type_of_instruction',
             'name',
             'text',
-            'instruction_agreement'
+            'instruction_agreement',
         )
 
 
@@ -243,7 +234,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'answers',
             'explanation',
             'reference_link',
-            'image'
+            'image',
         )
 
     def to_representation(self, instance):
@@ -322,6 +313,7 @@ class TestResultCreateSerializer(serializers.ModelSerializer):
 
 class BaseTestSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для тестов с общими полями"""
+
     test_results = serializers.SerializerMethodField()
 
     def get_test_results(self, obj):
@@ -331,7 +323,7 @@ class BaseTestSerializer(serializers.ModelSerializer):
             return TestResultSerializer(
                 obj.test_results.filter(user=request.user),
                 many=True,
-                context=self.context
+                context=self.context,
             ).data
         return []
 
@@ -346,12 +338,13 @@ class TestListSerializer(BaseTestSerializer):
             'name',
             'description',
             'test_is_control',
-            'test_results'
+            'test_results',
         )
 
 
 class TestSerializer(BaseTestSerializer):
     """Сериализатор для детального просмотра теста"""
+
     questions = serializers.SerializerMethodField()
 
     class Meta:
@@ -379,9 +372,7 @@ class TestSerializer(BaseTestSerializer):
         question_context['test_is_control'] = obj.test_is_control
 
         return QuestionSerializer(
-            questions,
-            many=True,
-            context=question_context
+            questions, many=True, context=question_context
         ).data
 
 

@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='tests',
             name='test_is_control',
-            field=models.BooleanField(default=1, verbose_name='Тест является контрольным'),
+            field=models.BooleanField(
+                default=1, verbose_name='Тест является контрольным'
+            ),
             preserve_default=False,
         ),
     ]

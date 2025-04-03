@@ -14,7 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ReferenceLink',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('title', models.TextField(verbose_name='Заголовок')),
                 ('url', models.URLField(verbose_name='URL')),
             ],
@@ -31,6 +39,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='reference_links',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='api.referencelink', verbose_name='Ссылка на объяснение'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='questions',
+                to='api.referencelink',
+                verbose_name='Ссылка на объяснение',
+            ),
         ),
     ]

@@ -77,24 +77,15 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            user = User.objects.create_user(
-                email=serializer.validated_data["email"],
-                first_name=serializer.validated_data["first_name"],
-                last_name=serializer.validated_data["last_name"],
-                password=serializer.validated_data["password"],
-                mobile_phone=serializer.validated_data["mobile_phone"],
-                face_descriptor=str(
-                    serializer.validated_data["face_descriptor"].tolist()
-                ),
-            )
+            # Используем serializer.save() вместо прямого создания
+            user = serializer.save()
         except IntegrityError as e:
             error_messages = {
                 "api_user_email": {
                     "email": "Пользователь с таким email уже существует"
                 },
                 "api_user_mobile_phone": {
-                    "mobile_phone": "Пользователь с таким номером "
-                    "телефона уже существует"
+                    "mobile_phone": "Пользователь с таким номером телефона уже существует"
                 },
                 "api_user_face_descriptor": {
                     "face_descriptor": "Такой дескриптор лица уже существует"
@@ -105,10 +96,7 @@ class SignUpView(APIView):
                 if db_error in str(e):
                     raise ValidationError(message)
 
-            raise ValidationError(
-                {"detail": "Ошибка при создании пользователя"}
-            )
-
+            raise ValidationError({"detail": "Ошибка при создании пользователя"})
         except Exception as e:
             raise ValidationError({"detail": str(e)})
 

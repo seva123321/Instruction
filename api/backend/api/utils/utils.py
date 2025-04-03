@@ -1,12 +1,10 @@
-import re
-import numpy as np
+import json
+
 from django.conf import settings
+import numpy as np
 
 from api.models import User
 
-
-import json
-import numpy as np
 
 def is_face_already_registered(input_descriptor):
     """
@@ -24,6 +22,6 @@ def is_face_already_registered(input_descriptor):
             if distance < settings.FACE_MATCH_THRESHOLD:
                 return True
         except (json.JSONDecodeError, TypeError) as e:
-            print(f'Error processing face descriptor for user {user.id}: {str(e)}')
+            print(f'Ошибка обработки дескриптора лица пользователя {user.id}: {str(e)}')
             continue
     return False

@@ -117,17 +117,30 @@ const idb = {
 // Установка и кэширование
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      cache
-        .addAll([
-          isDev ? '/' : '/static/',
-          isDev ? '/index.html' : '/static/index.html',
-          '/static/manifest.json',
-          '/static/logo.png',
-          '/static/js/main.js', // Добавляем основной JS-файл
-        ])
-        .catch((e) => console.error('Cache addAll error:', e))
-    )
+    caches.open(CACHE_NAME).then((cache) => {
+      const cacheUrls = [
+        isDev ? '/' : '/static/',
+        isDev ? '/index.html' : '/static/index.html',
+        '/manifest.json',
+        '/logo.png',
+        '/static/js/main.js',
+        '/static/css/main.css',
+      ].filter(Boolean)
+
+      return cache
+        .addAll(
+          cacheUrls.map(
+            (url) =>
+              new Request(url, {
+                cache: 'reload',
+                credentials: 'same-origin',
+              })
+          )
+        )
+        .catch((e) => {
+          console.warn('Cache preload failed:', e)
+        })
+    })
   )
   self.skipWaiting()
 })
@@ -159,12 +172,39 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   // Навигационные запросы
+  // if (request.mode === 'navigate') {
+  //   event.respondWith(
+  //     caches
+  //       .match(isDev ? '/' : '/static/')
+  //       .then((cached) => cached || fetch(request))
+  //       .catch(() => caches.match(isDev ? '/' : '/static/'))
+  //   )
+  //   return
+  // }
+
+  // Универсальный обработчик навигации
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches
-        .match(isDev ? '/' : '/static/')
-        .then((cached) => cached || fetch(request))
-        .catch(() => caches.match(isDev ? '/' : '/static/'))
+      (async () => {
+        // Для dev и prod используем разные fallback-страницы
+        const fallbackPage = isDev ? '/index.html' : '/static/index.html'
+
+        try {
+          // Сначала пробуем сеть
+          const networkResponse = await fetch(request)
+          if (networkResponse.ok) return networkResponse
+        } catch (e) {}
+
+        // Пробуем кеш
+        const cached = await caches.match(fallbackPage)
+        if (cached) return cached
+
+        // Крайний fallback
+        return new Response('Offline Page', {
+          status: 200,
+          headers: { 'Content-Type': 'text/html' },
+        })
+      })()
     )
     return
   }
@@ -194,41 +234,49 @@ self.addEventListener('fetch', (event) => {
 })
 
 async function handleTestRequest(event) {
-  if (!navigator.onLine) {
-    try {
-      const url = new URL(event.request.url)
-      const testId = url.pathname.split('/').pop()
-      const test = await idb.getTest(testId)
-
-      if (test) {
-        return new Response(JSON.stringify(test), {
-          headers: { 'Content-Type': 'application/json' },
-        })
-      }
-
-      return new Response(
-        JSON.stringify({ error: 'Test not available offline' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      )
-    } catch (e) {
-      console.error('Offline test error:', e)
-      return Response.error()
-    }
-  }
-
   try {
-    const response = await fetch(event.request)
-    if (response.ok) {
-      const cache = await caches.open(API_CACHE)
-      await cache.put(event.request, response.clone())
+    // Сначала пробуем сеть (если онлайн)
+    if (navigator.onLine) {
+      const networkResponse = await fetch(event.request)
+
+      // Кешируем успешные ответы
+      if (networkResponse.ok) {
+        const cache = await caches.open(API_CACHE)
+        await cache.put(event.request, networkResponse.clone())
+      }
+      return networkResponse
     }
-    return response
+
+    // Оффлайн-режим: пробуем кеш и IndexedDB
+    return await getFromCacheOrIDB(event)
   } catch (error) {
-    const cached = await caches.match(event.request)
-    return cached || Response.error()
+    // Фолбэк на кеш/IDB при ошибках сети
+    return getFromCacheOrIDB(event)
   }
 }
 
+async function getFromCacheOrIDB(event) {
+  const url = new URL(event.request.url)
+
+  // 1. Пробуем кеш API
+  const cachedApiResponse = await caches.match(event.request)
+  if (cachedApiResponse) return cachedApiResponse
+
+  // 2. Для API тестов пробуем IndexedDB
+  if (url.pathname.startsWith('/api/tests/')) {
+    const testId = url.pathname.split('/').pop()
+    const test = await idb.getTest(testId)
+
+    if (test) {
+      return new Response(JSON.stringify(test), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+  }
+
+  // 3. Фолбэк для других запросов
+  return Response.error()
+}
 async function handleTestResultRequest(event) {
   if (!navigator.onLine) {
     try {

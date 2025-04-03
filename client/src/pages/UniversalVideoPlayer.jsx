@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Button,
@@ -8,21 +8,34 @@ import {
   useTheme,
   useMediaQuery,
   CircularProgress,
+  Slider,
 } from '@mui/material'
-import { PlayCircle, Close } from '@mui/icons-material'
+import {
+  PlayCircle,
+  Close,
+  Pause,
+  VolumeUp,
+  VolumeOff,
+  Fullscreen,
+  FullscreenExit,
+} from '@mui/icons-material'
 
-// Функция для определения типа видео
 const getVideoType = (url) => {
   if (!url) return 'unknown'
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube'
   return 'server'
 }
 
-// Функция для извлечения YouTube ID
 const getYouTubeId = (url) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
   const match = url.match(regExp)
   return match && match[2].length === 11 ? match[2] : null
+}
+
+const formatTime = (seconds) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`
 }
 
 function UniversalVideoPlayer({
@@ -38,18 +51,75 @@ function UniversalVideoPlayer({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [videoType, setVideoType] = useState('unknown')
+  const [isPlaying, setIsPlaying] = useState(autoPlay)
+  const [isMuted, setIsMuted] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [durationSec, setDurationSec] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const videoRef = useRef(null)
+  const playerRef = useRef(null)
 
   useEffect(() => {
     setVideoType(getVideoType(url))
   }, [url])
 
+  useEffect(() => {
+    if (open && videoType === 'server' && videoRef.current) {
+      const video = videoRef.current
+      const updateTime = () => setCurrentTime(video.currentTime)
+      const updateDuration = () => setDurationSec(video.duration)
+
+      video.addEventListener('timeupdate', updateTime)
+      video.addEventListener('durationchange', updateDuration)
+
+      return () => {
+        video.removeEventListener('timeupdate', updateTime)
+        video.removeEventListener('durationchange', updateDuration)
+      }
+    }
+    return () => {}
+  }, [open, videoType])
+
   const handleOpen = () => {
     setOpen(true)
     setLoading(true)
+    setIsPlaying(autoPlay)
   }
 
   const handleClose = () => {
     setOpen(false)
+    setIsPlaying(false)
+  }
+
+  const togglePlay = () => {
+    if (videoRef.current.paused) {
+      videoRef.current.play()
+    } else {
+      videoRef.current.pause()
+    }
+    setIsPlaying(!isPlaying)
+  }
+
+  const toggleMute = () => {
+    videoRef.current.muted = !isMuted
+    setIsMuted(!isMuted)
+  }
+
+  const handleTimeChange = (e, newValue) => {
+    videoRef.current.currentTime = newValue
+    setCurrentTime(newValue)
+  }
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      playerRef.current.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`)
+      })
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
   }
 
   const renderThumbnail = () => {
@@ -69,7 +139,7 @@ function UniversalVideoPlayer({
 
     if (videoType === 'youtube') {
       const videoId = getYouTubeId(url)
-      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
       return (
         <img
           src={thumbnailUrl}
@@ -78,6 +148,9 @@ function UniversalVideoPlayer({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+          }}
+          onError={(e) => {
+            e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
           }}
         />
       )
@@ -88,7 +161,7 @@ function UniversalVideoPlayer({
         sx={{
           width: '100%',
           height: '100%',
-          display: 'flex',
+          // display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.palette.grey[300],
@@ -110,6 +183,7 @@ function UniversalVideoPlayer({
           height="100%"
           src={embedUrl}
           title={title}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-presentation"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           onLoad={() => setLoading(false)}
@@ -121,29 +195,89 @@ function UniversalVideoPlayer({
       )
     }
 
-    // Видео с сервера
     return (
-      <video
-        controls
-        autoPlay={autoPlay}
-        onCanPlay={() => setLoading(false)}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          display: loading ? 'none' : 'block',
-        }}
-      >
-        <source src={url} type="video/mp4" />
-        <track
-          kind="captions"
-          srcLang="ru"
-          label="Русские субтитры"
-          default
-          src=""
-        />
-        Ваш браузер не поддерживает видео тег.
-      </video>
+      <>
+        <video
+          ref={videoRef}
+          controls={false}
+          autoPlay={autoPlay}
+          muted={isMuted}
+          loop
+          poster={thumbnail}
+          preload="metadata"
+          playsInline
+          onCanPlay={() => {
+            setLoading(false)
+            setDurationSec(videoRef.current.duration)
+          }}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onClick={togglePlay}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: loading ? 'none' : 'block',
+            cursor: 'pointer',
+          }}
+        >
+          <source src={url} type="video/mp4" />
+          <source src="video.webm" type="video/webm" />
+          <track
+            kind="captions"
+            src="subtitles.vtt"
+            srcLang="ru"
+            label="Русские субтитры"
+            default
+          />
+          Ваш браузер не поддерживает видео.
+        </video>
+
+        {/* Кастомные контролы только для серверных видео */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            p: 2,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+            color: 'white',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton onClick={togglePlay} color="inherit">
+              {isPlaying ? <Pause /> : <PlayCircle />}
+            </IconButton>
+            <IconButton onClick={toggleMute} color="inherit">
+              {isMuted ? <VolumeOff /> : <VolumeUp />}
+            </IconButton>
+            <Typography variant="body2" sx={{ minWidth: '50px' }}>
+              {formatTime(currentTime)}
+            </Typography>
+            <Slider
+              value={currentTime}
+              max={durationSec || 100}
+              onChange={handleTimeChange}
+              sx={{
+                flexGrow: 1,
+                color: 'white',
+                '& .MuiSlider-thumb': {
+                  width: 12,
+                  height: 12,
+                },
+              }}
+            />
+            <Typography variant="body2" sx={{ minWidth: '50px' }}>
+              {formatTime(durationSec)}
+            </Typography>
+            <IconButton onClick={toggleFullscreen} color="inherit">
+              {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
+            </IconButton>
+          </Box>
+        </Box>
+      </>
     )
   }
 
@@ -237,6 +371,7 @@ function UniversalVideoPlayer({
         }}
       >
         <Box
+          ref={playerRef}
           sx={{
             position: 'relative',
             width: isMobile ? '100%' : '80%',
@@ -285,23 +420,25 @@ function UniversalVideoPlayer({
 
           {renderVideoPlayer()}
 
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: 2,
-              background:
-                'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-              color: 'white',
-            }}
-          >
-            <Typography variant="h6">{title}</Typography>
-            {views && (
-              <Typography variant="body2">{`${views} просмотров`}</Typography>
-            )}
-          </Box>
+          {videoType !== 'youtube' && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                p: 2,
+                background:
+                  'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+                color: 'white',
+              }}
+            >
+              <Typography variant="h6">{title}</Typography>
+              {views && (
+                <Typography variant="body2">{`${views} просмотров`}</Typography>
+              )}
+            </Box>
+          )}
         </Box>
       </Modal>
     </>

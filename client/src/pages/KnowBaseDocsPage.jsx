@@ -120,7 +120,7 @@ function KnowBasePageDocs() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg">
       <KnowBaseHeader title="Нормативно-правовые документы" />
 
       <Grid2 container spacing={4} justifyContent="center">

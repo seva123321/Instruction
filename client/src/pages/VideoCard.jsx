@@ -136,9 +136,9 @@ function VideoCard({ video, isMobile }) {
             <Typography variant="caption" color="text.secondary">
               {video.duration}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            {/* <Typography variant="caption" color="text.secondary">
               {`${video.views} просмотров`}
-            </Typography>
+            </Typography> */}
           </Box>
         </CardContent>
 
@@ -243,10 +243,10 @@ function VideoCard({ video, isMobile }) {
               <Box
                 sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}
               >
-                <Typography variant="body2">{video.duration}</Typography>
-                <Typography variant="body2">
+                {/* <Typography variant="body2">{video.duration}</Typography> */}
+                {/* <Typography variant="body2">
                   {`${video.views} просмотров`}
-                </Typography>
+                </Typography> */}
               </Box>
             </Box>
           </Box>

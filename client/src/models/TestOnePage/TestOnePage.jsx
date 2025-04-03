@@ -45,7 +45,7 @@ function OfflineIndicator() {
 
 function BackButton({ isMobile }) {
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box>
       <Link to="/tests">
         <Button
           variant="outlined"
@@ -70,17 +70,21 @@ function TestHeader({
       <Typography
         variant={isMobile ? 'h6' : 'h5'}
         gutterBottom
-        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}
+        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem', pl: isMobile ? 3 : 0 }}
       >
         {testName}
       </Typography>
-      <Typography
-        variant="subtitle1"
-        gutterBottom
-        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
-      >
-        {`Вопрос ${currentQuestionIndex + 1} из ${questionsLength}`}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Typography
+          variant="subtitle1"
+          gutterBottom
+          sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+        >
+          {`Вопрос ${currentQuestionIndex + 1} из ${questionsLength}`}
+        </Typography>
+        <BackButton isMobile={isMobile} />
+      </Box>
+
       <Divider sx={{ my: isMobile ? 1 : 2 }} />
     </>
   )
@@ -337,7 +341,7 @@ function TestOnePage() {
     const testDuration = Math.floor((completionTime - testStartTime) / 1000)
 
     const testResults = {
-      test_id: id,
+      test: id,
       test_title: test.name,
       is_passed: true,
       total_score: score,
@@ -464,7 +468,7 @@ function TestOnePage() {
   if (completed && finalResults) {
     return (
       <TestResultsView
-        testId={finalResults.test_id}
+        testId={finalResults.test}
         testTitle={finalResults.test_title}
         score={finalResults.total_score}
         totalPoints={totalPoints}
@@ -487,13 +491,11 @@ function TestOnePage() {
         maxWidth: 800,
         width: '80vw',
         margin: '0 auto',
-        py: 2,
         touchAction: isMobile ? 'pan-y' : 'auto',
       }}
       {...(isMobile ? swipeHandlers : {})}
     >
       {!isOnline && <OfflineIndicator />}
-      <BackButton isMobile={isMobile} />
       <TestHeader
         testName={test.name}
         currentQuestionIndex={currentQuestionIndex}

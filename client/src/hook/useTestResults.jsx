@@ -20,7 +20,7 @@ const initDB = async () => {
       upgrade(db) {
         if (!db.objectStoreNames.contains('results')) {
           const store = db.createObjectStore('results', { keyPath: 'id' })
-          store.createIndex('by_test_id', 'test_id', { unique: false })
+          store.createIndex('by_test', 'test', { unique: false })
         }
         if (!db.objectStoreNames.contains('pendingResults')) {
           db.createObjectStore('pendingResults', { keyPath: 'id' })
@@ -102,14 +102,14 @@ const useTestResults = () => {
       withDB(async (db) => {
         try {
           const tx = db.transaction('results', 'readonly')
-          const results = await tx.store.index('by_test_id').getAll(testId)
+          const results = await tx.store.index('by_test').getAll(testId)
           await tx.done
           return results
         } catch (error) {
           const tx = db.transaction('results', 'readonly')
           const allResults = await tx.store.getAll()
           await tx.done
-          return allResults.filter((r) => r.test_id === testId)
+          return allResults.filter((r) => r.test === testId)
         }
       }),
     [withDB]
@@ -120,7 +120,7 @@ const useTestResults = () => {
       const testResults = {
         ...results,
         id: `${testId}-${Date.now()}`,
-        test_id: testId,
+        test: testId,
         start_time: new Date(startTime).toISOString(),
         completion_time: new Date().toISOString(),
         test_duration: Math.floor((new Date() - new Date(startTime)) / 1000),

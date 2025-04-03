@@ -20,24 +20,137 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='User',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=150, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()], verbose_name='username')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('first_name', models.CharField(max_length=150, verbose_name='Имя')),
-                ('last_name', models.CharField(max_length=150, verbose_name='Фамилия')),
-                ('middle_name', models.CharField(max_length=150, verbose_name='Фамилия')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'password',
+                    models.CharField(max_length=128, verbose_name='password'),
+                ),
+                (
+                    'last_login',
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name='last login'
+                    ),
+                ),
+                (
+                    'is_superuser',
+                    models.BooleanField(
+                        default=False,
+                        help_text='Designates that this user has all permissions without explicitly assigning them.',
+                        verbose_name='superuser status',
+                    ),
+                ),
+                (
+                    'username',
+                    models.CharField(
+                        error_messages={
+                            'unique': 'A user with that username already exists.'
+                        },
+                        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.',
+                        max_length=150,
+                        unique=True,
+                        validators=[
+                            django.contrib.auth.validators.UnicodeUsernameValidator()
+                        ],
+                        verbose_name='username',
+                    ),
+                ),
+                (
+                    'is_staff',
+                    models.BooleanField(
+                        default=False,
+                        help_text='Designates whether the user can log into this admin site.',
+                        verbose_name='staff status',
+                    ),
+                ),
+                (
+                    'is_active',
+                    models.BooleanField(
+                        default=True,
+                        help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.',
+                        verbose_name='active',
+                    ),
+                ),
+                (
+                    'date_joined',
+                    models.DateTimeField(
+                        default=django.utils.timezone.now,
+                        verbose_name='date joined',
+                    ),
+                ),
+                (
+                    'first_name',
+                    models.CharField(max_length=150, verbose_name='Имя'),
+                ),
+                (
+                    'last_name',
+                    models.CharField(max_length=150, verbose_name='Фамилия'),
+                ),
+                (
+                    'middle_name',
+                    models.CharField(max_length=150, verbose_name='Фамилия'),
+                ),
                 ('birthday', models.DateField(verbose_name='Дата рождения')),
-                ('position', models.CharField(max_length=150, verbose_name='Должность')),
-                ('email', models.EmailField(max_length=254, unique=True, verbose_name='Электронная почта')),
-                ('mobile_phone', models.IntegerField(unique=True, verbose_name='Мобильный телефон')),
-                ('role', models.CharField(choices=[('admin', 'Администратор'), ('user', 'Пользователь'), ('management', 'Управление')], default='user', max_length=10, verbose_name='Роль')),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+                (
+                    'position',
+                    models.CharField(max_length=150, verbose_name='Должность'),
+                ),
+                (
+                    'email',
+                    models.EmailField(
+                        max_length=254,
+                        unique=True,
+                        verbose_name='Электронная почта',
+                    ),
+                ),
+                (
+                    'mobile_phone',
+                    models.IntegerField(
+                        unique=True, verbose_name='Мобильный телефон'
+                    ),
+                ),
+                (
+                    'role',
+                    models.CharField(
+                        choices=[
+                            ('admin', 'Администратор'),
+                            ('user', 'Пользователь'),
+                            ('management', 'Управление'),
+                        ],
+                        default='user',
+                        max_length=10,
+                        verbose_name='Роль',
+                    ),
+                ),
+                (
+                    'groups',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.group',
+                        verbose_name='groups',
+                    ),
+                ),
+                (
+                    'user_permissions',
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text='Specific permissions for this user.',
+                        related_name='user_set',
+                        related_query_name='user',
+                        to='auth.permission',
+                        verbose_name='user permissions',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Пользователь',
@@ -51,8 +164,19 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Instruction',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=100, verbose_name='Название'),
+                ),
                 ('text', models.TextField(verbose_name='Текст инструктажа')),
             ],
             options={
@@ -63,9 +187,23 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Media',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Название')),
-                ('file', models.FileField(upload_to='media/', verbose_name='Файл')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=100, verbose_name='Название'),
+                ),
+                (
+                    'file',
+                    models.FileField(upload_to='media/', verbose_name='Файл'),
+                ),
             ],
             options={
                 'verbose_name': 'Медиафайл',
@@ -75,10 +213,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Tests',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=100, verbose_name='Название'),
+                ),
                 ('description', models.TextField(verbose_name='Описание')),
-                ('passing_score', models.IntegerField(verbose_name='Проходной балл')),
+                (
+                    'passing_score',
+                    models.IntegerField(verbose_name='Проходной балл'),
+                ),
             ],
             options={
                 'verbose_name': 'Тест',
@@ -88,9 +240,23 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TypeOfInstruction',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='Название')),
-                ('frequency_of_passage', models.IntegerField(verbose_name='Частота прохождения')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=100, verbose_name='Название'),
+                ),
+                (
+                    'frequency_of_passage',
+                    models.IntegerField(verbose_name='Частота прохождения'),
+                ),
             ],
             options={
                 'verbose_name': 'Тип инструктажа',
@@ -100,12 +266,46 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TestResult',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('result', models.BooleanField(verbose_name='Сдал тест')),
-                ('date', models.DateTimeField(auto_now_add=True, verbose_name='Дата прохождения')),
-                ('time', models.TimeField(auto_now_add=True, verbose_name='Время прохождения')),
-                ('test', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='test_results', to='api.tests', verbose_name='Тест')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='test_results', to=settings.AUTH_USER_MODEL, verbose_name='Пользователь')),
+                (
+                    'date',
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name='Дата прохождения'
+                    ),
+                ),
+                (
+                    'time',
+                    models.TimeField(
+                        auto_now_add=True, verbose_name='Время прохождения'
+                    ),
+                ),
+                (
+                    'test',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='test_results',
+                        to='api.tests',
+                        verbose_name='Тест',
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='test_results',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Пользователь',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Результат тестирования',
@@ -115,9 +315,25 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Question',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('question', models.TextField(verbose_name='Вопрос')),
-                ('tests', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='api.tests', verbose_name='Тест')),
+                (
+                    'tests',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='questions',
+                        to='api.tests',
+                        verbose_name='Тест',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Вопрос',
@@ -127,10 +343,34 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Publickey',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('public_key', models.TextField(verbose_name='Публичный ключ')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='publickey', to=settings.AUTH_USER_MODEL, verbose_name='Пользователь')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'public_key',
+                    models.TextField(verbose_name='Публичный ключ'),
+                ),
+                (
+                    'created_at',
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name='Дата создания'
+                    ),
+                ),
+                (
+                    'user',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='publickey',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Пользователь',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Публичный ключ',
@@ -140,12 +380,49 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InstructionResult',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('result', models.BooleanField(verbose_name='Прошёл инструктаж')),
-                ('date', models.DateTimeField(auto_now_add=True, verbose_name='Дата прохождения')),
-                ('time', models.TimeField(auto_now_add=True, verbose_name='Время прохождения')),
-                ('instruction', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instruction_results', to='api.instruction', verbose_name='Инструктаж')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instruction_results', to=settings.AUTH_USER_MODEL, verbose_name='Пользователь')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'result',
+                    models.BooleanField(verbose_name='Прошёл инструктаж'),
+                ),
+                (
+                    'date',
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name='Дата прохождения'
+                    ),
+                ),
+                (
+                    'time',
+                    models.TimeField(
+                        auto_now_add=True, verbose_name='Время прохождения'
+                    ),
+                ),
+                (
+                    'instruction',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='instruction_results',
+                        to='api.instruction',
+                        verbose_name='Инструктаж',
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='instruction_results',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Пользователь',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Результат инструктажа',
@@ -155,7 +432,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InstructionAgreement',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('health', models.TextField(blank=True, null=True)),
                 ('noAlcohol', models.TextField(blank=True, null=True)),
                 ('isProvided', models.TextField(blank=True, null=True)),
@@ -165,8 +450,21 @@ class Migration(migrations.Migration):
                 ('report', models.TextField(blank=True, null=True)),
                 ('medAid', models.TextField(blank=True, null=True)),
                 ('attention', models.TextField(blank=True, null=True)),
-                ('date', models.DateTimeField(auto_now_add=True, verbose_name='Дата согласия')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instruction_agreements', to=settings.AUTH_USER_MODEL, verbose_name='Пользователь')),
+                (
+                    'date',
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name='Дата согласия'
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='instruction_agreements',
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name='Пользователь',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Согласие на инструктаж',
@@ -176,15 +474,39 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='instruction',
             name='type_of_instruction',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='instructions', to='api.typeofinstruction', verbose_name='Тип инструктажа'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='instructions',
+                to='api.typeofinstruction',
+                verbose_name='Тип инструктажа',
+            ),
         ),
         migrations.CreateModel(
             name='Answer',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('answer', models.TextField(verbose_name='Ответ')),
-                ('is_correct', models.BooleanField(verbose_name='Правильный ответ')),
-                ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='api.question', verbose_name='Вопрос')),
+                (
+                    'is_correct',
+                    models.BooleanField(verbose_name='Правильный ответ'),
+                ),
+                (
+                    'question',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='answers',
+                        to='api.question',
+                        verbose_name='Вопрос',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Ответ',

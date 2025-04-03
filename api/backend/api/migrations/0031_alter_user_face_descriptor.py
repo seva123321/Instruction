@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='face_descriptor',
-            field=models.TextField(blank=True, null=True, unique=True, verbose_name='Дескриптор лица'),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                unique=True,
+                verbose_name='Дескриптор лица',
+            ),
         ),
     ]

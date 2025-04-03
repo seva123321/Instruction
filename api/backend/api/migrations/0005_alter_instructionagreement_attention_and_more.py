@@ -6,53 +6,82 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0004_rename_ispassed_instructionagreement_is_passed_and_more'),
+        (
+            'api',
+            '0004_rename_ispassed_instructionagreement_is_passed_and_more',
+        ),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='instructionagreement',
             name='attention',
-            field=models.TextField(blank=True, null=True, verbose_name='Внимание'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Внимание'
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='compliance',
-            field=models.TextField(blank=True, null=True, verbose_name='Соблюдение правил техники безопасности'),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name='Соблюдение правил техники безопасности',
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='emergency',
-            field=models.TextField(blank=True, null=True, verbose_name='Правила действий при возникновении чрезвычайных ситуаций'),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name='Правила действий при возникновении чрезвычайных ситуаций',
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='health',
-            field=models.TextField(blank=True, null=True, verbose_name='Состояние здоровья'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Состояние здоровья'
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='is_passed',
-            field=models.TextField(blank=True, null=True, verbose_name='Прошел инструктаж по безопасности'),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name='Прошел инструктаж по безопасности',
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='is_provided',
-            field=models.TextField(blank=True, null=True, verbose_name='Предоставлены средства индивидуальной защиты'),
+            field=models.TextField(
+                blank=True,
+                null=True,
+                verbose_name='Предоставлены средства индивидуальной защиты',
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='med_aid',
-            field=models.TextField(blank=True, null=True, verbose_name='Первая помощь'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Первая помощь'
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='no_alcohol',
-            field=models.TextField(blank=True, null=True, verbose_name='Отказ от алкоголя'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Отказ от алкоголя'
+            ),
         ),
         migrations.AlterField(
             model_name='instructionagreement',
             name='report',
-            field=models.TextField(blank=True, null=True, verbose_name='Доклад'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Доклад'
+            ),
         ),
     ]

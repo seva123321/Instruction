@@ -14,12 +14,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='video',
             name='date',
-            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2025, 4, 2, 15, 57, 15, 773363, tzinfo=datetime.timezone.utc), verbose_name='Дата загрузки'),
+            field=models.DateTimeField(
+                auto_now_add=True,
+                default=datetime.datetime(
+                    2025,
+                    4,
+                    2,
+                    15,
+                    57,
+                    15,
+                    773363,
+                    tzinfo=datetime.timezone.utc,
+                ),
+                verbose_name='Дата загрузки',
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
             model_name='video',
             name='file',
-            field=models.FileField(blank=True, upload_to='media/videos/', verbose_name='Видеофайл'),
+            field=models.FileField(
+                blank=True, upload_to='media/videos/', verbose_name='Видеофайл'
+            ),
         ),
     ]

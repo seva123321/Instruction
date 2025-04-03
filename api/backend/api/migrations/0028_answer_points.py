@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='answer',
             name='points',
-            field=models.IntegerField(default=1, verbose_name='Количество баллов за ответ'),
+            field=models.IntegerField(
+                default=1, verbose_name='Количество баллов за ответ'
+            ),
             preserve_default=False,
         ),
     ]

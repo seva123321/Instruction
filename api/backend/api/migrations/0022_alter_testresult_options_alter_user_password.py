@@ -12,7 +12,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='testresult',
-            options={'ordering': ('-date',), 'verbose_name': 'Результат тестирования', 'verbose_name_plural': 'Результаты тестирования'},
+            options={
+                'ordering': ('-date',),
+                'verbose_name': 'Результат тестирования',
+                'verbose_name_plural': 'Результаты тестирования',
+            },
         ),
         migrations.AlterField(
             model_name='user',

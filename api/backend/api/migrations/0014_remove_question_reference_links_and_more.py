@@ -18,6 +18,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='referencelink',
             name='question',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='referenceLinks', to='api.question', verbose_name='Вопрос'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='referenceLinks',
+                to='api.question',
+                verbose_name='Вопрос',
+            ),
         ),
     ]

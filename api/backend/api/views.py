@@ -13,13 +13,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.models import (
-    User,
-    Instruction,
-    Tests,
-    Video,
-    TestResult
-)
+from api.models import User, Instruction, Tests, Video, TestResult
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
@@ -30,7 +24,7 @@ from api.serializers import (
     SignUpSerializer,
     TestResultSerializer,
     VideoSerializer,
-    TestResultCreateSerializer
+    TestResultCreateSerializer,
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -38,7 +32,7 @@ from backend.constants import ME
 
 @extend_schema(
     tags=['User'],
-    description='Получение, создание, изменение и удаление пользователей.'
+    description='Получение, создание, изменение и удаление пользователей.',
 )
 class UserViewSet(ModelViewSet):
     """Представление для операций с пользователями."""
@@ -51,16 +45,18 @@ class UserViewSet(ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(
-        detail=False, methods=['GET', 'PATCH'],
-        url_path=ME, url_name=ME,
-        permission_classes=(IsAuthenticated,)
+        detail=False,
+        methods=['GET', 'PATCH'],
+        url_path=ME,
+        url_name=ME,
+        permission_classes=(IsAuthenticated,),
     )
     def profile(self, request):
         """Представление профиля текущего пользователя."""
         if not request.method == 'PATCH':
-            return Response(UserSerializer(
-                request.user
-            ).data, status=status.HTTP_200_OK)
+            return Response(
+                UserSerializer(request.user).data, status=status.HTTP_200_OK
+            )
         serializer = UserSerializer(
             request.user, data=request.data, partial=True
         )
@@ -69,10 +65,7 @@ class UserViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema(
-    tags=['SignUp'],
-    description='Регистрация пользователей.'
-)
+@extend_schema(tags=['SignUp'], description='Регистрация пользователей.')
 class SignUpView(APIView):
     """Представление для регистрации новых пользователей."""
 
@@ -101,7 +94,7 @@ class SignUpView(APIView):
                 },
                 "api_user_mobile_phone": {
                     "mobile_phone": "Пользователь с таким номером "
-                                    "телефона уже существует"
+                    "телефона уже существует"
                 },
                 "api_user_face_descriptor": {
                     "face_descriptor": "Такой дескриптор лица уже существует"
@@ -121,16 +114,14 @@ class SignUpView(APIView):
 
         return Response(
             {"id": user.id, "email": user.email},
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
 
-@extend_schema(
-    tags=['Login'],
-    description='Аутентификация.'
-)
+@extend_schema(tags=['Login'], description='Аутентификация.')
 class LoginView(APIView):
     """Представление для входа через сессии"""
+
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
@@ -143,10 +134,12 @@ class LoginView(APIView):
                     'detail': 'Требуется email и пароль',
                     'errors': {
                         'email': 'Обязательное поле' if not email else None,
-                        'password': 'Обязательное поле' if not password else None
-                    }
+                        'password': (
+                            'Обязательное поле' if not password else None
+                        ),
+                    },
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -164,11 +157,9 @@ class LoginView(APIView):
                 return Response(
                     {
                         'detail': 'Ошибка аутентификации',
-                        'errors': {
-                            error_field: error_msg
-                        }
+                        'errors': {error_field: error_msg},
                     },
-                    status=status.HTTP_401_UNAUTHORIZED
+                    status=status.HTTP_401_UNAUTHORIZED,
                 )
 
             login(request, user)
@@ -178,25 +169,19 @@ class LoginView(APIView):
                     'detail': 'Успешный вход',
                     'user_id': user.id,
                     'email': user.email,
-                    'first_name': user.first_name
+                    'first_name': user.first_name,
                 },
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
 
         except Exception as e:
             return Response(
-                {
-                    'detail': 'Произошла ошибка при входе',
-                    'error': str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'detail': 'Произошла ошибка при входе', 'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
-@extend_schema(
-    tags=['LoginFace'],
-    description='Аутентификация по лицу.'
-)
+@extend_schema(tags=['LoginFace'], description='Аутентификация по лицу.')
 class FaceLoginView(APIView):
     """Аутентификация по лицу"""
 
@@ -207,8 +192,10 @@ class FaceLoginView(APIView):
         face_descriptor = request.data.get("face_descriptor")
         if not face_descriptor or len(face_descriptor) != 128:
             return Response(
-                {'error': 'Неправильный формат дескриптора'
-                          ' - должно быть 128 элементов'},
+                {
+                    'error': 'Неправильный формат дескриптора'
+                    ' - должно быть 128 элементов'
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -240,7 +227,10 @@ class FaceLoginView(APIView):
                 distance = np.linalg.norm(input_descriptor - stored_descriptor)
 
                 # Проверяем пороговое значение
-                if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
+                if (
+                    distance < min_distance
+                    and distance < settings.FACE_MATCH_THRESHOLD
+                ):
                     min_distance = distance
                     best_match = user
 
@@ -277,15 +267,11 @@ class LogoutView(APIView):
     def post(self, request):
         logout(request)
         return Response(
-            {'detail': 'Успешный выход'},
-            status=status.HTTP_200_OK
+            {'detail': 'Успешный выход'}, status=status.HTTP_200_OK
         )
 
 
-@extend_schema(
-    tags=['Instruction'],
-    description='Получение интруктажей.'
-)
+@extend_schema(tags=['Instruction'], description='Получение интруктажей.')
 class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения инструктажа."""
 
@@ -299,8 +285,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
         first_instruction = Instruction.objects.first()
         if first_instruction:
             response.data['first_instruction'] = InstructionSerializer(
-                first_instruction,
-                context=self.get_serializer_context()
+                first_instruction, context=self.get_serializer_context()
             ).data
 
         return response
@@ -312,17 +297,12 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
         return InstructionSerializer
 
 
-@extend_schema(
-    tags=['Tests'],
-    description='Получение тестов.'
-)
+@extend_schema(tags=['Tests'], description='Получение тестов.')
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения тестов."""
 
     queryset = Tests.objects.prefetch_related(
-        'questions',
-        'questions__answers',
-        'questions__reference_link'
+        'questions', 'questions__answers', 'questions__reference_link'
     ).all()
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
@@ -334,10 +314,7 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return TestSerializer
 
 
-@extend_schema(
-    tags=["Tests"],
-    description="Получение видео."
-)
+@extend_schema(tags=["Tests"], description="Получение видео.")
 class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения видео."""
 
@@ -348,7 +325,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
 
 @extend_schema(
     tags=['TestResult'],
-    description='Сохранение результатов тестов пользователя.'
+    description='Сохранение результатов тестов пользователя.',
 )
 class TestResultCreateView(APIView):
     """API для сохранения результатов тестирования."""
@@ -357,8 +334,7 @@ class TestResultCreateView(APIView):
 
     def post(self, request):
         serializer = TestResultCreateSerializer(
-            data=request.data,
-            context={'request': request}
+            data=request.data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.validated_data['user'] = request.user
@@ -366,7 +342,7 @@ class TestResultCreateView(APIView):
 
         return Response(
             TestResultSerializer(
-                test_result,
-                context={'request': request}).data,
-            status=status.HTTP_201_CREATED
+                test_result, context={'request': request}
+            ).data,
+            status=status.HTTP_201_CREATED,
         )

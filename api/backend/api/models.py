@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
 
+from .utils.validators import normalize_phone_number
 from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
     MAX_LENGTH_FIRST_NAME,
@@ -16,12 +17,13 @@ from backend.constants import (
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSING_SCORE,
     MIN_LENGTH_PASSING_SCORE,
-    MAX_LENGTH_TYPE_QUESTION
+    MAX_LENGTH_TYPE_QUESTION,
 )
 
 
 class UserManager(BaseUserManager):
     """Кастомный менеджер для модели User."""
+
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
@@ -78,15 +80,8 @@ class User(AbstractUser):
         'Отчество',
         max_length=MAX_LENGTH_MIDDLE_NAME,
     )
-    birthday = models.DateField(
-        'Дата рождения',
-        blank=True,
-        null=True
-    )
-    position = models.CharField(
-        'Должность',
-        max_length=MAX_LENGTH_POSITION
-    )
+    birthday = models.DateField('Дата рождения', blank=True, null=True)
+    position = models.CharField('Должность', max_length=MAX_LENGTH_POSITION)
     email = models.EmailField(
         'Электронная почта',
         unique=True,
@@ -119,6 +114,11 @@ class User(AbstractUser):
     def __str__(self):
         """Возвращает строковое представление объекта пользователя."""
         return f'{self.last_name} {self.first_name}'
+
+    def save(self, *args, **kwargs):
+        if self.mobile_phone:
+            self.mobile_phone = normalize_phone_number(self.mobile_phone)
+        super().save(*args, **kwargs)
 
 
 class TypeOfInstruction(models.Model):
@@ -154,7 +154,7 @@ class Instruction(models.Model):
         related_name='instructions',
         verbose_name='Тип инструктажа',
         blank=True,
-        null=True
+        null=True,
     )
     text = models.TextField(
         'Текст инструктажа',
@@ -164,7 +164,7 @@ class Instruction(models.Model):
         related_name='instruction',
         verbose_name='Согласие на инструктаж',
         blank=True,
-        null=True
+        null=True,
     )
 
     class Meta:
@@ -179,16 +179,8 @@ class Instruction(models.Model):
 class InstructionAgreement(models.Model):
     """Модель согласия на инструктаж."""
 
-    name = models.TextField(
-        'Название согласия',
-        blank=True,
-        null=True
-    )
-    text = models.TextField(
-        'Текст согласия',
-        blank=True,
-        null=True
-    )
+    name = models.TextField('Название согласия', blank=True, null=True)
+    text = models.TextField('Текст согласия', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Согласие на инструктаж'
@@ -212,8 +204,8 @@ class Tests(models.Model):
         'Проходной балл',
         validators=[
             MinValueValidator(MIN_LENGTH_PASSING_SCORE),
-            MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
-        ]
+            MaxValueValidator(MAX_LENGTH_PASSING_SCORE),
+        ],
     )
     total_points = models.IntegerField(
         'Максимальное количество баллов за тест',
@@ -244,18 +236,10 @@ class Question(models.Model):
         related_name='questions',
         verbose_name='Тест',
         blank=True,
-        null=True
+        null=True,
     )
-    explanation = models.TextField(
-        'Объяснение',
-        default='',
-        blank=True
-    )
-    image = models.URLField(
-        'Изображение',
-        blank=True,
-        null=True
-    )
+    explanation = models.TextField('Объяснение', default='', blank=True)
+    image = models.URLField('Изображение', blank=True, null=True)
     question_type = models.CharField(
         'Тип вопроса',
         max_length=MAX_LENGTH_TYPE_QUESTION,
@@ -278,16 +262,14 @@ class ReferenceLink(models.Model):
     title = models.TextField(
         'Заголовок',
     )
-    url = models.URLField(
-        'URL'
-    )
+    url = models.URLField('URL')
     question = models.ForeignKey(
         'Question',
         on_delete=models.SET_NULL,
         related_name='reference_link',
         verbose_name='Вопрос',
         blank=True,
-        null=True
+        null=True,
     )
 
     class Meta:
@@ -308,16 +290,14 @@ class Answer(models.Model):
     is_correct = models.BooleanField(
         'Правильный ответ',
     )
-    points = models.IntegerField(
-        'Количество баллов за ответ'
-    )
+    points = models.IntegerField('Количество баллов за ответ')
     question = models.ForeignKey(
         Question,
         on_delete=models.SET_NULL,
         related_name='answers',
         verbose_name='Вопрос',
         blank=True,
-        null=True
+        null=True,
     )
 
     class Meta:
@@ -338,7 +318,7 @@ class TestResult(models.Model):
         related_name='test_results',
         verbose_name='Пользователь',
         blank=True,
-        null=True
+        null=True,
     )
     test = models.ForeignKey(
         Tests,
@@ -346,36 +326,22 @@ class TestResult(models.Model):
         related_name='test_results',
         verbose_name='Тест',
         blank=True,
-        null=True
+        null=True,
     )
-    is_passed = models.BooleanField(
-        'Тест пройден',
-        default=False
-    )
+    is_passed = models.BooleanField('Тест пройден', default=False)
     mark = models.IntegerField(
         'Оценка',
         validators=[
             MinValueValidator(MIN_LENGTH_PASSING_SCORE),
-            MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
-        ]
+            MaxValueValidator(MAX_LENGTH_PASSING_SCORE),
+        ],
     )
-    score = models.IntegerField(
-        'Набранные баллы',
-        default=0
-    )
-    total_points = models.IntegerField(
-        'Максимальный балл',
-        default=0
-    )
-    start_time = models.DateTimeField(
-        'Время начала теста'
-    )
-    completion_time = models.DateTimeField(
-        'Время завершения теста'
-    )
+    score = models.IntegerField('Набранные баллы', default=0)
+    total_points = models.IntegerField('Максимальный балл', default=0)
+    start_time = models.DateTimeField('Время начала теста')
+    completion_time = models.DateTimeField('Время завершения теста')
     test_duration = models.IntegerField(
-        'Длительность теста (в секундах)',
-        default=0
+        'Длительность теста (в секундах)', default=0
     )
 
     class Meta:
@@ -384,8 +350,10 @@ class TestResult(models.Model):
         ordering = ('-completion_time',)
 
     def __str__(self):
-        return (f"{self.user} - {self.test}"
-                f" - {'Пройден' if self.is_passed else 'Не пройден'}")
+        return (
+            f"{self.user} - {self.test}"
+            f" - {'Пройден' if self.is_passed else 'Не пройден'}"
+        )
 
 
 class UserAnswer(models.Model):
@@ -397,26 +365,16 @@ class UserAnswer(models.Model):
         related_name='user_answers',
         verbose_name='Результат теста',
         null=True,
-        blank=True
+        blank=True,
     )
     question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        verbose_name='Вопрос'
+        Question, on_delete=models.CASCADE, verbose_name='Вопрос'
     )
     selected_answer = models.ForeignKey(
-        Answer,
-        on_delete=models.CASCADE,
-        verbose_name='Выбранный ответ'
+        Answer, on_delete=models.CASCADE, verbose_name='Выбранный ответ'
     )
-    is_correct = models.BooleanField(
-        'Ответ верный',
-        default=False
-    )
-    points_earned = models.IntegerField(
-        'Полученные баллы',
-        default=0
-    )
+    is_correct = models.BooleanField('Ответ верный', default=False)
+    points_earned = models.IntegerField('Полученные баллы', default=0)
 
     class Meta:
         verbose_name = 'Ответ пользователя'
@@ -435,7 +393,7 @@ class InstructionResult(models.Model):
         related_name='instruction_results',
         verbose_name='Пользователь',
         blank=True,
-        null=True
+        null=True,
     )
     instruction = models.ForeignKey(
         Instruction,
@@ -443,7 +401,7 @@ class InstructionResult(models.Model):
         related_name='instruction_results',
         verbose_name='Инструктаж',
         blank=True,
-        null=True
+        null=True,
     )
     result = models.BooleanField(
         'Прошёл инструктаж',
@@ -478,11 +436,7 @@ class Video(models.Model):
         ],
         default='youtube',
     )
-    url = models.URLField(
-        'URL',
-        blank=True,
-        null=True
-    )
+    url = models.URLField('URL', blank=True, null=True)
     title = models.CharField(
         'Название',
         max_length=MAX_LENGTH_MEDIA_NAME,

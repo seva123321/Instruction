@@ -98,10 +98,32 @@ class SignUpView(APIView):
                 ),
             )
         except IntegrityError as e:
-            raise ValidationError(e)
+            error_messages = {
+                "api_user_email": {
+                    "email": "Пользователь с таким email уже существует"
+                },
+                "api_user_mobile_phone": {
+                    "mobile_phone": "Пользователь с таким номером "
+                                    "телефона уже существует"
+                },
+                "api_user_face_descriptor": {
+                    "face_descriptor": "Такой дескриптор лица уже существует"
+                },
+            }
+
+            for db_error, message in error_messages.items():
+                if db_error in str(e):
+                    raise ValidationError(message)
+
+            raise ValidationError(
+                {"detail": "Ошибка при создании пользователя"}
+            )
+
+        except Exception as e:
+            raise ValidationError({"detail": str(e)})
 
         return Response(
-            {'id': user.id, 'email': user.email},
+            {"id": user.id, "email": user.email},
             status=status.HTTP_201_CREATED
         )
 

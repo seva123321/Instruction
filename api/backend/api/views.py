@@ -88,12 +88,14 @@ class SignUpView(APIView):
 
         try:
             user = User.objects.create_user(
-                email=serializer.validated_data['email'],
-                first_name=serializer.validated_data['first_name'],
-                last_name=serializer.validated_data['last_name'],
-                password=serializer.validated_data['password'],
-                mobile_phone=serializer.validated_data['mobile_phone'],
-                face_descriptor=serializer.validated_data['face_descriptor']
+                email=serializer.validated_data["email"],
+                first_name=serializer.validated_data["first_name"],
+                last_name=serializer.validated_data["last_name"],
+                password=serializer.validated_data["password"],
+                mobile_phone=serializer.validated_data["mobile_phone"],
+                face_descriptor=str(
+                    serializer.validated_data["face_descriptor"].tolist()
+                ),
             )
         except IntegrityError as e:
             raise ValidationError(e)

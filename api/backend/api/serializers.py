@@ -1,4 +1,5 @@
 from django.conf import settings
+import numpy as np
 from rest_framework import serializers
 
 from backend.constants import (
@@ -24,6 +25,7 @@ from api.models import (
     TestResult,
     Video
 )
+from api.utils import is_face_already_registered
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -71,6 +73,27 @@ class SignUpSerializer(serializers.Serializer):
         child=serializers.FloatField(),
         max_length=MAX_LENGTH_FACE_DESCRIPTOR
     )
+
+
+    def validate_face_descriptor(self, value):
+        try:
+            input_descriptor = np.array(value, dtype=np.float32)
+        except:
+            raise serializers.ValidationError(
+                'Invalid face descriptor format'
+            )
+
+        if len(input_descriptor) != 128:
+            raise serializers.ValidationError(
+                'Face descriptor must have 128 elements'
+            )
+
+        if is_face_already_registered(input_descriptor):
+            raise serializers.ValidationError(
+                'User with similar face already exists'
+            )
+
+        return value
 
 
 class LoginSerializer(serializers.Serializer):

@@ -207,7 +207,8 @@ class FaceLoginView(APIView):
         face_descriptor = request.data.get("face_descriptor")
         if not face_descriptor or len(face_descriptor) != 128:
             return Response(
-                {"error": "Invalid face descriptor - must have exactly 128 elements"},
+                {'error': 'Неправильный формат дескриптора'
+                          ' - должно быть 128 элементов'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -216,7 +217,7 @@ class FaceLoginView(APIView):
             input_descriptor = np.array(face_descriptor, dtype=np.float32)
         except Exception as e:
             return Response(
-                {"error": f"Invalid descriptor format: {str(e)}"},
+                {'error': f'Неправильный формат дескриптора: {str(e)}'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -262,7 +263,7 @@ class FaceLoginView(APIView):
             )
 
         return Response(
-            {"error": "Face not recognized or no matching users found"},
+            {'error': 'Лицо не распознано или пользователь не существует'},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 

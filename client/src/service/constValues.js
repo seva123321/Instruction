@@ -1,36 +1,40 @@
 export const agreements = [
   {
-    health: 'Я чувствую себя здоровым и не имею симптомов заболеваний.',
+    name: 'health',
+    text: 'Я чувствую себя здоровым и не имею симптомов заболеваний.',
   },
   {
-    noAlcohol:
-      'Я не нахожусь в состоянии алкогольного опьянения или под воздействием наркотических и психотропных веществ.',
+    name: 'no_alcohol',
+    text: 'Я не нахожусь в состоянии алкогольного опьянения или под воздействием наркотических и психотропных веществ.',
   },
   {
-    isProvided:
-      'Я обеспечен необходимыми средствами индивидуальной и коллективной защиты (например, каска, перчатки, защитные очки).',
+    name: 'is_provided',
+    text: 'Я обеспечен необходимыми средствами индивидуальной и коллективной защиты (например, каска, перчатки, защитные очки).',
   },
   {
-    emergency:
-      'Я знаю порядок действий при аварийных и экстренных ситуациях, включая эвакуацию и вызов помощи.',
+    name: 'emergency',
+    text: 'Я знаю порядок действий при аварийных и экстренных ситуациях, включая эвакуацию и вызов помощи.',
   },
   {
-    compliance:
-      'Я ознакомлен с правилами безопасности на рабочем месте и обязуюсь их соблюдать.',
+    name: 'compliance',
+    text: 'Я ознакомлен с правилами безопасности на рабочем месте и обязуюсь их соблюдать.',
   },
   {
-    isPassed:
-      'Я ознакомлен с правилами охраны труда и инструкциями по безопасности при выполнении сварочных работ. Обязуюсь соблюдать все указанные требования.',
+    name: 'is_passed',
+    text: 'Я ознакомлен с правилами охраны труда и инструкциями по безопасности при выполнении сварочных работ. Обязуюсь соблюдать все указанные требования.',
   },
   {
-    report:
-      'Я понимаю важность соблюдения норм охраны труда и готов сообщать о любых нарушениях.',
+    name: 'report',
+    text: 'Я понимаю важность соблюдения норм охраны труда и готов сообщать о любых нарушениях.',
   },
   {
-    medAid:
-      'Я осведомлен о наличии аптечки первой помощи и знаю, как ее использовать.',
+    name: 'med_aid',
+    text: 'Я осведомлен о наличии аптечки первой помощи и знаю, как ее использовать.',
   },
-  { attention: 'Я не знаю что мне делать и как быть' },
+  {
+    name: 'attention',
+    text: 'Я не знаю что мне делать и как быть',
+  },
 ]
 
 export const instructionMarkdown = `
@@ -102,6 +106,558 @@ export const instructionMarkdown = `
 
 `
 
+export const faceDescriptorMy = [
+  -0.13270311687175218, 0.08489390669373778, 0.056978308880986935,
+  -0.06093245157132949, -0.12195418918052235, 0.010379549144282293,
+  -0.03636408626586451, -0.12614879163804354, 0.12901905767686733,
+  0.005669783903582143, 0.2094711431780377, -0.012310118588586421,
+  -0.2972372327570443, 0.006403954374954091, -0.025271257689602353,
+  0.07737367218947626, -0.1112824020286401, -0.11961469256931596,
+  -0.13430175008000556, -0.09651042905610961, -0.005489898685574099,
+  0.016069477616743367, -0.03863605316321949, 0.08114722984431831,
+  -0.1334880379876038, -0.27407171489956145, -0.09092389373360453,
+  0.010334555528951003, -0.008730311673564568, -0.0403293986768338,
+  0.038239586193099834, 0.035876717383979594, -0.17867693153319059,
+  -0.056143512924805884, 0.01879126300545895, 0.06632754849873039,
+  -0.040959368343674786, -0.09765727388093601, 0.2068326800256162,
+  0.004433430701851853, -0.09832682410875956, 0.044063458960138364,
+  0.10331822600266015, 0.2902169342782046, 0.11638857296726725,
+  -0.0006459392153693763, 0.08072940527822252, -0.07283191064997735,
+  0.11225791428875816, -0.29684643460823606, 0.06735044465450621,
+  0.19688418910310074, 0.1418506772467145, 0.053464323791742395,
+  0.042604511441360855, -0.1686879769236118, -0.01847760073557708,
+  0.17620686829627097, -0.2021180942923099, 0.1619157064336914,
+  0.08933214066248085, -0.05333501853485097, -0.08478991986469467,
+  -0.1491099216983662, 0.195354683106547, 0.2116760237125663,
+  -0.149203167238214, -0.16068147347048597, 0.12702514043262414,
+  -0.1230751874344843, -0.08631176576605654, 0.05635740896707887,
+  -0.12601851002053097, -0.1758924194015898, -0.32891943376880506,
+  0.081059528190458, 0.46087330268309995, 0.12195549101845639,
+  -0.20488507693952268, -0.03455656486464766, -0.12215810449005247,
+  0.003239764292798632, 0.001266569227346236, -0.0252659148517941,
+  -0.14507769232800416, -0.047989775643706, -0.10979882849900573,
+  0.07367078463299417, 0.2597662183884028, 0.058014062981159,
+  -0.04727016702495717, 0.23036927339192984, 0.11231901203827546,
+  -0.0161518352707365, 0.0341096873563213, 0.11557577718888318,
+  -0.0843891053619954, -0.07618196372379053, -0.13977889593791318,
+  0.05205224974616522, 0.002475563327640827, -0.11522981462714908,
+  0.07262451295231717, 0.0720565221817778, -0.1846481930430945,
+  0.19726173437393463, 0.04253821751183562, -0.02942266156954632,
+  -0.018945442159708142, 0.03729726905822227, -0.15569444430304002,
+  -0.006362252822427681, 0.20315076009378777, -0.28740891806177193,
+  0.16159312899585243, 0.11752463881228421, 0.08663227948112238,
+  0.13157353043421968, 0.04983044977135734, 0.0992044400247569,
+  -0.03839896446503468, 0.00912855791587693, -0.04173163004714559,
+  -0.1103108195369845, -0.0009054646702540455, -0.03254938134789529,
+  0.0686888976391774, 0.10396139342505653,
+]
+
+export const test = {
+  id: 123,
+  name: 'Основы веб-разработки',
+  description: 'Тест проверяет базовые знания HTML, CSS и JavaScript.',
+  // total_questions: 10,
+  test_is_control: false,
+  passing_score: 10,
+  questions: [
+    {
+      id: 1,
+      name: 'Какой тег используется для создания ссылки в HTML?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 1,
+          name: '<a>',
+          is_correct: true,
+        },
+        {
+          id: 2,
+          name: '<link>',
+          is_correct: false,
+        },
+        {
+          id: 3,
+          name: '<href>',
+          is_correct: false,
+        },
+        {
+          id: 4,
+          name: '<url>',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        'Тег <code>&lt;a&gt;</code> создаёт гиперссылку. Атрибут <code>href</code> указывает URL.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/HTML/Element/a',
+          title: 'MDN: Тег &lt;a&gt;',
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: 'Какой CSS-селектор выбирает элемент по классу?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 5,
+          name: '#id',
+          is_correct: false,
+        },
+        {
+          id: 6,
+          name: '.class',
+          is_correct: true,
+        },
+        {
+          id: 7,
+          name: 'tag',
+          is_correct: false,
+        },
+        {
+          id: 8,
+          name: '*',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        'Селектор <code>.class</code> выбирает элементы с указанным классом.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/CSS/Class_selectors',
+          title: 'MDN: Селекторы классов',
+        },
+      ],
+      // tags: ['CSS'],
+    },
+    {
+      id: 3,
+      name: 'Как объявить переменную в JavaScript, которая не может быть переопределена?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 9,
+          name: 'var',
+          is_correct: false,
+        },
+        {
+          id: 10,
+          name: 'let',
+          is_correct: false,
+        },
+        {
+          id: 11,
+          name: 'const',
+          is_correct: true,
+        },
+      ],
+      explanation:
+        '<code>const</code> создаёт константу, которую нельзя изменить после объявления.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Statements/const',
+          title: 'MDN: const',
+        },
+      ],
+      // tags: ['JavaScript'],
+      image: 'https://ingate.ru/upload/medialibrary/807/1.jpg', // Пример const в JS
+    },
+    {
+      id: 4,
+      name: 'Какой метод добавляет новый элемент в конец массива?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 12,
+          name: 'push()',
+          is_correct: true,
+        },
+        {
+          id: 13,
+          name: 'pop()',
+          is_correct: false,
+        },
+        {
+          id: 14,
+          name: 'shift()',
+          is_correct: false,
+        },
+        {
+          id: 15,
+          name: 'unshift()',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        '<code>push()</code> добавляет элемент в конец, а <code>pop()</code> удаляет последний элемент.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Array/push',
+          title: 'MDN: Array.push()',
+        },
+      ],
+      // tags: ['JavaScript', 'Массивы'],
+      image:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/800px-Unofficial_JavaScript_logo_2.svg.png', // Пример работы push()
+    },
+    {
+      id: 5,
+      name: 'Какой атрибут HTML-тега <img> обязателен?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 16,
+          name: 'src',
+          is_correct: true,
+        },
+        {
+          id: 17,
+          name: 'alt',
+          is_correct: false,
+        },
+        {
+          id: 18,
+          name: 'width',
+          is_correct: false,
+        },
+        {
+          id: 19,
+          name: 'title',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        'Атрибут <code>src</code> указывает путь к изображению. <code>alt</code> рекомендуется для доступности, но не обязателен.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/HTML/Element/img',
+          title: 'MDN: Тег &lt;img&gt;',
+        },
+      ],
+      // tags: ['HTML'],
+      image:
+        'https://eu-images.contentstack.com/v3/assets/blt07f68461ccd75245/blt3b2b0b15a30c8b2d/661ce42067b4a544cd890c03/JavaScript-code.jpg?width=1280&auto=webp&quality=95&format=jpg&disable=upscale', // Пример тега img
+    },
+    // Остальные вопросы остаются без изменений
+    {
+      id: 6,
+      name: 'Какой CSS-свойство изменяет цвет текста?',
+      question_type: 'single_choice',
+      points: 1,
+      answers: [
+        {
+          id: 20,
+          name: 'background-color',
+          is_correct: false,
+        },
+        {
+          id: 21,
+          name: 'color',
+          is_correct: true,
+        },
+        {
+          id: 22,
+          name: 'font-color',
+          is_correct: false,
+        },
+        {
+          id: 23,
+          name: 'text-color',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        'Свойство <code>color</code> задаёт цвет текста. <code>background-color</code> меняет фон.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/CSS/color',
+          title: 'MDN: color',
+        },
+      ],
+      // tags: ['CSS'],
+    },
+    {
+      id: 7,
+      name: 'Что выведет этот код? <code>console.log(2 + 2..toString())</code>',
+      question_type: 'single_choice',
+      points: 2,
+      answers: [
+        {
+          id: 24,
+          name: '4',
+          is_correct: false,
+        },
+        {
+          id: 25,
+          name: '22',
+          is_correct: true,
+        },
+        {
+          id: 26,
+          name: 'NaN',
+          is_correct: false,
+        },
+      ],
+      explanation:
+        'JavaScript преобразует число в строку и выполняет конкатенацию: <code>String(2) + 2..toString() = String(22)</code>.',
+      reference_link: [
+        {
+          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/Addition',
+          title: 'MDN: Оператор +',
+        },
+      ],
+      // tags: ['JavaScript', 'Типы данных'],
+      image: 'https://i.imgur.com/QWErV8T.png', // Пример консоли с выводом
+    },
+    // Остальные вопросы...
+  ],
+}
+
+export const testNew = {
+  id: 1,
+  name: 'Для сварщиков',
+  description: 'Саня делает грязь',
+  test_is_control: false,
+  passing_score: 10,
+  test_results: [
+    {
+      id: 3,
+      result: false,
+      mark: 10,
+      date: '2025-03-25T12:45:37.303088Z',
+      time: '12:45:37.303122',
+    },
+  ],
+  questions: [
+    {
+      id: 11,
+      name: '6',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 8,
+      name: '3',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 6,
+      name: '1',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 10,
+      name: '5',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 5,
+      name: 'Тестовый вопрос',
+      answers: [
+        {
+          id: 15,
+          name: '1',
+          is_correct: true,
+        },
+        {
+          id: 16,
+          name: '2',
+          is_correct: false,
+        },
+        {
+          id: 17,
+          name: '3',
+          is_correct: false,
+        },
+        {
+          id: 18,
+          name: '4',
+          is_correct: false,
+        },
+      ],
+      explanation: 'Какое-то объяснение',
+      reference_link: [
+        {
+          id: 1,
+          title: 'Объяснялка',
+          url: 'https://tets.com',
+        },
+      ],
+      image: null,
+    },
+    {
+      id: 9,
+      name: '4',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 7,
+      name: '2',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 1,
+      name: 'Как дела?',
+      answers: [
+        {
+          id: 1,
+          name: 'Нормас',
+          is_correct: true,
+        },
+      ],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 12,
+      name: '7',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+    {
+      id: 13,
+      name: '8',
+      answers: [],
+      explanation: '',
+      reference_link: [],
+      image: null,
+    },
+  ],
+}
+
+export const testingListNew = {
+  count: 2,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      name: 'Для сварщиков',
+      description: 'Саня делает грязь',
+      test_is_control: false,
+      test_results: [
+        {
+          id: 3,
+          result: false,
+          mark: 10,
+          date: '2025-03-25T12:45:37.303088Z',
+          time: '12:45:37.303122',
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: 'Для электриков',
+      description: 'это описание',
+      test_is_control: true,
+      test_results: [
+        {
+          id: 4,
+          result: true,
+          mark: 1,
+          date: '2025-03-25T14:16:11.276414Z',
+          time: '14:16:11.276470',
+        },
+      ],
+    },
+  ],
+}
+
+export const testingList = [
+  {
+    id: 1,
+    name: 'Для сварщиков',
+    description: 'Техника безопасности при сварочных работах',
+    is_passed: false,
+  },
+  {
+    id: 2,
+    name: 'Для электриков',
+    description: 'Правила работы с высоким напряжением',
+    is_passed: true,
+    mark: '2.1',
+    date: '2025-03-25T14:16:11.276414Z',
+  },
+  {
+    id: 3,
+    name: 'Для строителей',
+    description: 'Безопасность на высотных работах',
+    is_passed: false,
+  },
+  {
+    id: 4,
+    name: 'Для водителей погрузчиков',
+    description: 'Правила эксплуатации складской техники',
+    is_passed: false,
+  },
+  {
+    id: 5,
+    name: 'Для химиков-лаборантов',
+    description: 'Работа с опасными реактивами',
+    is_passed: false,
+  },
+  {
+    id: 6,
+    name: 'Для монтажников',
+    description: 'Безопасность при монтаже конструкций',
+    is_passed: true,
+    mark: '8.5',
+    date: '2023-08-22',
+  },
+  {
+    id: 7,
+    name: 'Для машинистов кранов',
+    description: 'Техника безопасности при грузоподъемных работах',
+    is_passed: false,
+  },
+  {
+    id: 8,
+    name: 'Для работников пищевого производства',
+    description: 'Гигиенические нормы и стандарты',
+    is_passed: false,
+  },
+  {
+    id: 9,
+    name: 'Для уборщиков',
+    description: 'Работа с химическими средствами',
+    is_passed: true,
+    mark: '2.9',
+    date: '2023-01-25',
+  },
+  {
+    id: 10,
+    name: 'Для IT-специалистов',
+    description: 'Эргономика рабочего места',
+    is_passed: false,
+  },
+]
+
 // {
 //   instr_type: 'Первичный',
 //   instr_text: {
@@ -112,3 +668,88 @@ export const instructionMarkdown = `
 //   },
 //   instr_agree: agreements
 // }
+
+export const instructionsData = {
+  count: 2,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      name: 'Тестовый инструктаж',
+      type_of_instruction: 1,
+    },
+    {
+      id: 2,
+      name: 'New',
+      type_of_instruction: 1,
+    },
+  ],
+  first_instruction: {
+    id: 1,
+    type_of_instruction: {
+      id: 1,
+      name: 'Первичный',
+    },
+    name: 'Тестовый инструктаж',
+    text: `${instructionMarkdown}`,
+    instruction_agreement: [
+      {
+        name: 'health',
+        text: 'Я чувствую себя здоровым и не имею симптомов заболеваний.',
+      },
+      {
+        name: 'no_alcohol',
+        text: 'Я не нахожусь в состоянии алкогольного опьянения или под воздействием наркотических и психотропных веществ.',
+      },
+      {
+        name: 'is_provided',
+        text: 'Я обеспечен необходимыми средствами индивидуальной и коллективной защиты (например, каска, перчатки, защитные очки).',
+      },
+      {
+        name: 'emergency',
+        text: 'Я знаю порядок действий при аварийных и экстренных ситуациях, включая эвакуацию и вызов помощи.',
+      },
+      {
+        name: 'compliance',
+        text: 'Я ознакомлен с правилами безопасности на рабочем месте и обязуюсь их соблюдать.',
+      },
+      {
+        name: 'is_passed',
+        text: 'Я ознакомлен с правилами охраны труда и инструкциями по безопасности при выполнении сварочных работ. Обязуюсь соблюдать все указанные требования.',
+      },
+      {
+        name: 'report',
+        text: 'Я понимаю важность соблюдения норм охраны труда и готов сообщать о любых нарушениях.',
+      },
+      {
+        name: 'med_aid',
+        text: 'Я осведомлен о наличии аптечки первой помощи и знаю, как ее использовать.',
+      },
+      {
+        name: 'attention',
+        text: 'Я не знаю что мне делать и как быть',
+      },
+    ],
+  },
+}
+
+export const videoData = [
+  {
+    id: 1,
+    title: 'Основы гражданского права в РФ',
+    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '15:30',
+    views: '1.2K',
+    date: '12.05.2023',
+  },
+  {
+    id: 2,
+    title: 'Налоговое законодательство 2023',
+    url: 'https://www.youtube.com/watch?v=C0fBnil_Im4&t=4s',
+    duration: '22:45',
+    views: '3.4K',
+    date: '20.06.2023',
+  },
+  // ... другие видео
+]

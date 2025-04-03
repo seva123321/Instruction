@@ -37,7 +37,9 @@
       "error",
       { "allowAfterThis": true, "allowAfterSuper": true }
     ],
-    "prettier/prettier": "error",
+    "prettier/prettier": ["error", { "tabWidth": 2 }],
+    "consistent-return": ["error", { "treatUndefinedAsUnspecified": true }],
+    "implicit-arrow-linebreak": "off",
     "linebreak-style": [0, "unix"],
     "quotes": ["error", "single"],
     "semi": ["error", "never"],
@@ -53,9 +55,22 @@
       }
     ],
     "object-curly-newline": "off",
+    // Разрешаем переносы при деструктуризации
+    "operator-linebreak": [
+      "error",
+      "after",
+      {
+        "overrides": {
+          "=": "ignore" //, // Игнорируем переносы для оператора присваивания
+          // "?": "after", // Перенос после '?'
+          // ":": "after" // Перенос после ':'
+        }
+      }
+    ],
     "react/react-in-jsx-scope": "off",
     "react/require-default-props": "off",
     "react/jsx-props-no-spreading": "off",
+    "sx-one-expression-per-line": "off",
     "react/prop-types": 0,
     "import/no-unresolved": [2, { "caseSensitive": false }],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],

@@ -8,7 +8,13 @@ import {
 import Confirm from '@/components/Confirm'
 import FaceRecognition from '@/components/FaceRecognition'
 
-function Recognition({ onFaceDescriptor, onCameraError }) {
+function Recognition({
+  onFaceDescriptor,
+  onCameraError,
+  btnIcon,
+  buttonName = 'Распознавание лица*',
+  disabled = false,
+}) {
   const [showFaceRecognition, setShowFaceRecognition] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const faceRecognitionRef = useRef(null)
@@ -33,11 +39,12 @@ function Recognition({ onFaceDescriptor, onCameraError }) {
   return (
     <>
       <Confirm
+        disabledBtn={disabled}
         textTitle="Разрешение на использование камеры"
         text="Разрешить использование камеры для распознавания лица?"
-        btnIcon={<PersonAddOutlinedIcon />}
+        btnIcon={btnIcon ?? <PersonAddOutlinedIcon />}
         titleIcon={<CameraAltIcon sx={{ mr: 2 }} />}
-        buttonName="Распознавание лица*"
+        buttonName={buttonName}
         onAllowAccess={handleAllowAccess}
       />
 

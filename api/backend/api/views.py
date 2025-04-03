@@ -269,6 +269,7 @@ class FaceLoginView(APIView):
 
 class LogoutView(APIView):
     """Представление для выхода из системы"""
+    permission_classes = (AllowAny,)
 
     permission_classes = (AllowAny,)
 
@@ -289,7 +290,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Instruction.objects.all()
     serializer_class = InstructionSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,) #(AllowAny,) #IsAuthenticated
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)

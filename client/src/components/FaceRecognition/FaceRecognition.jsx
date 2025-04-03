@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import {
   useEffect,
   useRef,
@@ -19,7 +20,10 @@ const FaceRecognition = forwardRef(
     const animationFrameRef = useRef(null)
     const [isLoadedModel, setIsLoadedModel] = useState(false)
     const [isProcessing, setIsProcessing] = useState(false)
-    const [message, setMessage] = useState({ text: '', type: '' })
+    const [message, setMessage] = useState({
+      text: '',
+      type: '',
+    })
     const [comparisonResult, setComparisonResult] = useState(null)
     // eslint-disable-next-line operator-linebreak
     const [cameraPermissionGranted, setCameraPermissionGranted] =
@@ -69,7 +73,10 @@ const FaceRecognition = forwardRef(
         // @TODO очистка если сначала камера блокирована, а потом разблокирована
         // onCameraError('')
         setCameraPermissionGranted(true)
-        setMessage({ text: '', type: '' })
+        setMessage({
+          text: '',
+          type: '',
+        })
       } catch (error) {
         if (error.name === 'NotAllowedError') {
           setCameraPermissionGranted(false)
@@ -258,7 +265,7 @@ const FaceRecognition = forwardRef(
     return (
       <Box
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
@@ -268,6 +275,7 @@ const FaceRecognition = forwardRef(
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
+          zIndex: 2000,
           backgroundColor: 'rgba(65, 101, 207, 0.77)',
         }}
       >
@@ -303,11 +311,26 @@ const FaceRecognition = forwardRef(
         )}
 
         {isProcessing && (
-          <Box sx={{ width: '100%', mt: 2 }}>
+          <Box
+            sx={{
+              width: '100%',
+              mt: 2,
+            }}
+          >
             <CircularProgress
-              sx={{ color: 'white', display: 'block', m: '0 auto' }}
+              sx={{
+                color: 'white',
+                display: 'block',
+                m: '0 auto',
+              }}
             />
-            <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: 'center',
+                mt: 1,
+              }}
+            >
               Распознавание образа...
             </Typography>
           </Box>

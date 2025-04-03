@@ -13,13 +13,20 @@ import {
 function PasswordInput({ name, label, control, errors, ...props }) {
   const [showPassword, setShowPassword] = useState(false)
   const { watch } = props
+
   const handleClickShowPassword = () => setShowPassword((show) => !show)
   const handleMouseDownPassword = (e) => {
     e.preventDefault()
   }
 
   return (
-    <FormControl sx={{ width: '100%', marginBottom: 2 }} variant="outlined">
+    <FormControl
+      sx={{
+        width: '100%',
+        marginBottom: 2,
+      }}
+      variant="outlined"
+    >
       <InputLabel htmlFor={name}>{label}</InputLabel>
       <Controller
         name={name}
@@ -36,7 +43,6 @@ function PasswordInput({ name, label, control, errors, ...props }) {
           }),
           ...(name === 'confirmPassword' && {
             validate: (value) =>
-              // eslint-disable-next-line implicit-arrow-linebreak
               value === watch('password') || 'Пароли не совпадают',
           }),
         }}
@@ -47,6 +53,7 @@ function PasswordInput({ name, label, control, errors, ...props }) {
             id={name}
             required
             type={showPassword ? 'text' : 'password'}
+            error={!!errors[name]}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
@@ -65,8 +72,8 @@ function PasswordInput({ name, label, control, errors, ...props }) {
           />
         )}
       />
-      <FormHelperText sx={{ maxWidth: '30ch' }} error={errors[name]}>
-        {errors[name]?.message}
+      <FormHelperText sx={{ maxWidth: '30ch' }} error>
+        {errors[name]?.message || errors[name]}
       </FormHelperText>
     </FormControl>
   )

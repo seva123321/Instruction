@@ -1,7 +1,7 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
-import InstructionPage from '@/pages/InstructionPage'
 import KnowBasePage from '@/pages/KnowBasePage'
+import KnowBasePageDocs from '@/pages/KnowBaseDocsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import TestingPage from '@/pages/TestingPage'
 import SuccessPage from '@/pages/SuccessPage'
@@ -9,24 +9,37 @@ import Layout from '@/components/Layout'
 import ProfilePage from '@/pages/ProfilePage'
 import RegPage from '@/pages/RegPage'
 
-import RequireAuth from './hoc/RequireAuth'
-import { AuthProvider } from './hoc/AuthProvider'
-// import ThemeProvider from './hoc/ThemeProvider'
+import InstructionsPage from './pages/InstructionsPage'
+import TestOnePage from './models/TestOnePage/TestOnePage'
 import AuthPage from './pages/AuthPage'
+import { AuthProvider } from './hoc/AuthProvider'
+import RequireAuth from './hoc/RequireAuth'
+import KnowBaseVideosPage from './pages/KnowBaseVideosPage'
+
+// import ThemeProvider from './hoc/ThemeProvider'
 
 function App() {
   return (
     <AuthProvider>
       {/* <ThemeProvider> */}
       <Routes>
-        <Route index element={<RegPage />} />
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/" element={<Navigate to="/auth/login" replace />} />
+        <Route path="/auth/login" element={<RegPage />} />
+        <Route path="/auth/signup" element={<AuthPage />} />
         <Route path="/" element={<Layout />}>
           <Route
-            path="instruction"
+            path="instructions"
             element={
               <RequireAuth>
-                <InstructionPage />
+                <InstructionsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="instructions/:id"
+            element={
+              <RequireAuth>
+                <InstructionsPage />
               </RequireAuth>
             }
           />
@@ -39,7 +52,15 @@ function App() {
             }
           />
           <Route
-            path="knowladge/nla"
+            path="knowladge/nlas"
+            element={
+              <RequireAuth>
+                <KnowBasePageDocs />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="knowladge/audios"
             element={
               <RequireAuth>
                 <KnowBasePage />
@@ -47,26 +68,36 @@ function App() {
             }
           />
           <Route
-            path="knowladge/audio"
+            path="knowladge/videos"
             element={
               <RequireAuth>
-                <KnowBasePage />
+                <KnowBaseVideosPage />
               </RequireAuth>
             }
           />
-          <Route
-            path="knowladge/video"
-            element={
-              <RequireAuth>
-                <KnowBasePage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="test"
+          {/* <Route
+            path="tests"
             element={
               <RequireAuth>
                 <TestingPage />
+              </RequireAuth>
+            }
+          >
+            <Route path=":id" element={<TestOnePage />} />
+          </Route> */}
+          <Route
+            path="tests"
+            element={
+              <RequireAuth>
+                <TestingPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="tests/:id"
+            element={
+              <RequireAuth>
+                <TestOnePage />
               </RequireAuth>
             }
           />

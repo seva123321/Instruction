@@ -12,11 +12,14 @@ import {
   Collapse,
   Box,
   ListItem,
+  useMediaQuery,
+  SwipeableDrawer,
 } from '@mui/material'
 import {
   School as SchoolIcon,
   Person as PersonIcon,
   NoteAlt as NoteAltIcon,
+  Menu as MenuIcon,
   MenuOpen as MenuOpenIcon,
   FactCheck as FactCheckIcon,
   EmojiEvents as EmojiEventsIcon,
@@ -25,11 +28,10 @@ import {
   Login as LoginIcon,
   SmartDisplay as SmartDisplayIcon,
   ImportContacts as ImportContactsIcon,
-  KeyboardArrowRight as KeyboardArrowRightIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material'
-import { styled } from '@mui/material/styles'
+import { styled, useTheme } from '@mui/material/styles'
 
 import useAuth from '@/hook/useAuth'
 
@@ -58,15 +60,7 @@ const closedMixin = (theme) => ({
   },
 })
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-}))
-
-const Drawer = styled(MuiDrawer, {
+const StyledDrawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   width: drawerWidth,
@@ -74,26 +68,27 @@ const Drawer = styled(MuiDrawer, {
   whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   ...(open ? openedMixin(theme) : closedMixin(theme)),
-  '& .MuiDrawer-paper': open ? openedMixin(theme) : closedMixin(theme),
+  '& .MuiDrawer-paper': {
+    ...(open ? openedMixin(theme) : closedMixin(theme)),
+    overflowY: 'auto',
+  },
 }))
 
-const List = styled(MuiList)(({ theme }) => ({
+const List = styled(MuiList)({
   width: '100%',
-  maxWidth: 360,
-  bgcolor: theme.palette.background.paper,
-}))
+})
 
 const ListItemButton = styled(MuiListItemButton)(({ theme, open }) => ({
   minHeight: 48,
-  paddingLeft: theme.spacing(2.5),
-  paddingRight: theme.spacing(2.5),
   justifyContent: open ? 'initial' : 'center',
+  px: 2.5,
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.action.selected,
+  },
 }))
 
 const ListItemButtonSubMenu = styled(MuiListItemButton)(({ theme, open }) => ({
   minHeight: 48,
-  paddingLeft: theme.spacing(2.5),
-  paddingRight: theme.spacing(2.5),
   justifyContent: open ? 'initial' : 'center',
   ...(open && {
     paddingLeft: theme.spacing(4),
@@ -103,36 +98,37 @@ const ListItemButtonSubMenu = styled(MuiListItemButton)(({ theme, open }) => ({
 const ListItemIcon = styled(MuiListItemIcon)(({ theme, open }) => ({
   minWidth: 0,
   justifyContent: 'center',
-  marginRight: open ? theme.spacing(3) : 'auto',
+  paddingRight: open && 10,
+  mr: open ? theme.spacing(3) : 'auto',
 }))
 
-const ListItemText = styled(MuiListItemText)(({ open }) => ({
-  opacity: open ? 1 : 0,
+const ListItemText = styled(MuiListItemText)(({ open, isMobile }) => ({
+  opacity: open || isMobile === 'true' ? 1 : 0,
+  whiteSpace: 'normal',
 }))
 
 export default function MenuBox() {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [openSubMenu, setOpenSubMenu] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(!isMobile)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { signOut, user } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 800px)')
+    setDrawerOpen(!isMobile)
+  }, [isMobile])
 
-    const handleMediaQueryChange = (event) => {
-      setOpen(event.matches) // Устанавливаем open в true, если ширина >= 800px
+  const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen)
+    } else {
+      setDrawerOpen(!drawerOpen)
+      if (drawerOpen) {
+        setOpenSubMenu(false)
+      }
     }
-
-    setOpen(mediaQuery.matches)
-
-    mediaQuery.addEventListener('change', handleMediaQueryChange)
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleMediaQueryChange)
-    }
-  }, [])
-  const handleDrawerClick = () => {
-    setOpen(!open)
   }
 
   const handleSubMenuClick = () => {
@@ -140,121 +136,253 @@ export default function MenuBox() {
   }
 
   const handleSignOutClick = () => {
-    signOut(() => navigate('/', { replace: true }))
+    signOut(() => navigate('/auth/login', { replace: true }))
   }
 
-  return (
-    <Drawer variant="permanent" open={open}>
-      <DrawerHeader>
-        <IconButton onClick={handleDrawerClick}>
-          {open ? <MenuOpenIcon /> : <KeyboardArrowRightIcon />}
-        </IconButton>
-      </DrawerHeader>
+  const handleMobileItemClick = () => {
+    if (isMobile) {
+      setMobileOpen(false)
+    }
+  }
 
+  const drawerContent = (isDrawerOpen) => (
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: isDrawerOpen ? 'flex-end' : 'center',
+          p: 1,
+        }}
+      >
+        <Tooltip
+          title={isDrawerOpen ? 'Закрыть меню' : 'Открыть меню'}
+          placement="right"
+        >
+          <IconButton onClick={handleDrawerToggle}>
+            {isDrawerOpen ? <MenuOpenIcon /> : <MenuIcon />}
+          </IconButton>
+        </Tooltip>
+      </Box>
       <Divider />
 
-      <List component="nav" aria-labelledby="nested-list-subheader">
-        <ListItemButton component={CustomLink} to="/instruction">
-          <ListItemIcon open={open}>
-            <Tooltip title="Инструктаж">
+      <List component="nav">
+        <ListItemButton
+          component={CustomLink}
+          to="/instructions"
+          open={isDrawerOpen}
+          onClick={handleMobileItemClick}
+        >
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title="Инструктаж" placement="right">
               <NoteAltIcon />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText open={open} primary="Инструктаж" />
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary="Инструктаж"
+          />
         </ListItemButton>
 
-        <ListItemButton component={CustomLink} to="/test">
-          <ListItemIcon open={open}>
-            <Tooltip title="Тестирование">
+        <ListItemButton
+          component={CustomLink}
+          to="/tests"
+          open={isDrawerOpen}
+          onClick={handleMobileItemClick}
+        >
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title="Тестирование" placement="right">
               <FactCheckIcon />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText open={open} primary="Тестирование" />
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary="Тестирование"
+          />
         </ListItemButton>
 
-        <ListItemButton onClick={handleSubMenuClick}>
-          <ListItemIcon open={open}>
-            <Tooltip title="База знаний">
-              <SchoolIcon />
-            </Tooltip>
-          </ListItemIcon>
-          <ListItemText open={open} primary="База знаний" />
-          {openSubMenu ? open && <ExpandLess /> : open && <ExpandMore />}
-        </ListItemButton>
-        <Collapse in={openSubMenu} timeout="auto" unmountOnExit>
+        {isDrawerOpen && (
+          <ListItemButton onClick={handleSubMenuClick} open={isDrawerOpen}>
+            <ListItemIcon open={isDrawerOpen}>
+              <Tooltip title="База знаний" placement="right">
+                <SchoolIcon />
+              </Tooltip>
+            </ListItemIcon>
+            <ListItemText
+              open={isDrawerOpen}
+              ismobile={isMobile.toString()}
+              primary="База знаний"
+            />
+            {isDrawerOpen && (openSubMenu ? <ExpandLess /> : <ExpandMore />)}
+          </ListItemButton>
+        )}
+
+        <Collapse
+          in={!isDrawerOpen ? true : openSubMenu}
+          timeout="auto"
+          unmountOnExit
+        >
           <List component="div" disablePadding>
             <ListItemButtonSubMenu
-              open={open}
+              open={isDrawerOpen}
               component={CustomLink}
-              to="/knowladge/nla"
+              to="/knowladge/nlas"
+              onClick={handleMobileItemClick}
             >
-              <ListItemIcon open={open}>
-                <Tooltip title="Документы">
+              <ListItemIcon open={isDrawerOpen}>
+                <Tooltip title="Документы" placement="right">
                   <ImportContactsIcon />
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText open={open} primary="Документы" />
+              <ListItemText
+                open={isDrawerOpen}
+                ismobile={isMobile.toString()}
+                primary="Документы"
+              />
             </ListItemButtonSubMenu>
             <ListItemButtonSubMenu
-              open={open}
+              open={isDrawerOpen}
               component={CustomLink}
-              to="/knowladge/audio"
+              to="/knowladge/audios"
+              onClick={handleMobileItemClick}
             >
-              <ListItemIcon open={open}>
-                <Tooltip title="Аудио">
+              <ListItemIcon open={isDrawerOpen}>
+                <Tooltip title="Аудио" placement="right">
                   <HeadphonesIcon />
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText open={open} primary="Аудио" />
+              <ListItemText
+                open={isDrawerOpen}
+                ismobile={isMobile.toString()}
+                primary="Аудио"
+              />
             </ListItemButtonSubMenu>
             <ListItemButtonSubMenu
-              open={open}
+              open={isDrawerOpen}
               component={CustomLink}
-              to="/knowladge/video"
+              to="/knowladge/videos"
+              onClick={handleMobileItemClick}
             >
-              <ListItemIcon open={open}>
-                <Tooltip title="Видео">
+              <ListItemIcon open={isDrawerOpen}>
+                <Tooltip title="Видео" placement="right">
                   <SmartDisplayIcon />
                 </Tooltip>
               </ListItemIcon>
-              <ListItemText open={open} primary="Видео" />
+              <ListItemText
+                open={isDrawerOpen}
+                ismobile={isMobile.toString()}
+                primary="Видео"
+              />
             </ListItemButtonSubMenu>
           </List>
         </Collapse>
 
         <Divider />
 
-        <ListItemButton component={CustomLink} to="/profile">
-          <ListItemIcon open={open}>
-            <Tooltip title="Профиль">
+        <ListItemButton
+          component={CustomLink}
+          to="/profile"
+          open={isDrawerOpen}
+          onClick={handleMobileItemClick}
+        >
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title="Профиль" placement="right">
               <PersonIcon />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText open={open} primary="Профиль" />
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary="Профиль"
+          />
         </ListItemButton>
 
-        <ListItemButton component={CustomLink} to="/mysuccess">
-          <ListItemIcon open={open}>
-            <Tooltip title="Мои успехи">
+        <ListItemButton
+          component={CustomLink}
+          to="/mysuccess"
+          open={isDrawerOpen}
+          onClick={handleMobileItemClick}
+        >
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title="Мои успехи" placement="right">
               <EmojiEventsIcon />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText open={open} primary="Мои успехи" />
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary="Мои успехи"
+          />
         </ListItemButton>
       </List>
 
       <Box sx={{ flexGrow: 1 }} />
 
-      <ListItem onClick={handleSignOutClick} sx={{ mb: 3, p: 0 }}>
-        <ListItemButton>
-          <ListItemIcon open={open}>
-            <Tooltip title="Выйти">
+      <ListItem onClick={handleSignOutClick} sx={{ p: 0, mb: 2 }}>
+        <ListItemButton open={isDrawerOpen} onClick={handleMobileItemClick}>
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title={user ? 'Выйти' : 'Войти'} placement="right">
               {user ? <LogoutIcon /> : <LoginIcon />}
             </Tooltip>
           </ListItemIcon>
-          <ListItemText open={open} primary="Выйти" />
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary={user ? 'Выйти' : 'Войти'}
+          />
         </ListItemButton>
       </ListItem>
-    </Drawer>
+    </>
+  )
+
+  return (
+    <>
+      {isMobile && !mobileOpen && (
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{
+            position: 'fixed',
+            left: 30,
+            top: 20,
+            zIndex: theme.zIndex.drawer + 1,
+            backgroundColor: theme.palette.background.paper,
+            boxShadow: 1,
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      {isMobile ? (
+        <SwipeableDrawer
+          variant="temporary"
+          open={mobileOpen}
+          onOpen={() => setMobileOpen(true)}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{
+            keepMounted: true,
+            BackdropProps: {
+              invisible: false,
+            },
+          }}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+            },
+          }}
+        >
+          {drawerContent(true)}
+        </SwipeableDrawer>
+      ) : (
+        <StyledDrawer variant="permanent" open={drawerOpen}>
+          {drawerContent(drawerOpen)}
+        </StyledDrawer>
+      )}
+    </>
   )
 }

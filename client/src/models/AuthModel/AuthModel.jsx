@@ -15,9 +15,12 @@ import PasswordInput from '@/components/PasswordInput'
 import useAuth from '@/hook/useAuth'
 import CustomLink from '@/components/CustomLink'
 import Recognition from '@/models/Recognition'
-
-import formatPhoneNumber from '../../service/utilsFunction'
-import MessageAlert from '../../components/MessageAlert/MessageAlert'
+import {
+  formatPhoneNumber,
+  isEmail,
+  isPhoneNumber,
+} from '@/service/utilsFunction'
+import MessageAlert from '@/components/MessageAlert/MessageAlert'
 
 function AuthModel() {
   const navigate = useNavigate()
@@ -28,32 +31,32 @@ function AuthModel() {
     reset,
     watch,
     control,
-  } = useForm({
-    mode: 'onBlur',
-  })
-  const { signIn } = useAuth()
+  } = useForm({ mode: 'onBlur' })
+
+  const { auth, isLoading, error: authError } = useAuth()
   const [faceDescriptor, setFaceDescriptor] = useState(null)
-  // eslint-disable-next-line operator-linebreak
-  const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
-    useState(false)
-  const [errorMessage, setErrorMessage] = useState(null)
-  const fromPage = location.state?.from?.pathname || '/instruction'
+  const fromPage = location.state?.from?.pathname || '/instructions'
 
-  const onSubmit = (data) => {
-    if (!isFaceDescriptorReceived) {
-      return
-    }
+  const onSubmit = async (data) => {
+    if (!faceDescriptor) return
 
-    const newData = {
+    const userData = {
       ...data,
-      phone: data.phone.replaceAll('-', ''),
-      faceDescriptor,
+      mobile_phone: data.mobile_phone.replaceAll('-', ''),
+      face_descriptor: faceDescriptor,
     }
-    const { username } = newData
+    delete userData.confirmPassword
 
-    // alert(JSON.stringify(newData))
-    signIn(username, () => navigate(fromPage), { replace: true })
-    reset()
+    const success = await auth(userData)
+
+    if (success) {
+      reset()
+      navigate(fromPage, { replace: true })
+    }
+  }
+
+  const handleFaceDescriptor = (data) => {
+    setFaceDescriptor(data)
   }
 
   return (
@@ -65,23 +68,30 @@ function AuthModel() {
         sx={{ mb: 2 }}
       >
         <Typography variant="h5">Зарегистрироваться</Typography>
-        <CustomLink to="/">Войти</CustomLink>
+        <CustomLink to="/auth/login">Войти</CustomLink>
       </Box>
+
       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
         <Box
           display="flex"
-          sx={{ width: '40ch', margin: '0 auto' }}
+          sx={{
+            width: '40ch',
+            margin: '0 auto',
+          }}
           flexDirection="column"
           alignItems="center"
         >
           {/* Имя */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
-            <InputLabel htmlFor="username">Имя</InputLabel>
+            <InputLabel htmlFor="first_name">Имя</InputLabel>
             <Controller
-              name="username"
+              name="first_name"
               control={control}
               defaultValue=""
               rules={{
@@ -97,25 +107,26 @@ function AuthModel() {
                   {...field}
                   inputMode="text"
                   autoFocus
-                  autoComplete="username"
-                  id="username"
+                  autoComplete="first_name"
+                  id="first_name"
                   label="Имя"
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.username?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.first_name?.message}</FormHelperText>
           </FormControl>
 
           {/* Фамилия */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
-            <InputLabel htmlFor="usersurname">Фамилия</InputLabel>
+            <InputLabel htmlFor="last_name">Фамилия</InputLabel>
             <Controller
-              name="usersurname"
+              name="last_name"
               control={control}
               defaultValue=""
               rules={{
@@ -130,20 +141,21 @@ function AuthModel() {
                 <OutlinedInput
                   {...field}
                   inputMode="text"
-                  autoComplete="usersurname"
-                  id="usersurname"
+                  autoComplete="last_name"
+                  id="last_name"
                   label="Фамилия"
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.usersurname?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.last_name?.message}</FormHelperText>
           </FormControl>
 
-          {/* Почта */}
+          {/* Поле для email */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
             <InputLabel htmlFor="email">Почта</InputLabel>
@@ -153,10 +165,9 @@ function AuthModel() {
               defaultValue=""
               rules={{
                 required: 'Поле обязательно к заполнению!',
-                pattern: {
-                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                  message: 'Введите корректный адрес электронной почты',
-                },
+                validate: (value) =>
+                  isEmail(value) ||
+                  'Введите корректный адрес электронной почты',
               }}
               render={({ field }) => (
                 <OutlinedInput
@@ -168,46 +179,44 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.email?.message}
-            </FormHelperText>
+            <FormHelperText error>{errors.email?.message}</FormHelperText>
           </FormControl>
 
-          {/* Телефон */}
+          {/* Поле для телефона */}
           <FormControl
-            sx={{ width: '100%', marginBottom: 2 }}
+            sx={{
+              width: '100%',
+              marginBottom: 2,
+            }}
             variant="outlined"
           >
-            <InputLabel htmlFor="phone">Телефон</InputLabel>
+            <InputLabel htmlFor="mobile_phone">Телефон</InputLabel>
             <Controller
-              name="phone"
+              name="mobile_phone"
               control={control}
               defaultValue=""
               rules={{
                 required: 'Поле обязательно к заполнению!',
-                pattern: {
-                  value: /^\+?\d{1,3}-\d{3}-\d{3}-\d{2}-\d{2}$/,
-                  message:
-                    'Проверьте, что вводите телефон в правильном формате, например +7 900 123-33-55',
-                },
+                validate: (value) =>
+                  isPhoneNumber(value) ||
+                  'Проверьте, что вводите телефон в правильном формате, например +7 900 123-33-55',
               }}
               render={({ field }) => (
                 <OutlinedInput
                   {...field}
                   inputMode="tel"
-                  autoComplete="phone"
-                  id="phone"
+                  autoComplete="mobile_phone"
+                  id="mobile_phone"
                   label="Телефон"
                   value={formatPhoneNumber(field.value)}
                   onChange={(e) => {
-                    const formattedValue = formatPhoneNumber(e.target.value)
-                    field.onChange(formattedValue)
+                    field.onChange(formatPhoneNumber(e.target.value))
                   }}
                 />
               )}
             />
-            <FormHelperText sx={{ maxWidth: '30ch' }} error>
-              {errors.phone?.message}
+            <FormHelperText error>
+              {errors.mobile_phone?.message}
             </FormHelperText>
           </FormControl>
 
@@ -230,34 +239,35 @@ function AuthModel() {
           />
 
           <Recognition
-            onFaceDescriptor={(data) => {
-              setFaceDescriptor(data)
-              setIsFaceDescriptorReceived(true)
-            }}
-            onCameraError={(error) => {
-              setErrorMessage({
-                text: `Ошибка доступа к камере. ${error}`,
+            onFaceDescriptor={handleFaceDescriptor}
+            onCameraError={(err) => {
+              MessageAlert.show({
+                text: `Ошибка доступа к камере. ${err}`,
                 type: 'error',
               })
             }}
           />
 
-          {/* Отображение MessageAlert, если есть ошибка */}
-          {errorMessage && (
+          {/* Отображение ошибок из провайдера */}
+          {authError && (
             <MessageAlert
-              message={errorMessage}
-              onClose={() => setErrorMessage(null)} // Очистка ошибки при закрытии
+              message={{
+                text:
+                  authError.data?.message ||
+                  'Ошибка регистрации. Попробуйте снова.',
+                type: 'error',
+              }}
             />
           )}
 
           <Button
             type="submit"
             variant="contained"
-            disabled={!isValid || !isFaceDescriptorReceived}
+            disabled={!isValid || !faceDescriptor || isLoading}
             fullWidth
             sx={{ mt: 2 }}
           >
-            Зарегистрироваться
+            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
           </Button>
         </Box>
       </form>
@@ -266,3 +276,306 @@ function AuthModel() {
 }
 
 export default AuthModel
+
+// import { useState, useEffect } from 'react'
+// import { useLocation, useNavigate } from 'react-router-dom'
+// import {
+//   Button,
+//   Box,
+//   FormHelperText,
+//   FormControl,
+//   Typography,
+//   InputLabel,
+//   OutlinedInput,
+//   Alert,
+//   CircularProgress,
+// } from '@mui/material'
+// import { useForm, Controller } from 'react-hook-form'
+
+// import PasswordInput from '@/components/PasswordInput'
+// import useAuth from '@/hook/useAuth'
+// import CustomLink from '@/components/CustomLink'
+// import Recognition from '@/models/Recognition'
+// import {
+//   formatPhoneNumber,
+//   isEmail,
+//   isPhoneNumber,
+// } from '@/service/utilsFunction'
+
+// function AuthModel() {
+//   const navigate = useNavigate()
+//   const location = useLocation()
+//   const {
+//     formState: { errors, isValid },
+//     handleSubmit,
+//     reset,
+//     watch,
+//     control,
+//   } = useForm({ mode: 'onBlur' })
+
+//   const { auth, isLoading, error: authError } = useAuth()
+//   const [faceDescriptor, setFaceDescriptor] = useState(null)
+//   const [isFaceDescriptorReceived, setIsFaceDescriptorReceived] =
+//     useState(false)
+//   const [errorMessage, setErrorMessage] = useState(null)
+//   const fromPage = location.state?.from?.pathname || '/instructions'
+
+//   useEffect(() => {
+//     if (authError) {
+//       setErrorMessage({
+//         text: authError.detail || 'Ошибка регистрации. Попробуйте снова.',
+//         type: 'error',
+//       })
+//     }
+//   }, [authError])
+
+//   const onSubmit = async (data) => {
+//     if (!isFaceDescriptorReceived) return
+
+//     try {
+//       const newData = {
+//         ...data,
+//         mobile_phone: data.mobile_phone.replaceAll('-', ''),
+//         face_descriptor: faceDescriptor,
+//       }
+//       delete newData.confirmPassword
+
+//       const success = await auth(newData)
+
+//       if (success) {
+//         reset()
+//         navigate(fromPage, { replace: true })
+//       }
+//     } catch (error) {
+//       setErrorMessage({
+//         text: error.message || 'Произошла непредвиденная ошибка',
+//         type: 'error',
+//       })
+//     }
+//   }
+
+//   const handleFaceDescriptor = (data) => {
+//     setFaceDescriptor(data)
+//     setIsFaceDescriptorReceived(true)
+//   }
+
+//   return (
+//     <div>
+//       <Box
+//         display="flex"
+//         justifyContent="space-between"
+//         alignItems="center"
+//         sx={{ mb: 2 }}
+//       >
+//         <Typography variant="h5">Зарегистрироваться</Typography>
+//         <CustomLink to="/auth/login">Войти</CustomLink>
+//       </Box>
+
+//       <form noValidate autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
+//         <Box
+//           display="flex"
+//           sx={{ width: '40ch', margin: '0 auto' }}
+//           flexDirection="column"
+//           alignItems="center"
+//         >
+//           {/* Имя */}
+//           <FormControl
+//             sx={{ width: '100%', marginBottom: 2 }}
+//             variant="outlined"
+//           >
+//             <InputLabel htmlFor="first_name">Имя</InputLabel>
+//             <Controller
+//               name="first_name"
+//               control={control}
+//               defaultValue=""
+//               rules={{
+//                 required: 'Поле обязательно к заполнению!',
+//                 pattern: {
+//                   value: /^[a-zA-Zа-яА-Я\s-]+$/,
+//                   message: 'Разрешены только буквы, пробел и тире',
+//                 },
+//               }}
+//               render={({ field }) => (
+//                 <OutlinedInput
+//                   {...field}
+//                   inputMode="text"
+//                   autoFocus
+//                   autoComplete="given-name"
+//                   id="first_name"
+//                   label="Имя"
+//                 />
+//               )}
+//             />
+//             <FormHelperText error>{errors.first_name?.message}</FormHelperText>
+//           </FormControl>
+
+//           {/* Фамилия */}
+//           <FormControl
+//             sx={{ width: '100%', marginBottom: 2 }}
+//             variant="outlined"
+//           >
+//             <InputLabel htmlFor="last_name">Фамилия</InputLabel>
+//             <Controller
+//               name="last_name"
+//               control={control}
+//               defaultValue=""
+//               rules={{
+//                 required: 'Поле обязательно к заполнению!',
+//                 pattern: {
+//                   value: /^[a-zA-Zа-яА-Я\s-]+$/,
+//                   message: 'Разрешены только буквы, пробел и тире',
+//                 },
+//               }}
+//               render={({ field }) => (
+//                 <OutlinedInput
+//                   {...field}
+//                   inputMode="text"
+//                   autoComplete="family-name"
+//                   id="last_name"
+//                   label="Фамилия"
+//                 />
+//               )}
+//             />
+//             <FormHelperText error>{errors.last_name?.message}</FormHelperText>
+//           </FormControl>
+
+//           {/* Email */}
+//           <FormControl
+//             sx={{ width: '100%', marginBottom: 2 }}
+//             variant="outlined"
+//           >
+//             <InputLabel htmlFor="email">Почта</InputLabel>
+//             <Controller
+//               name="email"
+//               control={control}
+//               defaultValue=""
+//               rules={{
+//                 required: 'Поле обязательно к заполнению!',
+//                 validate: (value) =>
+//                   isEmail(value) || 'Введите корректный email',
+//               }}
+//               render={({ field }) => (
+//                 <OutlinedInput
+//                   {...field}
+//                   inputMode="email"
+//                   autoComplete="email"
+//                   id="email"
+//                   label="Почта"
+//                 />
+//               )}
+//             />
+//             <FormHelperText error>
+//               {errors.email?.message || authError?.data?.errors?.email}
+//             </FormHelperText>
+//           </FormControl>
+
+//           {/* Телефон */}
+//           <FormControl
+//             sx={{ width: '100%', marginBottom: 2 }}
+//             variant="outlined"
+//           >
+//             <InputLabel htmlFor="mobile_phone">Телефон</InputLabel>
+//             <Controller
+//               name="mobile_phone"
+//               control={control}
+//               defaultValue=""
+//               rules={{
+//                 required: 'Поле обязательно к заполнению!',
+//                 validate: (value) =>
+//                   isPhoneNumber(value) ||
+//                   'Введите телефон в формате +7 900 123-45-67',
+//               }}
+//               render={({ field }) => (
+//                 <OutlinedInput
+//                   {...field}
+//                   inputMode="tel"
+//                   autoComplete="tel"
+//                   id="mobile_phone"
+//                   label="Телефон"
+//                   value={formatPhoneNumber(field.value)}
+//                   onChange={(e) => {
+//                     field.onChange(formatPhoneNumber(e.target.value))
+//                   }}
+//                 />
+//               )}
+//             />
+//             <FormHelperText error>
+//               {errors.mobile_phone?.message ||
+//                 authError?.data?.errors?.mobile_phone}
+//             </FormHelperText>
+//           </FormControl>
+
+//           {/* Пароль */}
+//           <PasswordInput
+//             name="password"
+//             label="Пароль"
+//             control={control}
+//             errors={errors}
+//             watch={watch}
+//           />
+
+//           {/* Подтверждение пароля */}
+//           <PasswordInput
+//             name="confirmPassword"
+//             label="Повторите пароль"
+//             control={control}
+//             errors={{
+//               ...errors,
+//               confirmPassword: {
+//                 ...errors.confirmPassword,
+//                 message:
+//                   errors.confirmPassword?.message ||
+//                   (watch('password') !== watch('confirmPassword') &&
+//                     'Пароли не совпадают'),
+//               },
+//             }}
+//             watch={watch}
+//             rules={{
+//               validate: (value) =>
+//                 value === watch('password') || 'Пароли не совпадают',
+//             }}
+//           />
+
+//           <Recognition
+//             onFaceDescriptor={handleFaceDescriptor}
+//             onCameraError={(err) => {
+//               setErrorMessage({
+//                 text: `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`,
+//                 type: 'error',
+//               })
+//             }}
+//           />
+
+//           <Button
+//             type="submit"
+//             variant="contained"
+//             disabled={!isValid || !isFaceDescriptorReceived || isLoading}
+//             fullWidth
+//             sx={{ mt: 2 }}
+//           >
+//             {isLoading ? <CircularProgress size={24} /> : 'Зарегистрироваться'}
+//           </Button>
+//         </Box>
+//       </form>
+
+//       {errorMessage && (
+//         <Alert
+//           severity={errorMessage.type}
+//           onClose={() => setErrorMessage(null)}
+//           sx={{
+//             position: 'fixed',
+//             bottom: 40,
+//             left: '50%',
+//             transform: 'translateX(-50%)',
+//             maxWidth: '600px',
+//             zIndex: 1000,
+//           }}
+//         >
+//           {errorMessage.text}
+//         </Alert>
+//       )}
+//     </div>
+//   )
+// }
+
+// export default AuthModel

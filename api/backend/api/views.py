@@ -194,58 +194,71 @@ class LoginView(APIView):
 
 class FaceLoginView(APIView):
     """Аутентификация по лицу"""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
         # 1. Получаем дескриптор лица из запроса
-        face_descriptor = request.data.get('face_descriptor')
+        face_descriptor = request.data.get("face_descriptor")
         if not face_descriptor or len(face_descriptor) != 128:
             return Response(
-                {'error': 'Invalid face descriptor'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid face descriptor - must have exactly 128 elements"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 2. Преобразуем в numpy array
         try:
             input_descriptor = np.array(face_descriptor, dtype=np.float32)
-        except:
+        except Exception as e:
             return Response(
-                {'error': 'Invalid descriptor format'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Invalid descriptor format: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 3. Ищем ближайшего пользователя
         best_match = None
-        min_distance = float('inf')
+        min_distance = float("inf")
 
         for user in User.objects.exclude(face_descriptor__isnull=True):
-            # Преобразуем дескриптор из БД
-            stored_descriptor = np.array(
-                eval(user.face_descriptor),
-                dtype=np.float32
-            )
+            try:
+                # Преобразуем дескриптор из БД
+                stored_descriptor = np.array(
+                    eval(user.face_descriptor), dtype=np.float32
+                )
 
-            # Вычисляем евклидово расстояние
-            distance = np.linalg.norm(input_descriptor - stored_descriptor)
+                # Проверяем размерность дескриптора
+                if stored_descriptor.shape != (128,):
+                    continue  # Пропускаем некорректные записи
 
-            # Проверяем пороговое значение (обычно 0.6)
-            if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
-                min_distance = distance
-                best_match = user
+                # Вычисляем евклидово расстояние
+                distance = np.linalg.norm(input_descriptor - stored_descriptor)
+
+                # Проверяем пороговое значение
+                if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
+                    min_distance = distance
+                    best_match = user
+
+            except Exception as e:
+                print(
+                    f"Error processing user {user.id} face descriptor: {str(e)}"
+                )
+                continue
 
         # 4. Проверяем результат
         if best_match:
             login(request, best_match)
-            return Response({
-                'status': 'success',
-                'user_id': best_match.id,
-                'distance': float(min_distance),
-                'threshold': settings.FACE_MATCH_THRESHOLD
-            })
+            return Response(
+                {
+                    "status": "success",
+                    "user_id": best_match.id,
+                    "distance": float(min_distance),
+                    "threshold": settings.FACE_MATCH_THRESHOLD,
+                }
+            )
 
         return Response(
-            {'error': 'Face not recognized'},
-            status=status.HTTP_401_UNAUTHORIZED
+            {"error": "Face not recognized or no matching users found"},
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
 

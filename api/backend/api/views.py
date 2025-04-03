@@ -18,7 +18,9 @@ from api.models import (
     Instruction,
     InstructionAgreement,
     Tests,
-    Question
+    Question,
+    TestResult,
+    Video,
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -29,7 +31,9 @@ from api.serializers import (
     TestListSerializer,
     QuestionSerializer,
     SignUpSerializer,
-    LoginSerializer
+    LoginSerializer,
+    TestResultSerializer,
+    VideoSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -84,12 +88,14 @@ class SignUpView(APIView):
 
         try:
             user = User.objects.create_user(
-                email=serializer.validated_data['email'],
-                first_name=serializer.validated_data['first_name'],
-                last_name=serializer.validated_data['last_name'],
-                password=serializer.validated_data['password'],
-                mobile_phone=serializer.validated_data['mobile_phone'],
-                face_descriptor=serializer.validated_data['face_descriptor']
+                email=serializer.validated_data["email"],
+                first_name=serializer.validated_data["first_name"],
+                last_name=serializer.validated_data["last_name"],
+                password=serializer.validated_data["password"],
+                mobile_phone=serializer.validated_data["mobile_phone"],
+                face_descriptor=str(
+                    serializer.validated_data["face_descriptor"].tolist()
+                ),
             )
         except IntegrityError as e:
             raise ValidationError(e)
@@ -224,6 +230,8 @@ class FaceLoginView(APIView):
 class LogoutView(APIView):
     """Представление для выхода из системы"""
 
+    permission_classes = (AllowAny,)
+
     def post(self, request):
         logout(request)
         return Response(
@@ -282,3 +290,12 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return TestListSerializer
         return TestSerializer
+
+
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = (IsAuthenticated,)
+

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     User, TypeOfInstruction, Instruction, InstructionAgreement,
-    Tests, Question, Answer, TestResult, InstructionResult, Media,
+    Tests, Question, Answer, TestResult, InstructionResult, Video,
     ReferenceLink
 )
 
@@ -75,7 +75,7 @@ class InstructionResultAdmin(admin.ModelAdmin):
     search_fields = ('user__email', 'instruction__name')
 
 
-@admin.register(Media)
+@admin.register(Video)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = ('name', 'file')
+    list_display = ('title', 'url', 'file')
     search_fields = ('name',)

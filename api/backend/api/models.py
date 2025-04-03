@@ -417,22 +417,41 @@ class InstructionResult(models.Model):
         return f'{self.user} - {self.instruction} - {self.result}'
 
 
-class Media(models.Model):
-    """Модель медиафайлов."""
+class Video(models.Model):
+    """Модель видеофайлов."""
 
-    name = models.CharField(
+    type = models.CharField(
+        'Тип видео',
+        max_length=MAX_LENGTH_MEDIA_NAME,
+        choices=[
+            ('youtube', 'Youtube'),
+            ('server', 'Видео на сервере'),
+        ],
+        default='youtube',
+    )
+    url = models.URLField(
+        'URL',
+        blank=True,
+        null=True
+    )
+    title = models.CharField(
         'Название',
         max_length=MAX_LENGTH_MEDIA_NAME,
     )
     file = models.FileField(
-        'Файл',
-        upload_to='media/',
+        'Видеофайл',
+        upload_to='media/videos/',
+        blank=True,
+    )
+    date = models.DateTimeField(
+        'Дата загрузки',
+        auto_now_add=True,
     )
 
     class Meta:
-        verbose_name = 'Медиафайл'
-        verbose_name_plural = 'Медиафайлы'
+        verbose_name = 'Видеофайл'
+        verbose_name_plural = 'Видеофайлы'
 
     def __str__(self):
-        """Возвращает строковое представление объекта медиафайла."""
-        return self.name
+        """Возвращает строковое представление объекта видеофайла."""
+        return self.title

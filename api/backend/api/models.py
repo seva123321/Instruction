@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
 
+from .utils import normalize_phone_number
 from backend.constants import (
     MAX_LENGTH_EMAIL_ADDRESS,
     MAX_LENGTH_FIRST_NAME,
@@ -119,6 +120,11 @@ class User(AbstractUser):
     def __str__(self):
         """Возвращает строковое представление объекта пользователя."""
         return f'{self.last_name} {self.first_name}'
+
+    def save(self, *args, **kwargs):
+        if self.mobile_phone:
+            self.mobile_phone = normalize_phone_number(self.mobile_phone)
+        super().save(*args, **kwargs)
 
 
 class TypeOfInstruction(models.Model):

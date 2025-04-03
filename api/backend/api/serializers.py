@@ -26,7 +26,8 @@ from api.models import (
     Video,
     UserAnswer
 )
-from api.utils import is_face_already_registered
+from api.utils import is_face_already_registered, normalize_phone_number
+
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -69,6 +70,7 @@ class SignUpSerializer(serializers.Serializer):
     )
     mobile_phone = serializers.CharField(
         max_length=MAX_LENGTH_PHONE,
+        required=True
     )
     face_descriptor = serializers.ListField(
         child=serializers.FloatField(),
@@ -126,11 +128,20 @@ class SignUpSerializer(serializers.Serializer):
         return value
 
     def validate_mobile_phone(self, value):
-        if User.objects.filter(mobile_phone=value).exists():
+        normalized_phone = normalize_phone_number(value)
+
+        if not normalized_phone:
             raise serializers.ValidationError(
-                'Пользователь с таким номером телефона уже существует'
+                "Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999"
             )
-        return value
+
+        # Проверяем уникальность
+        if User.objects.filter(mobile_phone=normalized_phone).exists():
+            raise serializers.ValidationError(
+                "Пользователь с таким номером телефона уже существует"
+            )
+
+        return normalized_phone
 
 
 

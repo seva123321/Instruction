@@ -16,9 +16,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from api.models import (
     User,
     Instruction,
-    InstructionAgreement,
     Tests,
-    Question
+    Video,
+    TestResult
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -27,9 +27,10 @@ from api.serializers import (
     UserSerializer,
     TestSerializer,
     TestListSerializer,
-    QuestionSerializer,
     SignUpSerializer,
-    LoginSerializer
+    TestResultSerializer,
+    VideoSerializer,
+    TestResultCreateSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -84,22 +85,50 @@ class SignUpView(APIView):
 
         try:
             user = User.objects.create_user(
-                email=serializer.validated_data['email'],
-                first_name=serializer.validated_data['first_name'],
-                last_name=serializer.validated_data['last_name'],
-                password=serializer.validated_data['password'],
-                mobile_phone=serializer.validated_data['mobile_phone'],
-                face_descriptor=serializer.validated_data['face_descriptor']
+                email=serializer.validated_data["email"],
+                first_name=serializer.validated_data["first_name"],
+                last_name=serializer.validated_data["last_name"],
+                password=serializer.validated_data["password"],
+                mobile_phone=serializer.validated_data["mobile_phone"],
+                face_descriptor=str(
+                    serializer.validated_data["face_descriptor"].tolist()
+                ),
             )
         except IntegrityError as e:
-            raise ValidationError(e)
+            error_messages = {
+                "api_user_email": {
+                    "email": "Пользователь с таким email уже существует"
+                },
+                "api_user_mobile_phone": {
+                    "mobile_phone": "Пользователь с таким номером "
+                                    "телефона уже существует"
+                },
+                "api_user_face_descriptor": {
+                    "face_descriptor": "Такой дескриптор лица уже существует"
+                },
+            }
+
+            for db_error, message in error_messages.items():
+                if db_error in str(e):
+                    raise ValidationError(message)
+
+            raise ValidationError(
+                {"detail": "Ошибка при создании пользователя"}
+            )
+
+        except Exception as e:
+            raise ValidationError({"detail": str(e)})
 
         return Response(
-            {'id': user.id, 'email': user.email},
+            {"id": user.id, "email": user.email},
             status=status.HTTP_201_CREATED
         )
 
 
+@extend_schema(
+    tags=['Login'],
+    description='Аутентификация.'
+)
 class LoginView(APIView):
     """Представление для входа через сессии"""
     permission_classes = (AllowAny,)
@@ -164,65 +193,84 @@ class LoginView(APIView):
             )
 
 
+@extend_schema(
+    tags=['LoginFace'],
+    description='Аутентификация по лицу.'
+)
 class FaceLoginView(APIView):
     """Аутентификация по лицу"""
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
         # 1. Получаем дескриптор лица из запроса
-        face_descriptor = request.data.get('face_descriptor')
+        face_descriptor = request.data.get("face_descriptor")
         if not face_descriptor or len(face_descriptor) != 128:
             return Response(
-                {'error': 'Invalid face descriptor'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid face descriptor - must have exactly 128 elements"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 2. Преобразуем в numpy array
         try:
             input_descriptor = np.array(face_descriptor, dtype=np.float32)
-        except:
+        except Exception as e:
             return Response(
-                {'error': 'Invalid descriptor format'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Invalid descriptor format: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 3. Ищем ближайшего пользователя
         best_match = None
-        min_distance = float('inf')
+        min_distance = float("inf")
 
         for user in User.objects.exclude(face_descriptor__isnull=True):
-            # Преобразуем дескриптор из БД
-            stored_descriptor = np.array(
-                eval(user.face_descriptor),
-                dtype=np.float32
-            )
+            try:
+                # Преобразуем дескриптор из БД
+                stored_descriptor = np.array(
+                    eval(user.face_descriptor), dtype=np.float32
+                )
 
-            # Вычисляем евклидово расстояние
-            distance = np.linalg.norm(input_descriptor - stored_descriptor)
+                # Проверяем размерность дескриптора
+                if stored_descriptor.shape != (128,):
+                    continue  # Пропускаем некорректные записи
 
-            # Проверяем пороговое значение (обычно 0.6)
-            if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
-                min_distance = distance
-                best_match = user
+                # Вычисляем евклидово расстояние
+                distance = np.linalg.norm(input_descriptor - stored_descriptor)
+
+                # Проверяем пороговое значение
+                if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
+                    min_distance = distance
+                    best_match = user
+
+            except Exception as e:
+                print(
+                    f"Error processing user {user.id} face descriptor: {str(e)}"
+                )
+                continue
 
         # 4. Проверяем результат
         if best_match:
             login(request, best_match)
-            return Response({
-                'status': 'success',
-                'user_id': best_match.id,
-                'distance': float(min_distance),
-                'threshold': settings.FACE_MATCH_THRESHOLD
-            })
+            return Response(
+                {
+                    "status": "success",
+                    "user_id": best_match.id,
+                    "distance": float(min_distance),
+                    "threshold": settings.FACE_MATCH_THRESHOLD,
+                }
+            )
 
         return Response(
-            {'error': 'Face not recognized'},
-            status=status.HTTP_401_UNAUTHORIZED
+            {"error": "Face not recognized or no matching users found"},
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
 
 class LogoutView(APIView):
     """Представление для выхода из системы"""
+    permission_classes = (AllowAny,)
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -268,7 +316,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     description='Получение тестов.'
 )
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление для получения инструктажа."""
+    """Представление для получения тестов."""
 
     queryset = Tests.objects.prefetch_related(
         'questions',
@@ -283,3 +331,41 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return TestListSerializer
         return TestSerializer
+
+
+@extend_schema(
+    tags=["Tests"],
+    description="Получение видео."
+)
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = (IsAuthenticated,)
+
+
+@extend_schema(
+    tags=['TestResult'],
+    description='Сохранение результатов тестов пользователя.'
+)
+class TestResultCreateView(APIView):
+    """API для сохранения результатов тестирования."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = TestResultCreateSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data['user'] = request.user
+        test_result = serializer.save()
+
+        return Response(
+            TestResultSerializer(
+                test_result,
+                context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )

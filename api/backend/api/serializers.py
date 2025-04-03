@@ -1,4 +1,5 @@
 from django.conf import settings
+import numpy as np
 from rest_framework import serializers
 
 from backend.constants import (
@@ -7,7 +8,9 @@ from backend.constants import (
     MAX_LENGTH_FIRST_NAME,
     MAX_LENGTH_LAST_NAME,
     MAX_LENGTH_PHONE,
-    MAX_LENGTH_PASSWORD
+    MAX_LENGTH_PASSWORD,
+    MAX_LENGTH_PASSING_SCORE,
+    MIN_LENGTH_PASSING_SCORE
 )
 from api.models import (
     User,
@@ -19,8 +22,11 @@ from api.models import (
     Question,
     Answer,
     ReferenceLink,
-    TestResult
+    TestResult,
+    Video,
+    UserAnswer
 )
+from api.utils import is_face_already_registered
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -68,6 +74,64 @@ class SignUpSerializer(serializers.Serializer):
         child=serializers.FloatField(),
         max_length=MAX_LENGTH_FACE_DESCRIPTOR
     )
+
+    def validate(self, data):
+        errors = {}
+
+        if User.objects.filter(email=data["email"]).exists():
+            errors["email"] = "Пользователь с таким email уже существует"
+
+        if User.objects.filter(mobile_phone=data["mobile_phone"]).exists():
+            errors["mobile_phone"] = (
+                "Пользователь с таким номером телефона уже существует"
+            )
+
+        try:
+            input_descriptor = np.array(data["face_descriptor"], dtype=np.float32)
+            if is_face_already_registered(input_descriptor):
+                errors["face_descriptor"] = "Пользователь с таким лицом уже существует"
+        except Exception as e:
+            errors["face_descriptor"] = str(e)
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
+    def validate_face_descriptor(self, value):
+        try:
+            input_descriptor = np.array(value, dtype=np.float32)
+        except:
+            raise serializers.ValidationError(
+                'Invalid face descriptor format'
+            )
+
+        if len(input_descriptor) != 128:
+            raise serializers.ValidationError(
+                'Face descriptor must have 128 elements'
+            )
+
+        if is_face_already_registered(input_descriptor):
+            raise serializers.ValidationError(
+                'User with similar face already exists'
+            )
+
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return value
+
+    def validate_mobile_phone(self, value):
+        if User.objects.filter(mobile_phone=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким номером телефона уже существует'
+            )
+        return value
+
 
 
 class LoginSerializer(serializers.Serializer):
@@ -180,13 +244,69 @@ class QuestionSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserAnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='question.id')
+    selected_id = serializers.IntegerField(source='selected_answer.id')
+
+    class Meta:
+        model = UserAnswer
+        fields = ('id', 'selected_id', 'is_correct')
+
 
 class TestResultSerializer(serializers.ModelSerializer):
-    """Сериализатор для TestResultSerializer."""
+    """Сериализатор для результатов теста."""
 
     class Meta:
         model = TestResult
-        fields = ('id', 'result', 'mark', 'date', 'time')
+        fields = (
+            'id',
+            'is_passed',
+            'mark',
+            'score',
+            'total_points',
+            'start_time',
+            'completion_time',
+            'test_duration',
+        )
+
+
+class TestResultCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания результатов теста."""
+
+    user_answers = UserAnswerSerializer(many=True, required=False)
+
+    class Meta:
+        model = TestResult
+        fields = (
+            'test',
+            'mark',
+            'is_passed',
+            'start_time',
+            'completion_time',
+            'test_duration',
+            'score',
+            'total_points',
+            'user_answers',
+        )
+        extra_kwargs = {
+            'test': {'required': True},
+            'mark': {'required': True},
+        }
+
+    def create(self, validated_data):
+        user_answers_data = validated_data.pop('user_answers', [])
+        test_result = TestResult.objects.create(**validated_data)
+
+        for answer_data in user_answers_data:
+            UserAnswer.objects.create(
+                test_result=test_result,
+                question_id=answer_data['question']['id'],
+                selected_answer_id=answer_data['selected_answer']['id'],
+                is_correct=answer_data['is_correct'],
+                points_earned=answer_data.get('points_earned', 0),
+            )
+
+        return test_result
 
 
 class BaseTestSerializer(serializers.ModelSerializer):
@@ -199,7 +319,8 @@ class BaseTestSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return TestResultSerializer(
                 obj.test_results.filter(user=request.user),
-                many=True
+                many=True,
+                context=self.context
             ).data
         return []
 
@@ -230,8 +351,9 @@ class TestSerializer(BaseTestSerializer):
             'description',
             'test_is_control',
             'passing_score',
+            'total_points',
             'test_results',
-            'questions'
+            'questions',
         )
 
     def get_questions(self, obj):
@@ -250,3 +372,9 @@ class TestSerializer(BaseTestSerializer):
             many=True,
             context=question_context
         ).data
+
+
+class VideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = ('id', 'type', 'url', 'title', 'date')

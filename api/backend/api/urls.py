@@ -10,15 +10,18 @@ from api.views import (
     TestViewSet,
     SignUpView,
     LoginView,
-    LogoutView
+    LogoutView,
+    VideoViewSet,
+    TestResultCreateView,
 )
 
-router_v1 = DefaultRouter()
+router = DefaultRouter()
 
-router_v1.register('instructions', InstructionViewSet, basename='instructions')
-router_v1.register('tests', TestViewSet, basename='tests')
+router.register('instructions', InstructionViewSet, basename='instructions')
+router.register('tests', TestViewSet, basename='tests')
+router.register('knowladge/videos', VideoViewSet, basename='knowladge/videos')
 
-router_v1.register('users', UserViewSet, basename='users')
+router.register('users', UserViewSet, basename='users')
 auth_urls = [
     path('signup/', SignUpView.as_view(), name='signup'),
     path('login/', LoginView.as_view(), name='login'),
@@ -28,5 +31,6 @@ auth_urls = [
 
 urlpatterns = [
     path('auth/', include(auth_urls)),
-    path('', include(router_v1.urls)),
+    path('test_results/', TestResultCreateView.as_view(), name='test_results'),
+    path('', include(router.urls)),
 ]

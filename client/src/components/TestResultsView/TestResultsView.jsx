@@ -27,7 +27,6 @@ import {
 } from '@mui/icons-material'
 
 function TestResultsView({
-  testId = '',
   testTitle = '',
   score = 0,
   totalPoints = 0,
@@ -253,7 +252,7 @@ function TestResultsView({
 
                         <Typography variant="body2">
                           <Box component="span" fontWeight={500}>
-                            Ваш ответ:{' '}
+                            Ваш ответ:&nbsp;
                           </Box>
                           <Box
                             component="span"
@@ -266,7 +265,7 @@ function TestResultsView({
                         {!isCorrect && correctAnswer && (
                           <Typography variant="body2" sx={{ mt: 1 }}>
                             <Box component="span" fontWeight={500}>
-                              Правильный ответ:{' '}
+                              Правильный ответ:&nbsp;
                             </Box>
                             <Box component="span" color="success.main">
                               {correctAnswer.name}
@@ -281,7 +280,7 @@ function TestResultsView({
                           >
                             <Typography variant="body2">
                               <Box component="span" fontWeight={500}>
-                                Объяснение:{' '}
+                                Объяснение:&nbsp;
                               </Box>
                               {userAnswer.explanation}
                             </Typography>
@@ -302,7 +301,6 @@ function TestResultsView({
 }
 
 TestResultsView.propTypes = {
-  testId: PropTypes.string,
   testTitle: PropTypes.string,
   score: PropTypes.number,
   totalPoints: PropTypes.number,

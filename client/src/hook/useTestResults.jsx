@@ -4,6 +4,7 @@
 
 import { useCallback } from 'react'
 import { openDB } from 'idb'
+
 import { usePostTestResultMutation } from '../slices/testApi'
 
 const DB_NAME = 'TestResultsDB'
@@ -28,7 +29,6 @@ const initDB = async () => {
     })
     return dbInstance
   } catch (error) {
-    console.error('DB initialization failed:', error)
     dbInstance = null
     throw error
   }
@@ -40,81 +40,78 @@ const useTestResults = () => {
   const withDB = useCallback(async (operation) => {
     const db = await initDB()
     try {
-      return await operation(db)
+      return operation(db)
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.warn('Connection aborted, retrying...')
         dbInstance = null
         const freshDB = await initDB()
-        return await operation(freshDB)
+        return operation(freshDB)
       }
       throw error
     }
   }, [])
 
   const saveResultsToDB = useCallback(
-    async (testResults) => {
-      return withDB(async (db) => {
+    (testResults) =>
+      withDB(async (db) => {
         const tx = db.transaction('results', 'readwrite')
         await tx.store.put(testResults)
         await tx.done
         return testResults
-      })
-    },
+      }),
     [withDB]
   )
 
   const addPendingResult = useCallback(
-    async (testResults) => {
-      return withDB(async (db) => {
+    (testResults) =>
+      withDB(async (db) => {
         const tx = db.transaction('pendingResults', 'readwrite')
         await tx.store.put(testResults)
         await tx.done
         return testResults
-      })
-    },
+      }),
     [withDB]
   )
 
-  const syncPendingResults = useCallback(async () => {
-    return withDB(async (db) => {
-      const tx = db.transaction('pendingResults', 'readwrite')
-      const pendingResults = await tx.store.getAll()
+  const syncPendingResults = useCallback(
+    () =>
+      withDB(async (db) => {
+        const tx = db.transaction('pendingResults', 'readwrite')
+        const pendingResults = await tx.store.getAll()
 
-      const syncedResults = []
-      for (const result of pendingResults) {
-        try {
-          const response = await postTestResult(result).unwrap()
-          await saveResultsToDB(response)
-          await tx.store.delete(result.id)
-          syncedResults.push(response)
-        } catch (error) {
-          console.error('Sync failed for result:', result.id, error)
-        }
-      }
+        const syncPromises = pendingResults.map(async (result) => {
+          try {
+            const response = await postTestResult(result).unwrap()
+            await saveResultsToDB(response)
+            await tx.store.delete(result.id)
+            return response
+          } catch (error) {
+            return null
+          }
+        })
 
-      await tx.done
-      return syncedResults
-    })
-  }, [withDB, postTestResult, saveResultsToDB])
+        const syncedResults = (await Promise.all(syncPromises)).filter(Boolean)
+        await tx.done
+        return syncedResults
+      }),
+    [withDB, postTestResult, saveResultsToDB]
+  )
 
   const getTestResults = useCallback(
-    async (testId) => {
-      return withDB(async (db) => {
+    (testId) =>
+      withDB(async (db) => {
         try {
           const tx = db.transaction('results', 'readonly')
           const results = await tx.store.index('by_test_id').getAll(testId)
           await tx.done
           return results
         } catch (error) {
-          console.warn('Index query failed, using fallback:', error)
           const tx = db.transaction('results', 'readonly')
           const allResults = await tx.store.getAll()
           await tx.done
           return allResults.filter((r) => r.test_id === testId)
         }
-      })
-    },
+      }),
     [withDB]
   )
 
@@ -130,41 +127,29 @@ const useTestResults = () => {
         synced: navigator.onLine,
       }
 
-      console.log('Attempting to save:', testResults) // Логирование
-
-      try {
-        if (navigator.onLine) {
-          try {
-            console.log('Trying online save...')
-            const response = await postTestResult(testResults).unwrap()
-            const completeResults = {
-              ...testResults,
-              ...response,
-              synced: true,
-            }
-            await saveResultsToDB(completeResults)
-            console.log('Successfully saved online and to DB')
-            return completeResults
-          } catch (onlineError) {
-            console.warn('Online save failed, saving as pending:', onlineError)
-            await addPendingResult(testResults)
-            await saveResultsToDB(testResults)
-            return testResults
+      if (navigator.onLine) {
+        try {
+          const response = await postTestResult(testResults).unwrap()
+          const completeResults = {
+            ...testResults,
+            ...response,
+            synced: true,
           }
-        } else {
-          console.log('Offline mode - saving locally')
+          await saveResultsToDB(completeResults)
+          return completeResults
+        } catch (onlineError) {
           await addPendingResult(testResults)
           await saveResultsToDB(testResults)
           return testResults
         }
-      } catch (error) {
-        console.error('Complete save failure:', error)
-        throw error
       }
+      await addPendingResult(testResults)
+      await saveResultsToDB(testResults)
+      return testResults
     },
     [postTestResult, saveResultsToDB, addPendingResult]
   )
-  
+
   return {
     saveTestResults,
     getTestResults,
@@ -177,129 +162,145 @@ export default useTestResults
 // import { useCallback } from 'react'
 // import { openDB } from 'idb'
 
+// import { usePostTestResultMutation } from '../slices/testApi'
+
 // const DB_NAME = 'TestResultsDB'
 // const DB_VERSION = 1
 
-// const initResultsDB = async () => {
-//   return openDB(DB_NAME, DB_VERSION, {
-//     upgrade(db) {
-//       if (!db.objectStoreNames.contains('results')) {
-//         db.createObjectStore('results', { keyPath: 'id' })
-//       }
-//       if (!db.objectStoreNames.contains('pendingResults')) {
-//         db.createObjectStore('pendingResults', {
-//           keyPath: 'id',
-//           autoIncrement: true,
-//         })
-//       }
-//     },
-//   })
+// let dbInstance = null
+
+// const initDB = async () => {
+//   if (dbInstance) return dbInstance
+
+//   try {
+//     dbInstance = await openDB(DB_NAME, DB_VERSION, {
+//       upgrade(db) {
+//         if (!db.objectStoreNames.contains('results')) {
+//           const store = db.createObjectStore('results', { keyPath: 'id' })
+//           store.createIndex('by_test_id', 'test_id', { unique: false })
+//         }
+//         if (!db.objectStoreNames.contains('pendingResults')) {
+//           db.createObjectStore('pendingResults', { keyPath: 'id' })
+//         }
+//       },
+//     })
+//     return dbInstance
+//   } catch (error) {
+//     console.error('DB initialization failed:', error)
+//     dbInstance = null
+//     throw error
+//   }
 // }
 
 // const useTestResults = () => {
-//   const saveResultsToDB = useCallback(async (testResults) => {
+//   const [postTestResult] = usePostTestResultMutation()
+
+//   const withDB = useCallback(async (operation) => {
+//     const db = await initDB()
 //     try {
-//       const db = await initResultsDB()
-//       const tx = db.transaction('results', 'readwrite')
-//       await tx.store.put(testResults)
-//       await tx.done
-//       return testResults
+//       return await operation(db)
 //     } catch (error) {
-//       console.error('Failed to save results to DB:', error)
-//       throw error
-//     }
-//   }, [])
-
-//   const addPendingResult = useCallback(async (testResults) => {
-//     try {
-//       const db = await initResultsDB()
-//       const tx = db.transaction('pendingResults', 'readwrite')
-//       await tx.store.add(testResults)
-//       await tx.done
-//       return testResults
-//     } catch (error) {
-//       console.error('Failed to add pending result:', error)
-//       throw error
-//     }
-//   }, [])
-
-//   const syncPendingResults = useCallback(async () => {
-//     try {
-//       const db = await initResultsDB()
-//       const tx = db.transaction('pendingResults', 'readwrite')
-//       const pendingResults = await tx.store.getAll()
-
-//       const results = []
-//       for (const result of pendingResults) {
-//         try {
-//           const response = await fetch('/api/test-results', {
-//             method: 'POST',
-//             headers: {
-//               'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(result),
-//           })
-
-//           if (response.ok) {
-//             const serverResponse = await response.json()
-//             await saveResultsToDB(serverResponse)
-//             await tx.store.delete(result.id)
-//             results.push(serverResponse)
-//           }
-//         } catch (error) {
-//           console.error('Failed to sync result:', error)
-//         }
+//       if (error.name === 'AbortError') {
+//         console.warn('Connection aborted, retrying...')
+//         dbInstance = null
+//         const freshDB = await initDB()
+//         return await operation(freshDB)
 //       }
-
-//       await tx.done
-//       return results
-//     } catch (error) {
-//       console.error('Failed to sync pending results:', error)
 //       throw error
 //     }
-//   }, [saveResultsToDB])
+//   }, [])
+
+//   const saveResultsToDB = useCallback(
+//     async (testResults) =>
+//       withDB(async (db) => {
+//         const tx = db.transaction('results', 'readwrite')
+//         await tx.store.put(testResults)
+//         await tx.done
+//         return testResults
+//       }),
+//     [withDB]
+//   )
+
+//   const addPendingResult = useCallback(
+//     async (testResults) =>
+//       withDB(async (db) => {
+//         const tx = db.transaction('pendingResults', 'readwrite')
+//         await tx.store.put(testResults)
+//         await tx.done
+//         return testResults
+//       }),
+//     [withDB]
+//   )
+
+//   const syncPendingResults = useCallback(
+//     async () =>
+//       withDB(async (db) => {
+//         const tx = db.transaction('pendingResults', 'readwrite')
+//         const pendingResults = await tx.store.getAll()
+
+//         const syncedResults = []
+//         for (const result of pendingResults) {
+//           try {
+//             const response = await postTestResult(result).unwrap()
+//             await saveResultsToDB(response)
+//             await tx.store.delete(result.id)
+//             syncedResults.push(response)
+//           } catch (error) {
+//             console.error('Sync failed for result:', result.id, error)
+//           }
+//         }
+
+//         await tx.done
+//         return syncedResults
+//       }),
+//     [withDB, postTestResult, saveResultsToDB]
+//   )
+
+//   const getTestResults = useCallback(
+//     async (testId) =>
+//       withDB(async (db) => {
+//         try {
+//           const tx = db.transaction('results', 'readonly')
+//           const results = await tx.store.index('by_test_id').getAll(testId)
+//           await tx.done
+//           return results
+//         } catch (error) {
+//           console.warn('Index query failed, using fallback:', error)
+//           const tx = db.transaction('results', 'readonly')
+//           const allResults = await tx.store.getAll()
+//           await tx.done
+//           return allResults.filter((r) => r.test_id === testId)
+//         }
+//       }),
+//     [withDB]
+//   )
 
 //   const saveTestResults = useCallback(
 //     async (testId, results, startTime) => {
-//       const completionTime = new Date()
-//       const testDuration = Math.floor(
-//         (completionTime - new Date(startTime)) / 1000
-//       )
-
 //       const testResults = {
 //         ...results,
 //         id: `${testId}-${Date.now()}`,
 //         test_id: testId,
 //         start_time: new Date(startTime).toISOString(),
-//         completion_time: completionTime.toISOString(),
-//         test_duration: testDuration,
-//         synced: false,
+//         completion_time: new Date().toISOString(),
+//         test_duration: Math.floor((new Date() - new Date(startTime)) / 1000),
+//         synced: navigator.onLine,
 //       }
 
+//       console.log('Attempting to save:', testResults) // Логирование
+
 //       try {
-//         const isOnline = navigator.onLine
-
-//         if (isOnline) {
+//         if (navigator.onLine) {
 //           try {
-//             const response = await fetch('/api/test-results', {
-//               method: 'POST',
-//               headers: {
-//                 'Content-Type': 'application/json',
-//                 Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-//               },
-//               body: JSON.stringify(testResults),
-//             })
-
-//             if (!response.ok) throw new Error('Server response not OK')
-
-//             const serverResponse = await response.json()
+//             console.log('Trying online save...')
+//             const response = await postTestResult(testResults).unwrap()
 //             const completeResults = {
 //               ...testResults,
-//               ...serverResponse,
+//               ...response,
 //               synced: true,
 //             }
-
 //             await saveResultsToDB(completeResults)
+//             console.log('Successfully saved online and to DB')
 //             return completeResults
 //           } catch (onlineError) {
 //             console.warn('Online save failed, saving as pending:', onlineError)
@@ -308,30 +309,18 @@ export default useTestResults
 //             return testResults
 //           }
 //         } else {
+//           console.log('Offline mode - saving locally')
 //           await addPendingResult(testResults)
 //           await saveResultsToDB(testResults)
 //           return testResults
 //         }
 //       } catch (error) {
-//         console.error('Failed to save test results:', error)
+//         console.error('Complete save failure:', error)
 //         throw error
 //       }
 //     },
-//     [saveResultsToDB, addPendingResult]
+//     [postTestResult, saveResultsToDB, addPendingResult]
 //   )
-
-//   const getTestResults = useCallback(async (testId) => {
-//     try {
-//       const db = await initResultsDB()
-//       const tx = db.transaction('results', 'readonly')
-//       const results = await tx.store.index('test_id').getAll(testId)
-//       await tx.done
-//       return results
-//     } catch (error) {
-//       console.error('Failed to get test results:', error)
-//       throw error
-//     }
-//   }, [])
 
 //   return {
 //     saveTestResults,

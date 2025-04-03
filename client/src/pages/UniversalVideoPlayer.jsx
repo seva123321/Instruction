@@ -140,7 +140,7 @@ function UniversalVideoPlayer({
           srcLang="ru"
           label="Русские субтитры"
           default
-          src="" //  путь к файлу субтитров .vtt
+          src=""
         />
         Ваш браузер не поддерживает видео тег.
       </video>

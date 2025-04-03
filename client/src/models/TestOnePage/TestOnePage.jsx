@@ -17,53 +17,153 @@ import { Link, useParams } from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
 import OfflineBoltIcon from '@mui/icons-material/OfflineBolt'
 
+// Импорт утилит и хуков
 import { calculateMark } from '@/service/utilsFunction'
 import useTestState from '@/hook/useTestState'
 import useTestResults from '@/hook/useTestResults'
+import { initDB, getTestFromDB } from '@/service/offlineDB'
+// Импорт компонентов
 import TabsWrapper from '@/components/TabsWrapper'
 
+import { useGetTestByIdQuery } from '../../slices/testApi'
 import TestControls from '../../components/TestControls/TestControls'
 import QuestionView from '../../components/QuestionView/QuestionView'
 import TestResultsView from '../../components/TestResultsView/TestResultsView'
 import QuestionFeedback from '../../components/QuestionFeedback/QuestionFeedback'
-import { useGetTestByIdQuery } from '../../slices/testApi'
-import {
-  initDB,
-  getTestFromDB,
-  saveTestToDB,
-  // saveTestResultToDB,
-  // syncPendingResults,
-} from '@/service/offlineDB'
+
+// Вынесенные компоненты
+function OfflineIndicator() {
+  return (
+    <Chip
+      icon={<OfflineBoltIcon />}
+      label="Оффлайн режим"
+      color="warning"
+      sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}
+    />
+  )
+}
+
+function BackButton({ isMobile }) {
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Link to="/tests">
+        <Button
+          variant="outlined"
+          size={isMobile ? 'small' : 'medium'}
+          sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+        >
+          Назад к тестам
+        </Button>
+      </Link>
+    </Box>
+  )
+}
+
+function TestHeader({
+  testName,
+  currentQuestionIndex,
+  questionsLength,
+  isMobile,
+}) {
+  return (
+    <>
+      <Typography
+        variant={isMobile ? 'h6' : 'h5'}
+        gutterBottom
+        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}
+      >
+        {testName}
+      </Typography>
+      <Typography
+        variant="subtitle1"
+        gutterBottom
+        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+      >
+        {`Вопрос ${currentQuestionIndex + 1} из ${questionsLength}`}
+      </Typography>
+      <Divider sx={{ my: isMobile ? 1 : 2 }} />
+    </>
+  )
+}
+
+function LoadingState() {
+  return <CircularProgress />
+}
+
+function ErrorState({ error, isOnline, onRetry, isLoading }) {
+  return (
+    <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error?.message || 'Ошибка загрузки теста'}
+      </Alert>
+      {!isOnline && (
+        <Button variant="contained" onClick={onRetry} disabled={isLoading}>
+          Попробовать загрузить снова
+        </Button>
+      )}
+    </Box>
+  )
+}
+
+function NotFoundState({ isOnline }) {
+  return (
+    <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Typography variant="h6">
+        {isOnline ? 'Тест не найден' : 'Тест не доступен в оффлайн-режиме'}
+      </Typography>
+      {!isOnline && (
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => window.location.reload()}
+        >
+          Обновить страницу
+        </Button>
+      )}
+    </Box>
+  )
+}
 
 function TestOnePage() {
+  // Основные параметры и состояние
   const { id } = useParams()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [offlineTest, setOfflineTest] = useState(null)
   const [syncError, setSyncError] = useState(null)
+  const [isDBInitialized, setIsDBInitialized] = useState(false)
+  const [offlineTest, setOfflineTest] = useState(null)
+  const [isOfflineLoading, setIsOfflineLoading] = useState(false)
+  const { saveTestResults } = useTestResults()
 
-  // Инициализация IndexedDB
+  // Запрос данных теста
+  const {
+    data: onlineTest,
+    isLoading: isOnlineLoading,
+    isError: isOnlineError,
+    error: onlineError,
+    refetch,
+  } = useGetTestByIdQuery(id, { skip: !id || !isOnline })
+
+  // Инициализация базы данных и обработка статуса сети
   useEffect(() => {
-    initDB().catch((e) => console.error('DB init error:', e))
-  }, [])
-
-  const { saveTestResults, syncPendingResults } = useTestResults()
-
-  // Обработчик изменения онлайн-статуса
-  useEffect(() => {
-    const handleStatusChange = () => {
-      const newStatus = navigator.onLine
-      setIsOnline(newStatus)
-
-      if (newStatus) {
-        syncPendingResults().catch((e) => {
-          setSyncError('Ошибка синхронизации оффлайн-результатов')
-          console.error('Sync error:', e)
-        })
+    const initializeDB = async () => {
+      try {
+        await initDB()
+        setIsDBInitialized(true)
+      } catch (e) {
+        console.error('DB initialization failed:', e)
+        setSyncError('Ошибка инициализации локального хранилища')
       }
     }
 
+    const handleStatusChange = () => {
+      const newStatus = navigator.onLine
+      setIsOnline(newStatus)
+      if (newStatus) refetch()
+    }
+
+    initializeDB()
     window.addEventListener('online', handleStatusChange)
     window.addEventListener('offline', handleStatusChange)
 
@@ -71,46 +171,29 @@ function TestOnePage() {
       window.removeEventListener('online', handleStatusChange)
       window.removeEventListener('offline', handleStatusChange)
     }
-  }, [syncPendingResults])
+  }, [refetch])
 
-  // Загрузка теста (онлайн/оффлайн)
-  const {
-    data: onlineTest,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useGetTestByIdQuery(id, {
-    skip: !id || !isOnline,
-  })
-
-  // Сохранение теста в IndexedDB при успешной загрузке
+  // Загрузка оффлайн-версии теста
   useEffect(() => {
-    if (onlineTest) {
-      saveTestToDB(onlineTest).catch((e) =>
-        console.error('Save test error:', e)
-      )
-    }
-  }, [onlineTest])
-
-  // Загрузка оффлайн версии теста при отсутствии соединения
-  useEffect(() => {
-    if (!isOnline && !isLoading && id) {
+    if (!isOnline && isDBInitialized && id) {
       const loadOfflineTest = async () => {
         try {
+          setIsOfflineLoading(true)
           const test = await getTestFromDB(id)
+          if (!test) throw new Error('Тест не найден в оффлайн-хранилище')
           setOfflineTest(test)
         } catch (e) {
           console.error('Offline load error:', e)
+          setSyncError(e.message)
+        } finally {
+          setIsOfflineLoading(false)
         }
       }
       loadOfflineTest()
     }
-  }, [isOnline, isLoading, id])
+  }, [isOnline, isDBInitialized, id])
 
-  const test = isOnline ? onlineTest : offlineTest
-  const isControlTest = test?.test_is_control
-
+  // Состояние теста
   const [state, updateState] = useTestState({
     currentQuestionIndex: 0,
     answers: {},
@@ -133,11 +216,40 @@ function TestOnePage() {
     testStartTime,
   } = state
 
+  // Определение текущего теста и его свойств
+  const test = isOnline ? onlineTest : offlineTest
+  const isLoading = isOnline ? isOnlineLoading : isOfflineLoading
+  const isError = isOnline ? isOnlineError : false
+  const error = isOnline ? onlineError : null
+  const isControlTest = test?.test_is_control
   const currentQuestion = test?.questions?.[currentQuestionIndex]
+
+  // Мемоизированные значения
   const totalPoints = useMemo(
     () => test?.questions?.reduce((sum, q) => sum + q.points, 0) || 0,
     [test?.questions]
   )
+
+  const unansweredQuestions = useMemo(
+    () => test?.questions?.filter((q) => answers[q.id] === undefined) || [],
+    [answers, test?.questions]
+  )
+
+  const allQuestionsAnswered = unansweredQuestions.length === 0
+  const isLastQuestion =
+    currentQuestionIndex === (test?.questions?.length || 0) - 1
+  const isAnswered = currentQuestion?.id
+    ? correctAnswers[currentQuestion.id] !== undefined
+    : false
+
+  // Обработчики событий
+  const handleDownloadTest = useCallback(async () => {
+    try {
+      await refetch()
+    } catch (err) {
+      setSyncError(`Ошибка загрузки: ${err.message}`)
+    }
+  }, [refetch])
 
   const navigateQuestion = useCallback(
     (direction) => {
@@ -161,22 +273,9 @@ function TestOnePage() {
     preventDefaultTouchmoveEvent: true,
   })
 
-  const unansweredQuestions = useMemo(
-    () => test?.questions?.filter((q) => answers[q.id] === undefined) || [],
-    [answers, test?.questions]
-  )
-
-  const allQuestionsAnswered = unansweredQuestions.length === 0
-  const isLastQuestion =
-    currentQuestionIndex === (test?.questions?.length || 0) - 1
-  const isAnswered = currentQuestion?.id
-    ? correctAnswers[currentQuestion.id] !== undefined
-    : false
-
   const handleAnswerChange = useCallback(
     (event) => {
       if (!currentQuestion?.id) return
-
       updateState({
         answers: {
           ...answers,
@@ -261,24 +360,14 @@ function TestOnePage() {
     }
 
     try {
-      if (!isOnline) {
-        // Сохраняем только в оффлайн-режиме
-        const savedResults = await saveTestResults(
-          id,
-          testResults,
-          testStartTime
-        )
-        updateState({
-          completed: true,
-          finalResults: savedResults || testResults,
-        })
-      } else {
-        // В онлайн-режиме просто показываем результаты
-        updateState({
-          completed: true,
-          finalResults: testResults,
-        })
-      }
+      const resultsToSave = !isOnline
+        ? await saveTestResults(id, testResults, testStartTime)
+        : testResults
+
+      updateState({
+        completed: true,
+        finalResults: resultsToSave,
+      })
     } catch (e) {
       console.error('Save results error:', e)
       updateState({
@@ -320,6 +409,7 @@ function TestOnePage() {
     refetch()
   }, [refetch, updateState])
 
+  // Подготовка вкладок с вопросами
   const questionTabs = useMemo(
     () =>
       test?.questions?.map((question, index) => ({
@@ -358,12 +448,19 @@ function TestOnePage() {
     ]
   )
 
-  if (isLoading) return <CircularProgress size={50} />
+  // Рендер состояний
+  if (!isDBInitialized || isLoading) return <LoadingState />
   if (isError) {
-    return <div>{`Ошибка при загрузке теста: ${error?.message}`}</div>
+    return (
+      <ErrorState
+        error={error}
+        isOnline={isOnline}
+        onRetry={handleDownloadTest}
+        isLoading={isLoading}
+      />
+    )
   }
-  if (!test) return <div>Тест не найден</div>
-
+  if (!test) return <NotFoundState isOnline={isOnline} />
   if (completed && finalResults) {
     return (
       <TestResultsView
@@ -383,6 +480,7 @@ function TestOnePage() {
     )
   }
 
+  // Основной рендер
   return (
     <Box
       sx={{
@@ -394,44 +492,14 @@ function TestOnePage() {
       }}
       {...(isMobile ? swipeHandlers : {})}
     >
-      {!isOnline && (
-        <Chip
-          icon={<OfflineBoltIcon />}
-          label="Оффлайн режим"
-          color="warning"
-          sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}
-        />
-      )}
-
-      <Box sx={{ mb: 2 }}>
-        <Link to="/tests">
-          <Button
-            variant="outlined"
-            size={isMobile ? 'small' : 'medium'}
-            sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
-          >
-            Назад к тестам
-          </Button>
-        </Link>
-      </Box>
-
-      <Typography
-        variant={isMobile ? 'h6' : 'h5'}
-        gutterBottom
-        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}
-      >
-        {test.name}
-      </Typography>
-
-      <Typography
-        variant="subtitle1"
-        gutterBottom
-        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
-      >
-        {`Вопрос ${currentQuestionIndex + 1} из ${test.questions.length}`}
-      </Typography>
-
-      <Divider sx={{ my: isMobile ? 1 : 2 }} />
+      {!isOnline && <OfflineIndicator />}
+      <BackButton isMobile={isMobile} />
+      <TestHeader
+        testName={test.name}
+        currentQuestionIndex={currentQuestionIndex}
+        questionsLength={test.questions.length}
+        isMobile={isMobile}
+      />
 
       <TabsWrapper
         tabs={questionTabs}

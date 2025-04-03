@@ -23,7 +23,8 @@ from api.models import (
     Answer,
     ReferenceLink,
     TestResult,
-    Video
+    Video,
+    UserAnswer
 )
 from api.utils import is_face_already_registered
 
@@ -243,13 +244,69 @@ class QuestionSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserAnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='question.id')
+    selected_id = serializers.IntegerField(source='selected_answer.id')
+
+    class Meta:
+        model = UserAnswer
+        fields = ('id', 'selected_id', 'is_correct')
+
 
 class TestResultSerializer(serializers.ModelSerializer):
-    """Сериализатор для TestResultSerializer."""
+    """Сериализатор для результатов теста."""
 
     class Meta:
         model = TestResult
-        fields = ('id', 'result', 'mark', 'date', 'time')
+        fields = (
+            'id',
+            'is_passed',
+            'mark',
+            'score',
+            'total_points',
+            'start_time',
+            'completion_time',
+            'test_duration',
+        )
+
+
+class TestResultCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания результатов теста."""
+
+    user_answers = UserAnswerSerializer(many=True, required=False)
+
+    class Meta:
+        model = TestResult
+        fields = (
+            'test',
+            'mark',
+            'is_passed',
+            'start_time',
+            'completion_time',
+            'test_duration',
+            'score',
+            'total_points',
+            'user_answers',
+        )
+        extra_kwargs = {
+            'test': {'required': True},
+            'mark': {'required': True},
+        }
+
+    def create(self, validated_data):
+        user_answers_data = validated_data.pop('user_answers', [])
+        test_result = TestResult.objects.create(**validated_data)
+
+        for answer_data in user_answers_data:
+            UserAnswer.objects.create(
+                test_result=test_result,
+                question_id=answer_data['question']['id'],
+                selected_answer_id=answer_data['selected_answer']['id'],
+                is_correct=answer_data['is_correct'],
+                points_earned=answer_data.get('points_earned', 0),
+            )
+
+        return test_result
 
 
 class BaseTestSerializer(serializers.ModelSerializer):
@@ -262,7 +319,8 @@ class BaseTestSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return TestResultSerializer(
                 obj.test_results.filter(user=request.user),
-                many=True
+                many=True,
+                context=self.context
             ).data
         return []
 
@@ -293,8 +351,9 @@ class TestSerializer(BaseTestSerializer):
             'description',
             'test_is_control',
             'passing_score',
+            'total_points',
             'test_results',
-            'questions'
+            'questions',
         )
 
     def get_questions(self, obj):

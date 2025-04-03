@@ -16,11 +16,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from api.models import (
     User,
     Instruction,
-    InstructionAgreement,
     Tests,
-    Question,
-    TestResult,
     Video,
+    TestResult
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -29,11 +27,10 @@ from api.serializers import (
     UserSerializer,
     TestSerializer,
     TestListSerializer,
-    QuestionSerializer,
     SignUpSerializer,
-    LoginSerializer,
     TestResultSerializer,
-    VideoSerializer
+    VideoSerializer,
+    TestResultCreateSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -128,6 +125,10 @@ class SignUpView(APIView):
         )
 
 
+@extend_schema(
+    tags=['Login'],
+    description='Аутентификация.'
+)
 class LoginView(APIView):
     """Представление для входа через сессии"""
     permission_classes = (AllowAny,)
@@ -192,6 +193,10 @@ class LoginView(APIView):
             )
 
 
+@extend_schema(
+    tags=['LoginFace'],
+    description='Аутентификация по лицу.'
+)
 class FaceLoginView(APIView):
     """Аутентификация по лицу"""
 
@@ -310,7 +315,7 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
     description='Получение тестов.'
 )
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление для получения инструктажа."""
+    """Представление для получения тестов."""
 
     queryset = Tests.objects.prefetch_related(
         'questions',
@@ -327,6 +332,10 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return TestSerializer
 
 
+@extend_schema(
+    tags=["Tests"],
+    description="Получение видео."
+)
 class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения видео."""
 
@@ -334,3 +343,28 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = VideoSerializer
     permission_classes = (IsAuthenticated,)
 
+
+@extend_schema(
+    tags=['TestResult'],
+    description='Сохранение результатов тестов пользователя.'
+)
+class TestResultCreateView(APIView):
+    """API для сохранения результатов тестирования."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = TestResultCreateSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data['user'] = request.user
+        test_result = serializer.save()
+
+        return Response(
+            TestResultSerializer(
+                test_result,
+                context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )

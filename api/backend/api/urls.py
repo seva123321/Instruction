@@ -12,6 +12,7 @@ from api.views import (
     LoginView,
     LogoutView,
     VideoViewSet,
+    TestResultCreateView,
 )
 
 router = DefaultRouter()
@@ -30,5 +31,6 @@ auth_urls = [
 
 urlpatterns = [
     path('auth/', include(auth_urls)),
+    path('test_results/', TestResultCreateView.as_view(), name='test_results'),
     path('', include(router.urls)),
 ]

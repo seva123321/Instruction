@@ -348,8 +348,9 @@ class TestResult(models.Model):
         blank=True,
         null=True
     )
-    result = models.BooleanField(
-        'Сдал тест',
+    is_passed = models.BooleanField(
+        'Тест пройден',
+        default=False
     )
     mark = models.IntegerField(
         'Оценка',
@@ -358,23 +359,71 @@ class TestResult(models.Model):
             MaxValueValidator(MAX_LENGTH_PASSING_SCORE)
         ]
     )
-    date = models.DateTimeField(
-        'Дата прохождения',
-        auto_now_add=True,
+    score = models.IntegerField(
+        'Набранные баллы',
+        default=0
     )
-    time = models.TimeField(
-        'Время прохождения',
-        auto_now_add=True,
+    total_points = models.IntegerField(
+        'Максимальный балл',
+        default=0
+    )
+    start_time = models.DateTimeField(
+        'Время начала теста'
+    )
+    completion_time = models.DateTimeField(
+        'Время завершения теста'
+    )
+    test_duration = models.IntegerField(
+        'Длительность теста (в секундах)',
+        default=0
     )
 
     class Meta:
         verbose_name = 'Результат тестирования'
         verbose_name_plural = 'Результаты тестирования'
-        ordering = ('-date',)
+        ordering = ('-completion_time',)
 
     def __str__(self):
-        """Возвращает строковое представление объекта результата тестирования."""
-        return f'{self.user} - {self.test} - {self.result}'
+        return (f"{self.user} - {self.test}"
+                f" - {'Пройден' if self.is_passed else 'Не пройден'}")
+
+
+class UserAnswer(models.Model):
+    """Модель ответов пользователя на вопросы теста."""
+
+    test_result = models.ForeignKey(
+        'TestResult',
+        on_delete=models.SET_NULL,
+        related_name='user_answers',
+        verbose_name='Результат теста',
+        null=True,
+        blank=True
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        verbose_name='Вопрос'
+    )
+    selected_answer = models.ForeignKey(
+        Answer,
+        on_delete=models.CASCADE,
+        verbose_name='Выбранный ответ'
+    )
+    is_correct = models.BooleanField(
+        'Ответ верный',
+        default=False
+    )
+    points_earned = models.IntegerField(
+        'Полученные баллы',
+        default=0
+    )
+
+    class Meta:
+        verbose_name = 'Ответ пользователя'
+        verbose_name_plural = 'Ответы пользователя'
+
+    def __str__(self):
+        return f"{self.question} - {self.selected_answer}"
 
 
 class InstructionResult(models.Model):

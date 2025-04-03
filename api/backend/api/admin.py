@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     User, TypeOfInstruction, Instruction, InstructionAgreement,
     Tests, Question, Answer, TestResult, InstructionResult, Video,
-    ReferenceLink
+    ReferenceLink, UserAnswer
 )
 
 
@@ -65,7 +65,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'result', 'mark', 'date', 'time')
+    list_display = ('user', 'test', 'is_passed', 'mark', 'score')
     search_fields = ('user__email', 'test__name')
 
 
@@ -79,3 +79,10 @@ class InstructionResultAdmin(admin.ModelAdmin):
 class MediaAdmin(admin.ModelAdmin):
     list_display = ('title', 'url', 'file')
     search_fields = ('name',)
+
+
+@admin.register(UserAnswer)
+class UserAnswerAdmin(admin.ModelAdmin):
+    list_display = ('test_result', 'question', 'selected_answer', 'is_correct', 'points_earned')
+    search_fields = ('test_result__user__email', 'question__name', 'selected_answer__name')
+    list_filter = ('is_correct',)

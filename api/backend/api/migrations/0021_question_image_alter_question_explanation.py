@@ -13,11 +13,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='image',
-            field=models.URLField(blank=True, null=True, verbose_name='Изображение'),
+            field=models.URLField(
+                blank=True, null=True, verbose_name='Изображение'
+            ),
         ),
         migrations.AlterField(
             model_name='question',
             name='explanation',
-            field=models.TextField(blank=True, default='', verbose_name='Объяснение'),
+            field=models.TextField(
+                blank=True, default='', verbose_name='Объяснение'
+            ),
         ),
     ]

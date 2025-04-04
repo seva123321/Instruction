@@ -4,7 +4,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # TODO: Add this to venv
-SECRET_KEY = 'django-insecure-b4ddw)^afp4i+bpu!g*fvi*soq*l39m2x6gu-yjub-w7=ufc%u'
+SECRET_KEY = (
+    'django-insecure-b4ddw)^afp4i+bpu!g*fvi*soq*l39m2x6gu-yjub-w7=ufc%u'
+)
 
 # TODO: Change before production
 DEBUG = True
@@ -116,11 +118,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'ENUM_NAME_OVERRIDES': {
-        'ValidationErrorEnum': [
-            'invalid',
-            'not_found',
-            'permission_denied'
-        ]
+        'ValidationErrorEnum': ['invalid', 'not_found', 'permission_denied']
     },
     'COMPONENT_SPLIT_REQUEST': True,
     'SCHEMA_COERCE_PATH_PK': False,
@@ -146,7 +144,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_EXPOSE_HEADERS = ['Set-Cookie'] 
+CORS_EXPOSE_HEADERS = ['Set-Cookie']
 
 UNFOLD = {
     "SITE_TITLE": "Аналитика инструктажей",

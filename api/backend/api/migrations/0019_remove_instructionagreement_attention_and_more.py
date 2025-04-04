@@ -53,11 +53,15 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='instructionagreement',
             name='name',
-            field=models.TextField(blank=True, null=True, verbose_name='Название согласия'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Название согласия'
+            ),
         ),
         migrations.AddField(
             model_name='instructionagreement',
             name='text',
-            field=models.TextField(blank=True, null=True, verbose_name='Текст согласия'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Текст согласия'
+            ),
         ),
     ]

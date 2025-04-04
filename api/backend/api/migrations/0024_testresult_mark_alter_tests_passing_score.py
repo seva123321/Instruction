@@ -14,12 +14,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='testresult',
             name='mark',
-            field=models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(10), django.core.validators.MaxValueValidator(10)], verbose_name='Оценка'),
+            field=models.IntegerField(
+                default=1,
+                validators=[
+                    django.core.validators.MinValueValidator(10),
+                    django.core.validators.MaxValueValidator(10),
+                ],
+                verbose_name='Оценка',
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
             model_name='tests',
             name='passing_score',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(10), django.core.validators.MaxValueValidator(10)], verbose_name='Проходной балл'),
+            field=models.IntegerField(
+                validators=[
+                    django.core.validators.MinValueValidator(10),
+                    django.core.validators.MaxValueValidator(10),
+                ],
+                verbose_name='Проходной балл',
+            ),
         ),
     ]

@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='face_descriptor',
-            field=models.TextField(blank=True, null=True, verbose_name='Дескриптор лица'),
+            field=models.TextField(
+                blank=True, null=True, verbose_name='Дескриптор лица'
+            ),
         ),
         migrations.DeleteModel(
             name='PhotoData',

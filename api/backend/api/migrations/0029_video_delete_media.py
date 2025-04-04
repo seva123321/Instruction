@@ -13,11 +13,41 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Video',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[('youtube', 'Youtube'), ('server', 'Видео на сервере')], default='youtube', max_length=100, verbose_name='Тип видео')),
-                ('url', models.URLField(blank=True, null=True, verbose_name='URL')),
-                ('title', models.CharField(max_length=100, verbose_name='Название')),
-                ('file', models.FileField(upload_to='media/videos/', verbose_name='Видеофайл')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'type',
+                    models.CharField(
+                        choices=[
+                            ('youtube', 'Youtube'),
+                            ('server', 'Видео на сервере'),
+                        ],
+                        default='youtube',
+                        max_length=100,
+                        verbose_name='Тип видео',
+                    ),
+                ),
+                (
+                    'url',
+                    models.URLField(blank=True, null=True, verbose_name='URL'),
+                ),
+                (
+                    'title',
+                    models.CharField(max_length=100, verbose_name='Название'),
+                ),
+                (
+                    'file',
+                    models.FileField(
+                        upload_to='media/videos/', verbose_name='Видеофайл'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Видеофайл',

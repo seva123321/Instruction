@@ -26,6 +26,8 @@ export function AuthProvider({ children }) {
   const auth = useCallback(
     async (userData) => {
       try {
+        console.log('userData > ', userData)
+
         await postSignup(userData).unwrap()
         setUser(userData)
         return true
@@ -35,7 +37,6 @@ export function AuthProvider({ children }) {
     },
     [postSignup]
   )
-
   const signIn = useCallback(
     async (authData) => {
       try {
@@ -47,6 +48,7 @@ export function AuthProvider({ children }) {
         setUser(authData)
         return true
       } catch (error) {
+        // console.error('SignIn error:', error)
         return false
       }
     },

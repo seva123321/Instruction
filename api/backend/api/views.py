@@ -13,7 +13,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.models import User, Instruction, Tests, Video, TestResult
+from api.models import User, Instruction, Tests, Video, NormativeLegislation
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
@@ -25,6 +25,7 @@ from api.serializers import (
     TestResultSerializer,
     VideoSerializer,
     TestResultCreateSerializer,
+    NormativeLegislationSerializer,
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -44,6 +45,12 @@ class UserViewSet(ModelViewSet):
     search_fields = ('last_name',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
+    def get_serializer_class(self):
+        """Определяем сериализатор в зависимости от действия."""
+        if self.action == 'profile':
+            return UserSerializer
+        return super().get_serializer_class()
+
     @action(
         detail=False,
         methods=['GET', 'PATCH'],
@@ -53,16 +60,17 @@ class UserViewSet(ModelViewSet):
     )
     def profile(self, request):
         """Представление профиля текущего пользователя."""
-        if not request.method == 'PATCH':
-            return Response(
-                UserSerializer(request.user).data, status=status.HTTP_200_OK
-            )
-        serializer = UserSerializer(
-            request.user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
+
+        if request.method == "GET":
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == "PATCH":
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=['SignUp'], description='Регистрация пользователей.')
@@ -77,24 +85,15 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            user = User.objects.create_user(
-                email=serializer.validated_data["email"],
-                first_name=serializer.validated_data["first_name"],
-                last_name=serializer.validated_data["last_name"],
-                password=serializer.validated_data["password"],
-                mobile_phone=serializer.validated_data["mobile_phone"],
-                face_descriptor=str(
-                    serializer.validated_data["face_descriptor"].tolist()
-                ),
-            )
+            # Используем serializer.save() вместо прямого создания
+            user = serializer.save()
         except IntegrityError as e:
             error_messages = {
                 "api_user_email": {
                     "email": "Пользователь с таким email уже существует"
                 },
                 "api_user_mobile_phone": {
-                    "mobile_phone": "Пользователь с таким номером "
-                    "телефона уже существует"
+                    "mobile_phone": "Пользователь с таким номером телефона уже существует"
                 },
                 "api_user_face_descriptor": {
                     "face_descriptor": "Такой дескриптор лица уже существует"
@@ -105,10 +104,7 @@ class SignUpView(APIView):
                 if db_error in str(e):
                     raise ValidationError(message)
 
-            raise ValidationError(
-                {"detail": "Ошибка при создании пользователя"}
-            )
-
+            raise ValidationError({"detail": "Ошибка при создании пользователя"})
         except Exception as e:
             raise ValidationError({"detail": str(e)})
 
@@ -321,6 +317,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = (IsAuthenticated,)
+    ordering = ('-date',)
 
 
 @extend_schema(
@@ -346,3 +343,12 @@ class TestResultCreateView(APIView):
             ).data,
             status=status.HTTP_201_CREATED,
         )
+
+class NormativeLegislationViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = NormativeLegislation.objects.all()
+    serializer_class = NormativeLegislationSerializer
+    permission_classes = (IsAuthenticated,)
+    ordering = ('-date',)
+    ordering_fields = ('date', 'title')

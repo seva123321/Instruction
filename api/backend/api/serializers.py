@@ -1,3 +1,4 @@
+
 from django.conf import settings
 import numpy as np
 from rest_framework import serializers
@@ -9,8 +10,6 @@ from backend.constants import (
     MAX_LENGTH_LAST_NAME,
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSWORD,
-    MAX_LENGTH_PASSING_SCORE,
-    MIN_LENGTH_PASSING_SCORE,
 )
 from api.models import (
     User,
@@ -25,6 +24,7 @@ from api.models import (
     TestResult,
     Video,
     UserAnswer,
+    NormativeLegislation
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
@@ -38,11 +38,26 @@ class AdminUserSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
-class UserSerializer(AdminUserSerializer):
-    """Сериализатор для базовых операций с моделью User."""
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для данных пользователя (профиль)."""
 
     class Meta:
-        read_only_fields = 'role'
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "middle_name",
+            "mobile_phone",
+            "birthday",
+            "position",
+            "role",
+        )
+        extra_kwargs = {
+            "email": {"read_only": True},
+            "role": {"read_only": True},
+        }
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -73,24 +88,24 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         errors = {}
 
-        if User.objects.filter(email=data["email"]).exists():
-            errors["email"] = "Пользователь с таким email уже существует"
+        if User.objects.filter(email=data['email']).exists():
+            errors['email'] = 'Пользователь с таким email уже существует'
 
-        if User.objects.filter(mobile_phone=data["mobile_phone"]).exists():
-            errors["mobile_phone"] = (
-                "Пользователь с таким номером телефона уже существует"
+        if User.objects.filter(mobile_phone=data['mobile_phone']).exists():
+            errors['mobile_phone'] = (
+                'Пользователь с таким номером телефона уже существует'
             )
 
         try:
             input_descriptor = np.array(
-                data["face_descriptor"], dtype=np.float32
+                data['face_descriptor'], dtype=np.float32
             )
             if is_face_already_registered(input_descriptor):
-                errors["face_descriptor"] = (
-                    "Пользователь с таким лицом уже существует"
+                errors['face_descriptor'] = (
+                    'Пользователь с таким лицом уже существует'
                 )
         except Exception as e:
-            errors["face_descriptor"] = str(e)
+            errors['face_descriptor'] = str(e)
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -127,16 +142,30 @@ class SignUpSerializer(serializers.Serializer):
 
         if not normalized_phone:
             raise serializers.ValidationError(
-                "Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999"
+                'Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999'
             )
 
         # Проверяем уникальность
         if User.objects.filter(mobile_phone=normalized_phone).exists():
             raise serializers.ValidationError(
-                "Пользователь с таким номером телефона уже существует"
+                'Пользователь с таким номером телефона уже существует'
             )
 
         return normalized_phone
+
+    def create(self, validated_data):
+        face_descriptor = validated_data.pop("face_descriptor")
+        try:
+            if not isinstance(face_descriptor, np.ndarray):
+                face_descriptor = np.array(face_descriptor, dtype=np.float32)
+
+            validated_data["face_descriptor"] = str(face_descriptor.tolist())
+        except Exception as e:
+            raise serializers.ValidationError(
+                {"face_descriptor": f"Ошибка обработки дескриптора: {str(e)}"}
+            )
+
+        return User.objects.create_user(**validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -379,4 +408,13 @@ class TestSerializer(BaseTestSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ('id', 'type', 'url', 'title', 'date')
+        fields = ('id', 'type', 'url', 'title', 'file', 'date')
+
+
+class NormativeLegislationSerializer(serializers.ModelSerializer):
+    """Сериализатор для нормативно-правовых актов (только чтение)."""
+
+    class Meta:
+        model = NormativeLegislation
+        fields = ('id', 'title', 'description', 'url', 'date')
+        read_only_fields = fields

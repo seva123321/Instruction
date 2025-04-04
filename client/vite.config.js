@@ -49,7 +49,6 @@ export default defineConfig(({ mode }) => {
           sw: resolve(__dirname, 'public/sw.js'),
         },
         output: {
-          assetFileNames: 'assets/[name].[hash].[ext]',
           entryFileNames: (chunkInfo) => {
             // Сохраняем sw.js без хэша в имени файла
             return chunkInfo.name === 'sw'

@@ -458,3 +458,23 @@ class Video(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта видеофайла."""
         return self.title
+
+class NormativeLegislation(models.Model):
+    """Модель нормативно-правовых актов."""
+
+    title = models.TextField('Название')
+    description = models.TextField(
+        'Описание',
+        blank=True,
+        null=True,
+    )
+    url = models.URLField('URL', blank=True, null=True)
+    date = models.DateTimeField('Дата загрузки', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Нормативно-правовой акт'
+        verbose_name_plural = 'Нормативно-правовые акты'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта нормативно-правового акта."""
+        return self.title

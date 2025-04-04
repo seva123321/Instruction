@@ -1,4 +1,3 @@
-import json
 
 from django.conf import settings
 import numpy as np
@@ -11,8 +10,6 @@ from backend.constants import (
     MAX_LENGTH_LAST_NAME,
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSWORD,
-    MAX_LENGTH_PASSING_SCORE,
-    MIN_LENGTH_PASSING_SCORE,
 )
 from api.models import (
     User,
@@ -27,6 +24,7 @@ from api.models import (
     TestResult,
     Video,
     UserAnswer,
+    NormativeLegislation
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
@@ -410,4 +408,13 @@ class TestSerializer(BaseTestSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ('id', 'type', 'url', 'title', 'date')
+        fields = ('id', 'type', 'url', 'title', 'file', 'date')
+
+
+class NormativeLegislationSerializer(serializers.ModelSerializer):
+    """Сериализатор для нормативно-правовых актов (только чтение)."""
+
+    class Meta:
+        model = NormativeLegislation
+        fields = ('id', 'title', 'description', 'url', 'date')
+        read_only_fields = fields

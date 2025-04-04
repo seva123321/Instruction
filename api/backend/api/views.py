@@ -13,7 +13,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.models import User, Instruction, Tests, Video, TestResult
+from api.models import User, Instruction, Tests, Video, NormativeLegislation
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
@@ -25,6 +25,7 @@ from api.serializers import (
     TestResultSerializer,
     VideoSerializer,
     TestResultCreateSerializer,
+    NormativeLegislationSerializer,
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -315,6 +316,7 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = (IsAuthenticated,)
+    ordering = ('-date',)
 
 
 @extend_schema(
@@ -340,3 +342,12 @@ class TestResultCreateView(APIView):
             ).data,
             status=status.HTTP_201_CREATED,
         )
+
+class NormativeLegislationViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = NormativeLegislation.objects.all()
+    serializer_class = NormativeLegislationSerializer
+    permission_classes = (IsAuthenticated,)
+    ordering = ('-date',)
+    ordering_fields = ('date', 'title')

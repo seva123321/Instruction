@@ -12,6 +12,7 @@ from .models import (
     Video,
     ReferenceLink,
     UserAnswer,
+    NormativeLegislation,
 )
 
 
@@ -105,3 +106,10 @@ class UserAnswerAdmin(admin.ModelAdmin):
         'selected_answer__name',
     )
     list_filter = ('is_correct',)
+
+
+@admin.register(NormativeLegislation)
+class NormativeLegislationAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date')
+    search_fields = ('title', 'description')
+    list_filter = ('date',)

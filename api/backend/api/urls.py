@@ -14,6 +14,7 @@ from api.views import (
     LogoutView,
     VideoViewSet,
     TestResultCreateView,
+    NormativeLegislationViewSet
 )
 
 router = DefaultRouter()
@@ -21,6 +22,7 @@ router = DefaultRouter()
 router.register('instructions', InstructionViewSet, basename='instructions')
 router.register('tests', TestViewSet, basename='tests')
 router.register('knowladge/videos', VideoViewSet, basename='knowladge/videos')
+router.register('knowladge/nlas', NormativeLegislationViewSet, basename='knowladge/nlas')
 
 router.register('users', UserViewSet, basename='users')
 auth_urls = [

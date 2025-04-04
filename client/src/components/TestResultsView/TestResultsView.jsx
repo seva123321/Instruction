@@ -18,6 +18,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   CircularProgress,
+  Alert,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -81,6 +82,17 @@ function TestResultsView({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!questions || !answers) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Alert severity="error">Не удалось загрузить результаты теста</Alert>
+        <Button variant="contained" onClick={onRestart} sx={{ mt: 2 }}>
+          Попробовать снова
+        </Button>
+      </Box>
+    )
   }
 
   return (

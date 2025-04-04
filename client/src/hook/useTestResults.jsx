@@ -51,6 +51,7 @@ const useTestResults = () => {
     }
   }, [])
 
+  // Сохранение результатов в основное хранилище
   const saveResultsToDB = useCallback(
     (testResults) =>
       withDB(async (db) => {
@@ -62,6 +63,7 @@ const useTestResults = () => {
     [withDB]
   )
 
+  // Добавление в очередь для синхронизации
   const addPendingResult = useCallback(
     (testResults) =>
       withDB(async (db) => {
@@ -73,30 +75,7 @@ const useTestResults = () => {
     [withDB]
   )
 
-  const syncPendingResults = useCallback(
-    () =>
-      withDB(async (db) => {
-        const tx = db.transaction('pendingResults', 'readwrite')
-        const pendingResults = await tx.store.getAll()
-
-        const syncPromises = pendingResults.map(async (result) => {
-          try {
-            const response = await postTestResult(result).unwrap()
-            await saveResultsToDB(response)
-            await tx.store.delete(result.id)
-            return response
-          } catch (error) {
-            return null
-          }
-        })
-
-        const syncedResults = (await Promise.all(syncPromises)).filter(Boolean)
-        await tx.done
-        return syncedResults
-      }),
-    [withDB, postTestResult, saveResultsToDB]
-  )
-
+  // Получение результатов теста
   const getTestResults = useCallback(
     (testId) =>
       withDB(async (db) => {
@@ -115,37 +94,72 @@ const useTestResults = () => {
     [withDB]
   )
 
+  // Синхронизация ожидающих результатов
+  const syncPendingResults = useCallback(
+    () =>
+      withDB(async (db) => {
+        const tx = db.transaction('pendingResults', 'readwrite')
+        const pendingResults = await tx.store.getAll()
+
+        const syncPromises = pendingResults.map(async (result) => {
+          try {
+            // Отправляем только необходимые серверу данные
+            const serverData = {
+              test: result.test,
+              is_passed: result.is_passed,
+              total_score: result.total_score,
+              mark: result.mark,
+              start_time: result.start_time,
+              completion_time: result.completion_time,
+              test_duration: result.test_duration,
+              user_answers: result.user_answers,
+            }
+
+            const response = await postTestResult(serverData).unwrap()
+            await tx.store.delete(result.id)
+            return response
+          } catch (error) {
+            console.error('Sync error:', error)
+            return null
+          }
+        })
+
+        const syncedResults = (await Promise.all(syncPromises)).filter(Boolean)
+        await tx.done
+        return syncedResults
+      }),
+    [withDB, postTestResult]
+  )
+
+  // Основная функция сохранения результатов
   const saveTestResults = useCallback(
-    async (testId, results, startTime) => {
-      const testResults = {
-        ...results,
+    async (testId, fullResults, serverResults) => {
+      const resultsWithMeta = {
+        ...fullResults,
         id: `${testId}-${Date.now()}`,
-        test: testId,
-        start_time: new Date(startTime).toISOString(),
-        completion_time: new Date().toISOString(),
-        test_duration: Math.floor((new Date() - new Date(startTime)) / 1000),
         synced: navigator.onLine,
       }
 
       if (navigator.onLine) {
         try {
-          const response = await postTestResult(testResults).unwrap()
+          const response = await postTestResult(serverResults).unwrap()
           const completeResults = {
-            ...testResults,
+            ...resultsWithMeta,
             ...response,
             synced: true,
           }
           await saveResultsToDB(completeResults)
           return completeResults
-        } catch (onlineError) {
-          await addPendingResult(testResults)
-          await saveResultsToDB(testResults)
-          return testResults
+        } catch (error) {
+          await addPendingResult(serverResults)
+          await saveResultsToDB(resultsWithMeta)
+          return resultsWithMeta
         }
+      } else {
+        await addPendingResult(serverResults)
+        await saveResultsToDB(resultsWithMeta)
+        return resultsWithMeta
       }
-      await addPendingResult(testResults)
-      await saveResultsToDB(testResults)
-      return testResults
     },
     [postTestResult, saveResultsToDB, addPendingResult]
   )

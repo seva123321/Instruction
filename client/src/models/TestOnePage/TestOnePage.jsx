@@ -91,7 +91,7 @@ function TestHeader({
 }
 
 function LoadingState() {
-  return <CircularProgress />
+  // return <CircularProgress />
 }
 
 function ErrorState({ error, isOnline, onRetry, isLoading }) {
@@ -138,7 +138,24 @@ function TestOnePage() {
   const [isDBInitialized, setIsDBInitialized] = useState(false)
   const [offlineTest, setOfflineTest] = useState(null)
   const [isOfflineLoading, setIsOfflineLoading] = useState(false)
-  const { saveTestResults } = useTestResults()
+  const { saveTestResults, getTestResults, syncPendingResults } =
+    useTestResults()
+
+  // Для получения результатов теста
+  useEffect(() => {
+    const loadResults = async () => {
+      try {
+        const results = await getTestResults(id)
+        // Обработка полученных результатов
+      } catch (error) {
+        console.error('Failed to load test results:', error)
+      }
+    }
+
+    if (id) {
+      loadResults()
+    }
+  }, [id, getTestResults])
 
   // Запрос данных теста
   const {
@@ -176,6 +193,19 @@ function TestOnePage() {
       window.removeEventListener('offline', handleStatusChange)
     }
   }, [refetch])
+
+  useEffect(() => {
+    const handleOnline = async () => {
+      try {
+        await syncPendingResults()
+      } catch (e) {
+        console.error('Sync failed:', e)
+      }
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
+  }, [syncPendingResults])
 
   // Загрузка оффлайн-версии теста
   useEffect(() => {
@@ -325,6 +355,7 @@ function TestOnePage() {
   const handleCompleteTest = useCallback(async () => {
     if (!test?.questions || !id || !test?.name) return
 
+    // Проверка на неотвеченные вопросы
     if (!allQuestionsAnswered) {
       const firstUnansweredIndex = test.questions.findIndex(
         (q) => answers[q.id] === undefined
@@ -340,7 +371,8 @@ function TestOnePage() {
     const completionTime = new Date()
     const testDuration = Math.floor((completionTime - testStartTime) / 1000)
 
-    const testResults = {
+    // Полные данные для локального хранения и отображения
+    const fullResults = {
       test: id,
       test_title: test.name,
       is_passed: true,
@@ -352,31 +384,57 @@ function TestOnePage() {
       questions: test.questions.map((question) => ({
         id: question.id,
         name: question.name,
-        selected_id: answers[question.id] || null,
-        is_correct: correctAnswers[question.id] || false,
-        points: correctAnswers[question.id] ? question.points : 0,
+        points: question.points,
         answers: question.answers.map((answer) => ({
           id: answer.id,
           name: answer.name,
           is_correct: answer.is_correct,
         })),
+        explanation: question.explanation,
+      })),
+      user_answers: test.questions.map((question) => ({
+        id: question.id,
+        selected_id: answers[question.id] || null,
+        is_correct: correctAnswers[question.id] || false,
+        points: correctAnswers[question.id] ? question.points : 0,
+      })),
+    }
+
+    // Упрощенные данные для сервера
+    const serverResults = {
+      test: id,
+      is_passed: true,
+      total_score: score,
+      mark,
+      start_time: testStartTime.toISOString(),
+      completion_time: completionTime.toISOString(),
+      test_duration: testDuration,
+      user_answers: test.questions.map((question) => ({
+        id: question.id,
+        selected_id: answers[question.id] || null,
+        is_correct: correctAnswers[question.id] || false,
       })),
     }
 
     try {
-      const resultsToSave = !isOnline
-        ? await saveTestResults(id, testResults, testStartTime)
-        : testResults
+      const savedResults = await saveTestResults(id, fullResults, serverResults)
 
       updateState({
         completed: true,
-        finalResults: resultsToSave,
+        finalResults: {
+          ...savedResults,
+          test_title: test.name,
+          totalPoints,
+        },
       })
     } catch (e) {
-      console.error('Save results error:', e)
+      console.error('Failed to save test results:', error)
       updateState({
         completed: true,
-        finalResults: testResults,
+        finalResults: {
+          ...fullResults,
+          totalPoints,
+        },
       })
       setSyncError(
         isOnline
@@ -385,17 +443,15 @@ function TestOnePage() {
       )
     }
   }, [
-    allQuestionsAnswered,
+    isOnline,
+    test,
+    id,
     answers,
     correctAnswers,
-    id,
-    isOnline,
-    saveTestResults,
     score,
-    test?.questions,
-    test?.name,
-    testStartTime,
     totalPoints,
+    testStartTime,
+    allQuestionsAnswered,
     updateState,
   ])
 
@@ -466,15 +522,24 @@ function TestOnePage() {
   }
   if (!test) return <NotFoundState isOnline={isOnline} />
   if (completed && finalResults) {
+    // Добавляем проверку на наличие необходимых данных
+    if (!finalResults.questions || !finalResults.user_answers) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          {/* <CircularProgress /> */}
+        </Box>
+      )
+    }
+
     return (
       <TestResultsView
         testId={finalResults.test}
-        testTitle={finalResults.test_title}
+        testTitle={finalResults.test_title || test?.name}
         score={finalResults.total_score}
         totalPoints={totalPoints}
         mark={finalResults.mark}
-        answers={finalResults.questions}
-        questions={test.questions}
+        answers={finalResults.user_answers}
+        questions={finalResults.questions}
         startTime={finalResults.start_time}
         completionTime={finalResults.completion_time}
         duration={finalResults.test_duration}

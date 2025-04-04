@@ -40,11 +40,26 @@ class AdminUserSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
-class UserSerializer(AdminUserSerializer):
-    """Сериализатор для базовых операций с моделью User."""
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для данных пользователя (профиль)."""
 
     class Meta:
-        read_only_fields = 'role'
+        model = User
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "middle_name",
+            "mobile_phone",
+            "birthday",
+            "position",
+            "role",
+        )
+        extra_kwargs = {
+            "email": {"read_only": True},
+            "role": {"read_only": True},
+        }
 
 
 class SignUpSerializer(serializers.Serializer):

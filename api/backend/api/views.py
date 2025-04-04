@@ -44,6 +44,12 @@ class UserViewSet(ModelViewSet):
     search_fields = ('last_name',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
+    def get_serializer_class(self):
+        """Определяем сериализатор в зависимости от действия."""
+        if self.action == 'profile':
+            return UserSerializer
+        return super().get_serializer_class()
+
     @action(
         detail=False,
         methods=['GET', 'PATCH'],
@@ -53,16 +59,17 @@ class UserViewSet(ModelViewSet):
     )
     def profile(self, request):
         """Представление профиля текущего пользователя."""
-        if not request.method == 'PATCH':
-            return Response(
-                UserSerializer(request.user).data, status=status.HTTP_200_OK
-            )
-        serializer = UserSerializer(
-            request.user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
+
+        if request.method == "GET":
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        elif request.method == "PATCH":
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=['SignUp'], description='Регистрация пользователей.')

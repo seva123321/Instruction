@@ -257,12 +257,13 @@ function TestOnePage() {
   const error = isOnline ? onlineError : null
   const isControlTest = test?.test_is_control
   const currentQuestion = test?.questions?.[currentQuestionIndex]
-
+  const totalPoints = test?.total_points
+  const passingScore = test?.passing_score
   // Мемоизированные значения
-  const totalPoints = useMemo(
-    () => test?.questions?.reduce((sum, q) => sum + q.points, 0) || 0,
-    [test?.questions]
-  )
+  // const totalPoints = useMemo(
+  //   () => test?.questions?.reduce((sum, q) => sum + q.points, 0) || 0,
+  //   [test?.questions]
+  // )
 
   const unansweredQuestions = useMemo(
     () => test?.questions?.filter((q) => answers[q.id] === undefined) || [],
@@ -333,7 +334,8 @@ function TestOnePage() {
         ...correctAnswers,
         [currentQuestion.id]: isCorrect,
       },
-      score: isCorrect ? score + currentQuestion.points : score,
+      score: isCorrect ? score + 1 : score,
+      // score: isCorrect ? score + currentQuestion.points : score,
       showFeedback: true,
     })
   }, [answers, correctAnswers, currentQuestion, score, updateState])
@@ -371,12 +373,27 @@ function TestOnePage() {
     const completionTime = new Date()
     const testDuration = Math.floor((completionTime - testStartTime) / 1000)
 
-    // Полные данные для локального хранения и отображения
+    /*
+            fields = (
+            'id',
+            'is_passed',
+            'mark',
+            'score',
+            'total_points',
+            'start_time',
+            'completion_time',
+            'test_duration',
+        )
+    */
+    const isPassed = score >= (totalPoints * passingScore) / 100
+
+    // Полные данные для локального хранения
     const fullResults = {
       test: id,
       test_title: test.name,
-      is_passed: true,
-      total_score: score,
+      is_passed: isPassed,
+      // total_score: score,
+      total_points: totalPoints,
       mark,
       start_time: testStartTime.toISOString(),
       completion_time: completionTime.toISOString(),
@@ -403,9 +420,11 @@ function TestOnePage() {
     // Упрощенные данные для сервера
     const serverResults = {
       test: id,
-      is_passed: true,
-      total_score: score,
+      is_passed: isPassed,
+      // total_score: score,
       mark,
+      score,
+      total_points: totalPoints,
       start_time: testStartTime.toISOString(),
       completion_time: completionTime.toISOString(),
       test_duration: testDuration,
@@ -427,8 +446,9 @@ function TestOnePage() {
           totalPoints,
         },
       })
-    } catch (e) {
-      console.error('Failed to save test results:', error)
+    } catch (error) {
+      console.error('Save results error:', error)
+      // В случае ошибки все равно показываем результаты
       updateState({
         completed: true,
         finalResults: {
@@ -439,7 +459,7 @@ function TestOnePage() {
       setSyncError(
         isOnline
           ? 'Ошибка отправки результатов'
-          : 'Результаты сохранены для оффлайн-синхронизации'
+          : 'Результаты сохранены локально для последующей синхронизации'
       )
     }
   }, [
@@ -453,7 +473,28 @@ function TestOnePage() {
     testStartTime,
     allQuestionsAnswered,
     updateState,
+    saveTestResults,
   ])
+
+  // В компоненте TestOnePage
+  useEffect(() => {
+    const checkResults = async () => {
+      if (completed && !finalResults) {
+        try {
+          const results = await getTestResults(id)
+          if (results.length > 0) {
+            updateState({
+              finalResults: results[0],
+              completed: true,
+            })
+          }
+        } catch (e) {
+          console.error('Failed to recover results:', e)
+        }
+      }
+    }
+    checkResults()
+  }, [completed, finalResults, id, getTestResults, updateState])
 
   const handleRestartTest = useCallback(() => {
     updateState({

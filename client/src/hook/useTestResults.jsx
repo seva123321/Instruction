@@ -112,91 +112,284 @@ const useTestResults = () => {
     [withDB]
   )
 
-  // Синхронизация ожидающих результатов
   const syncPendingResults = useCallback(async () => {
-    let db
     try {
-      db = await initDB()
-      const tx = db.transaction('pendingResults', 'readwrite')
-      const store = tx.objectStore('pendingResults')
-      const pendingResults = await store.getAll()
+      const db = await initDB()
 
-      const resultsToSync = pendingResults.filter((r) => !r.synced)
+      // Получаем все pending результаты
+      const pendingTx = db.transaction('pendingResults', 'readonly')
+      const pendingResults = await pendingTx
+        .objectStore('pendingResults')
+        .getAll()
+      await pendingTx.done
 
-      for (const result of resultsToSync) {
+      let successCount = 0
+      let failedCount = 0
+
+      for (const pendingResult of pendingResults) {
         try {
-          const serverData = {
-            test: result.test,
-            is_passed: result.is_passed,
-            total_score: result.total_score,
-            mark: result.mark,
-            start_time: result.start_time,
-            completion_time: result.completion_time,
-            test_duration: result.test_duration,
-            user_answers: result.user_answers,
+          // Отправляем на сервер (без метаданных)
+          const { id, attemptCount, lastAttempt, syncError, ...serverData } =
+            pendingResult
+          await postTestResult(serverData).unwrap()
+
+          // Находим соответствующий результат в основном хранилище
+          const resultsTx = db.transaction('results', 'readwrite')
+          const resultsStore = resultsTx.objectStore('results')
+          const index = resultsStore.index('by_test')
+
+          // Ищем все результаты для этого теста
+          const testResults = await index.getAll(pendingResult.test)
+
+          // Находим результат с таким же test и похожим timestamp в ID
+          const resultToDelete = testResults.find(
+            (result) =>
+              result.test === pendingResult.test &&
+              result.id.includes(pendingResult.test)
+          )
+
+          if (resultToDelete) {
+            // Удаляем из обоих хранилищ
+            const deleteTx = db.transaction(
+              ['pendingResults', 'results'],
+              'readwrite'
+            )
+
+            await deleteTx
+              .objectStore('pendingResults')
+              .delete(pendingResult.id)
+            await deleteTx.objectStore('results').delete(resultToDelete.id)
+            await deleteTx.done
+          } else {
+            // Если не нашли в results, удаляем только из pending
+            const deleteTx = db.transaction('pendingResults', 'readwrite')
+            await deleteTx
+              .objectStore('pendingResults')
+              .delete(pendingResult.id)
+            await deleteTx.done
           }
 
-          await postTestResult(serverData).unwrap()
-          await store.delete(result.id)
+          successCount++
         } catch (error) {
-          console.error('Failed to sync result:', error)
-          await store.put({
-            ...result,
+          console.error(`Failed to sync result ${pendingResult.id}:`, error)
+
+          // Обновляем счетчик попыток
+          const updateTx = db.transaction('pendingResults', 'readwrite')
+          await updateTx.objectStore('pendingResults').put({
+            ...pendingResult,
             syncError: error.message,
-            attemptCount: (result.attemptCount || 0) + 1,
+            attemptCount: (pendingResult.attemptCount || 0) + 1,
+            lastAttempt: new Date().toISOString(),
           })
+          await updateTx.done
+
+          failedCount++
         }
       }
 
-      await tx.done
-      return resultsToSync.length
+      return {
+        total: pendingResults.length,
+        success: successCount,
+        failed: failedCount,
+      }
     } catch (error) {
-      console.error('Sync transaction failed:', error)
+      console.error('Sync failed:', error)
       throw error
     }
   }, [postTestResult])
 
-  // Основная функция сохранения результатов
   const saveTestResults = useCallback(
     async (testId, fullResults, serverResults) => {
-      try {
-        const resultsWithMeta = {
-          ...fullResults,
-          id: `${testId}-${Date.now()}`,
-          synced: false,
-          createdAt: new Date().toISOString(),
-        }
+      const timestamp = Date.now()
+      // Генерируем одинаковый ID для обоих хранилищ
+      const resultId = `${testId}-${timestamp}`
 
+      const resultsWithMeta = {
+        ...fullResults,
+        id: resultId,
+        createdAt: new Date(timestamp).toISOString(),
+      }
+
+      try {
+        // Сохраняем полные результаты в основное хранилище
         await saveResultsToDB(resultsWithMeta)
+
+        // Подготавливаем данные для сервера
+        const resultToSync = {
+          ...serverResults,
+          id: resultId, // Важно сохранять тот же ID
+          createdAt: resultsWithMeta.createdAt,
+          attemptCount: 0,
+        }
 
         if (navigator.onLine) {
           try {
             const response = await postTestResult(serverResults).unwrap()
-            await saveResultsToDB({
-              ...resultsWithMeta,
-              ...response,
-              synced: true,
-            })
             return {
               ...resultsWithMeta,
               ...response,
-              synced: true,
             }
           } catch (error) {
-            await addPendingResult(serverResults)
+            // При ошибке сохраняем в pending
+            await addPendingResult(resultToSync)
             return resultsWithMeta
           }
         } else {
-          await addPendingResult(serverResults)
+          // Оффлайн - сразу в pending
+          await addPendingResult(resultToSync)
           return resultsWithMeta
         }
       } catch (error) {
-        console.error('Complete save failure:', error)
+        console.error('Save failed:', error)
         throw new Error('Не удалось сохранить результаты теста')
       }
     },
     [postTestResult, saveResultsToDB, addPendingResult]
   )
+  // const syncPendingResults = useCallback(async () => {
+  //   try {
+  //     const db = await initDB()
+  //     // Сначала получаем все ожидающие результаты в отдельной транзакции
+  //     const pendingResults = await db.getAll('pendingResults')
+
+  //     let successCount = 0
+  //     let failedCount = 0
+
+  //     // Синхронизируем каждый результат в отдельной транзакции
+  //     for (const result of pendingResults) {
+  //       try {
+  //         // Создаем новую транзакцию для каждого результата
+  //         const tx = db.transaction(['pendingResults', 'results'], 'readwrite')
+  //         const pendingStore = tx.objectStore('pendingResults')
+  //         const resultsStore = tx.objectStore('results')
+
+  //         try {
+  //           // Отправляем на сервер
+  //           await postTestResult(result).unwrap()
+
+  //           // Если успешно - удаляем из pending и results
+  //           await pendingStore.delete(result.id)
+  //           await resultsStore.delete(result.id)
+
+  //           await tx.done
+  //           successCount++
+  //         } catch (error) {
+  //           console.error(`Failed to sync result ${result.id}:`, error)
+
+  //           // Обновляем счетчик попыток
+  //           const updatedResult = {
+  //             ...result,
+  //             syncError: error.message,
+  //             attemptCount: (result.attemptCount || 0) + 1,
+  //             lastAttempt: new Date().toISOString(),
+  //           }
+
+  //           // Обновляем запись в хранилище
+  //           await pendingStore.put(updatedResult)
+  //           await tx.done
+  //           failedCount++
+  //         }
+  //       } catch (txError) {
+  //         console.error(`Transaction failed for result ${result.id}:`, txError)
+  //         failedCount++
+  //       }
+  //     }
+
+  //     return {
+  //       total: pendingResults.length,
+  //       success: successCount,
+  //       failed: failedCount,
+  //     }
+  //   } catch (error) {
+  //     console.error('Initialization failed:', error)
+  //     throw error
+  //   }
+  // }, [postTestResult])
+  // Синхронизация ожидающих результатов
+  // const syncPendingResults = useCallback(async () => {
+  //   let db
+  //   try {
+  //     db = await initDB()
+  //     const tx = db.transaction('pendingResults', 'readwrite')
+  //     const store = tx.objectStore('pendingResults')
+  //     const pendingResults = await store.getAll()
+  //         debugger
+  //     const resultsToSync = pendingResults.filter((r) => !r.synced)
+
+  //     for (const result of resultsToSync) {
+  //       try {
+  //         const serverData = {
+  //           test: result.test,
+  //           is_passed: result.is_passed,
+  //           total_score: result.total_score,
+  //           mark: result.mark,
+  //           start_time: result.start_time,
+  //           completion_time: result.completion_time,
+  //           test_duration: result.test_duration,
+  //           user_answers: result.user_answers,
+  //         }
+
+  //         await postTestResult(serverData).unwrap()
+  //         await store.delete(result.id)
+  //       } catch (error) {
+  //         console.error('Failed to sync result:', error)
+  //         await store.put({
+  //           ...result,
+  //           syncError: error.message,
+  //           attemptCount: (result.attemptCount || 0) + 1,
+  //         })
+  //       }
+  //     }
+
+  //     await tx.done
+  //     return resultsToSync.length
+  //   } catch (error) {
+  //     console.error('Sync transaction failed:', error)
+  //     throw error
+  //   }
+  // }, [postTestResult])
+
+  // Основная функция сохранения результатов
+  // const saveTestResults = useCallback(
+  //   async (testId, fullResults, serverResults) => {
+  //     try {
+  //       const resultsWithMeta = {
+  //         ...fullResults,
+  //         id: `${testId}-${Date.now()}`,
+  //         // synced: false,
+  //         createdAt: new Date().toISOString(),
+  //       }
+
+  //       await saveResultsToDB(resultsWithMeta)
+
+  //       if (navigator.onLine) {
+  //         try {
+  //           const response = await postTestResult(serverResults).unwrap()
+  //           await saveResultsToDB({
+  //             ...resultsWithMeta,
+  //             ...response,
+  //             // synced: true,
+  //           })
+  //           return {
+  //             ...resultsWithMeta,
+  //             ...response,
+  //             // synced: true,
+  //           }
+  //         } catch (error) {
+  //           await addPendingResult(serverResults)
+  //           return resultsWithMeta
+  //         }
+  //       } else {
+  //         await addPendingResult(serverResults)
+  //         return resultsWithMeta
+  //       }
+  //     } catch (error) {
+  //       console.error('Complete save failure:', error)
+  //       throw new Error('Не удалось сохранить результаты теста')
+  //     }
+  //   },
+  //   [postTestResult, saveResultsToDB, addPendingResult]
+  // )
 
   return {
     saveTestResults,

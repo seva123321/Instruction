@@ -19,6 +19,7 @@ import {
   AccordionDetails,
   CircularProgress,
   Alert,
+  Tooltip,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -133,16 +134,20 @@ function TestResultsView({
               Общий результат
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
-              <Chip
-                label={`${score}/${totalPoints}`}
-                color="primary"
-                size={isMobile ? 'medium' : 'large'}
-              />
-              <Chip
-                label={`Оценка: ${mark}/10`}
-                color={parseFloat(mark) >= 6 ? 'success' : 'error'}
-                size={isMobile ? 'medium' : 'large'}
-              />
+              <Tooltip title="Количество баллов из максимально возможных">
+                <Chip
+                  label={`${score}/${totalPoints}`}
+                  color="primary"
+                  size={isMobile ? 'medium' : 'large'}
+                />
+              </Tooltip>
+              <Tooltip title="Оценка по 10ти бальной шкале">
+                <Chip
+                  label={`Оценка: ${mark}/10`}
+                  color={parseFloat(mark) >= 6 ? 'success' : 'error'}
+                  size={isMobile ? 'medium' : 'large'}
+                />
+              </Tooltip>
             </Stack>
           </Box>
 

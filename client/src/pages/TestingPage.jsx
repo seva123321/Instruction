@@ -1,5 +1,6 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable indent */
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   List,
@@ -72,13 +73,13 @@ function OfflineIndicator() {
 
 function TestingPage() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [offlineTests, setOfflineTests] = useState([])
+  // const [offlineTests, setOfflineTests] = useState([])
   const [tests, setTests] = useState([])
   const [error, setError] = useState(null)
   const [loadingStates, setLoadingStates] = useState({})
   const [isDownloading, setIsDownloading] = useState({})
   const [dbInitialized, setDbInitialized] = useState(false)
-  const [dbReady, setDbReady] = useState(false)
+  // const [dbReady, setDbReady] = useState(false)
   const { initializeDB } = useTestResults()
 
   const { getTestResults, syncPendingResults, closeDB } = useTestResults()
@@ -208,10 +209,10 @@ function TestingPage() {
         const mergedTests = await mergeTestsWithResults(loadedTests)
         setTests(mergedTests)
         if (!isOnline) {
-          setOfflineTests(mergedTests)
+          // setOfflineTests(mergedTests)
         }
       } else if (!isOnline) {
-        setOfflineTests([])
+        // setOfflineTests([])
       }
     } catch (e) {
       console.error('Failed to load data:', e)
@@ -255,11 +256,11 @@ function TestingPage() {
     try {
       await initializeApplicationDatabases()
       await initializeDB()
-      setDbReady(true)
+      // setDbReady(true)
     } catch (e) {
       console.error('Failed to initialize databases:', e)
       setError('Ошибка инициализации базы данных')
-      setDbReady(false)
+      // setDbReady(false)
     }
   }, [initializeDB])
   useEffect(() => {
@@ -269,7 +270,7 @@ function TestingPage() {
       try {
         await initializeAllDatabases()
         if (mounted) {
-          setDbReady(true)
+          // setDbReady(true)
           await loadData()
         }
       } catch (e) {
@@ -364,41 +365,6 @@ function TestingPage() {
       } finally {
         setIsDownloading((prev) => ({ ...prev, [id]: false }))
       }
-      // e.preventDefault()
-      // e.stopPropagation()
-
-      // if (!dbReady) {
-      //   setError('База данных не готова. Пожалуйста, подождите...')
-      //   return
-      // }
-
-      // try {
-      //   setIsDownloading((prev) => ({ ...prev, [id]: true }))
-      //   setError(null)
-
-      //   // Получаем полные данные теста
-      //   const { data: test } = await getTestById(id)
-      //   if (!test) throw new Error('Тест не найден')
-
-      //   // Сохраняем в оба хранилища
-      //   await Promise.all([
-      //     saveTestToDB(test, STORE_NAMES.TESTS),
-      //     saveTestToDB(test, STORE_NAMES.TESTS_CONTENT),
-      //   ])
-
-      //   // Обновляем список тестов
-      //   const updatedTests = await getTestsFromDB()
-      //   setTests(await mergeTestsWithResults(updatedTests))
-      //   setOfflineTests(updatedTests)
-
-      //   return true // Успешное сохранение
-      // } catch (err) {
-      //   console.error('Failed to download test:', err)
-      //   setError(`Ошибка загрузки теста: ${err.message}`)
-      //   return false
-      // } finally {
-      //   setIsDownloading((prev) => ({ ...prev, [id]: false }))
-      // }
     },
     [getTestById]
   )
@@ -408,17 +374,9 @@ function TestingPage() {
     async (testId) => {
       try {
         await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
-        // Проверяем что тест действительно удалился
-        // const testExists = await getTestFromDB(
-        //   testId,
-        //   STORE_NAMES.TESTS_CONTENT
-        // )
-        // if (testExists) {
-        //   throw new Error('Не удалось удалить тест')
-        // }
 
         const updatedTests = await getTestsFromDB()
-        setOfflineTests(updatedTests)
+        // setOfflineTests(updatedTests)
         setTests(await mergeTestsWithResults(updatedTests))
         return true
       } catch (e) {
@@ -477,9 +435,9 @@ function TestingPage() {
   // Рендер состояний
   if (isLoading && isOnline) return <LoadingIndicator />
   if (fetchError && isOnline) return <ErrorMessage error={fetchError} />
-  if (!isLoading && !fetchError && tests.length === 0) {
-    return <EmptyState isOnline={isOnline} />
-  }
+  // if (!isLoading && !fetchError && tests.length === 0) {
+  //   return <EmptyState isOnline={isOnline} />
+  // }
 
   return (
     <Box>
@@ -510,330 +468,3 @@ function TestingPage() {
 }
 
 export default TestingPage
-
-// import React, { useState, useEffect, useCallback, useMemo } from 'react'
-// import {
-//   List,
-//   Typography,
-//   Box,
-//   Chip,
-//   CircularProgress,
-//   Snackbar,
-//   Alert,
-// } from '@mui/material'
-// import {
-//   School as SchoolIcon,
-//   OfflineBolt as OfflineBoltIcon,
-//   Assignment as AssignmentIcon,
-// } from '@mui/icons-material'
-
-// import TabsWrapper from '@/components/TabsWrapper'
-
-// import {
-//   useLazyGetTestByIdQuery,
-//   useLazyGetTestsQuery,
-// } from '../slices/testApi'
-// import {
-//   initDB,
-//   getTestsFromDB,
-//   saveTestToDB,
-//   deleteTestFromDB,
-//   STORE_NAMES,
-// } from '../service/offlineDB'
-// import useTestResults from '../hook/useTestResults'
-
-// import TestItem from './TestItem'
-
-// // Компоненты для состояний
-// function LoadingIndicator() {
-//   return (
-//     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-//       <CircularProgress size={60} />
-//     </Box>
-//   )
-// }
-
-// function ErrorMessage() {
-//   // { error }
-//   return (
-//     <Box sx={{ p: 3, textAlign: 'center' }}>
-//       <Alert severity="error">Ошибка при загрузке тестов.</Alert>
-//     </Box>
-//   )
-// }
-
-// function EmptyState({ isOnline }) {
-//   return (
-//     <Box sx={{ p: 3, textAlign: 'center' }}>
-//       <Typography variant="h6">
-//         {`Нет доступных тестов ${!isOnline && 'в оффлайн-режиме'}`}
-//       </Typography>
-//     </Box>
-//   )
-// }
-
-// function OfflineIndicator() {
-//   return (
-//     <Box sx={{ position: 'fixed', top: 70, right: 20, zIndex: 1000 }}>
-//       <Chip label="Оффлайн режим" color="warning" icon={<OfflineBoltIcon />} />
-//     </Box>
-//   )
-// }
-
-// function TestingPage() {
-//   // Состояния
-//   const [isOnline, setIsOnline] = useState(navigator.onLine)
-//   const [offlineTests, setOfflineTests] = useState([])
-//   const [tests, setTests] = useState([])
-//   const [error, setError] = useState(null)
-//   const [loadingStates, setLoadingStates] = useState({})
-//   const [isDownloading, setIsDownloading] = useState({})
-
-//   // API запросы
-//   const { getTestResults, syncPendingResults } = useTestResults()
-//   const [
-//     getTests,
-//     { data: testsData, isLoading, error: fetchError, isUninitialized },
-//   ] = useLazyGetTestsQuery()
-//   const [getTestById] = useLazyGetTestByIdQuery()
-
-//   // Инициализация и загрузка данных
-//   useEffect(() => {
-//     const initOfflineData = async () => {
-//       try {
-//         await initDB()
-//         if (!isOnline) {
-//           const testsFromDB = await getTestsFromDB()
-//           setOfflineTests(testsFromDB)
-//           await syncPendingResults().catch(console.warn)
-//         }
-//       } catch (e) {
-//         console.error('Offline init failed:', e)
-//       }
-//     }
-
-//     initOfflineData()
-//   }, [isOnline, syncPendingResults])
-
-//   // Обработка изменений онлайн/офлайн статуса
-//   useEffect(() => {
-//     let syncTimeout
-//     if (isOnline) {}
-//       const handleOnline = async () => {
-//         setIsOnline(true)
-//         // Добавляем задержку для стабилизации соединения
-//         syncTimeout = setTimeout(async () => {
-//           try {
-//             await syncPendingResults()
-//             await getTests().unwrap()
-//           } catch (e) {
-//             console.error('Sync after online failed:', e)
-//             setError('Ошибка синхронизации после восстановления соединения')
-//           }
-//         }, 3000)
-//       }
-
-//     const handleOffline = () => {
-//       clearTimeout(syncTimeout)
-//       setIsOnline(false)
-//     }
-
-//     window.addEventListener('online', handleOnline)
-//     window.addEventListener('offline', handleOffline)
-
-//     return () => {
-//       clearTimeout(syncTimeout)
-//       window.removeEventListener('online', handleOnline)
-//       window.removeEventListener('offline', handleOffline)
-//     }
-//   }, [getTests, syncPendingResults])
-
-//   // Загрузка тестов при первом монтировании
-//   useEffect(() => {
-//     if (isOnline && isUninitialized) {
-//       getTests()
-//     }
-//   }, [isOnline, isUninitialized, getTests])
-
-//   // Объединение данных тестов и результатов
-//   const getMergedTests = useCallback(async () => {
-//     const sourceTests = isOnline ? testsData?.results || [] : offlineTests
-
-//     return Promise.all(
-//       sourceTests.map(async (test) => {
-//         const testId = test.id
-//         try {
-//           setLoadingStates((prev) => ({ ...prev, [testId]: true }))
-
-//           let results = []
-//           try {
-//             results = await getTestResults(testId)
-//           } catch (e) {
-//             console.warn(`Results load failed for test ${testId}:`, e)
-//           }
-
-//           const latestResult = results[0] || {}
-
-//           return {
-//             ...test,
-//             ...latestResult,
-//             name: latestResult.test_title || test.name,
-//             is_passed: latestResult.is_passed ?? false,
-//             mark: latestResult.mark ?? 0,
-//             date: latestResult.completion_time ?? null,
-//           }
-//         } catch (e) {
-//           console.error(`Processing failed for test ${testId}:`, e)
-//           return test
-//         } finally {
-//           setLoadingStates((prev) => ({ ...prev, [testId]: false }))
-//         }
-//       })
-//     )
-//   }, [isOnline, testsData, offlineTests, getTestResults])
-
-//   useEffect(() => {
-//     let isActive = true
-
-//     const loadData = async () => {
-//       try {
-//         const merged = await getMergedTests()
-//         if (isActive) setTests(merged)
-//       } catch (e) {
-//         console.error('Failed to load tests:', e)
-//       }
-//     }
-
-//     loadData()
-
-//     return () => {
-//       isActive = false
-//     }
-//   }, [getMergedTests])
-
-//   // Обработчики действий
-//   const handleDownloadTest = useCallback(
-//     async (e, id) => {
-//       e.preventDefault()
-//       e.stopPropagation()
-
-//       try {
-//         setIsDownloading((prev) => ({ ...prev, [id]: true }))
-//         setError(null)
-
-//         const { data: oneTest } = await getTestById(id)
-//         if (!oneTest) throw new Error('Тест не найден')
-
-//         await saveTestToDB(
-//           { ...oneTest, downloadedAt: new Date().toISOString() },
-//           STORE_NAMES.TESTS_CONTENT
-//         )
-//       } catch (err) {
-//         console.error('Failed to download test:', err)
-//         setError(`Ошибка загрузки теста: ${err.message}`)
-//       } finally {
-//         setIsDownloading((prev) => ({ ...prev, [id]: false }))
-//       }
-//     },
-//     [getTestById]
-//   )
-
-//   const handleDeleteTest = useCallback(async (testId) => {
-//     try {
-//       await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
-//       return true
-//     } catch (e) {
-//       console.error('Failed to delete test:', e)
-//       setError('Не удалось удалить тест')
-//       return false
-//     }
-//   }, [])
-
-//   // Генерация вкладок
-//   const tabs = useMemo(() => {
-//     const renderTestList = (filterFn) => (
-//       <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//         {tests.filter(filterFn).map((test) => (
-//           <TestItem
-//             key={test.id}
-//             test={test}
-//             isLoading={loadingStates[test.id]}
-//             isDownloading={isDownloading}
-//             onDeleteTest={handleDeleteTest}
-//             onDownloadTest={handleDownloadTest}
-//           />
-//         ))}
-//       </List>
-//     )
-
-//     return [
-//       {
-//         label: 'Все тесты',
-//         icon: <SchoolIcon />,
-//         content: renderTestList(() => true),
-//       },
-//       {
-//         label: 'Учебные',
-//         icon: <SchoolIcon />,
-//         content: renderTestList((test) => !test.test_is_control),
-//       },
-//       {
-//         label: 'Контрольные',
-//         icon: <AssignmentIcon />,
-//         content: renderTestList((test) => test.test_is_control),
-//       },
-//     ]
-//   }, [
-//     tests,
-//     loadingStates,
-//     isDownloading,
-//     handleDeleteTest,
-//     handleDownloadTest,
-//   ])
-
-//   // Рендер состояний
-//   if (isLoading && isOnline && !isUninitialized) return <LoadingIndicator />
-//   if (fetchError && isOnline) return <ErrorMessage error={fetchError} />
-//   if (!isLoading && !fetchError && tests.length === 0) {
-//     return <EmptyState isOnline={isOnline} />
-//   }
-
-//   return (
-//     <Box>
-//       {!isOnline && <OfflineIndicator />}
-
-//       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
-//         Тестирование
-//       </Typography>
-
-//       <TabsWrapper tabs={tabs} />
-
-//       <Snackbar
-//         open={!!error}
-//         autoHideDuration={6000}
-//         onClose={() => setError(null)}
-//         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-//       >
-//         <Alert
-//           severity="error"
-//           onClose={() => setError(null)}
-//           sx={{ width: '100%' }}
-//         >
-//           {error}
-//         </Alert>
-//       </Snackbar>
-
-//       {/* <Snackbar
-//         open={!!error}
-//         autoHideDuration={6000}
-//         onClose={() => setError(null)}
-//       >
-//         <Alert severity="error" onClose={() => setError(null)}>
-//           {error}
-//         </Alert>
-//       </Snackbar> */}
-//     </Box>
-//   )
-// }
-
-// export default TestingPage

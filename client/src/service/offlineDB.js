@@ -7,16 +7,20 @@ export const STORE_NAMES = {
   TESTS_CONTENT: 'testsContent',
 }
 
+// Глобальное соединение с базой данных
 let dbInstance = null
 let isInitializing = false
+let pendingOperations = []
 
+// Получение или создание соединения с базой данных
 export const getDB = async () => {
   if (dbInstance) return dbInstance
 
   if (isInitializing) {
-    // Ждем завершения инициализации
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    return getDB()
+    // Если уже идет инициализация, ждем ее завершения
+    return new Promise((resolve) => {
+      pendingOperations.push(resolve)
+    })
   }
 
   isInitializing = true
@@ -31,6 +35,11 @@ export const getDB = async () => {
         }
       },
     })
+
+    // Разрешаем все ожидающие операции
+    pendingOperations.forEach((resolve) => resolve(dbInstance))
+    pendingOperations = []
+
     return dbInstance
   } catch (e) {
     console.error('Failed to open DB:', e)
@@ -41,6 +50,7 @@ export const getDB = async () => {
   }
 }
 
+// Инициализация базы данных
 export const initDB = async () => {
   try {
     return await getDB()
@@ -50,9 +60,10 @@ export const initDB = async () => {
   }
 }
 
+// Получение всех тестов
 export const getTestsFromDB = async () => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     const tx = db.transaction(STORE_NAMES.TESTS, 'readonly')
     const tests = await tx.store.getAll()
     await tx.done
@@ -63,12 +74,13 @@ export const getTestsFromDB = async () => {
   }
 }
 
+// Получение конкретного теста
 export const getTestFromDB = async (
   testId,
   storeName = STORE_NAMES.TESTS_CONTENT
 ) => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     if (!db.objectStoreNames.contains(storeName)) {
       console.error(`Store ${storeName} does not exist`)
       return null
@@ -83,9 +95,10 @@ export const getTestFromDB = async (
   }
 }
 
+// Сохранение теста
 export const saveTestToDB = async (test, storeName = STORE_NAMES.TESTS) => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     const tx = db.transaction(storeName, 'readwrite')
     await tx.store.put(test)
     await tx.done
@@ -96,29 +109,13 @@ export const saveTestToDB = async (test, storeName = STORE_NAMES.TESTS) => {
   }
 }
 
-export const closeDB = () => {
-  if (dbInstance) {
-    dbInstance.close()
-    dbInstance = null
-  }
-}
-
-export const deleteDatabase = async (name) => {
-  try {
-    await deleteDB(name)
-    console.log(`Database ${name} deleted successfully`)
-  } catch (e) {
-    console.error(`Failed to delete database ${name}:`, e)
-    throw e
-  }
-}
-
+// Удаление теста
 export const deleteTestFromDB = async (
   testId,
   storeName = STORE_NAMES.TESTS
 ) => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     const tx = db.transaction(storeName, 'readwrite')
     await tx.store.delete(testId)
     await tx.done
@@ -129,10 +126,10 @@ export const deleteTestFromDB = async (
   }
 }
 
-// Проверяет наличие теста в любом из хранилищ
+// Проверка наличия теста
 export const isTestDownloaded = async (testId) => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     const tx = db.transaction(
       [STORE_NAMES.TESTS, STORE_NAMES.TESTS_CONTENT],
       'readonly'
@@ -149,10 +146,10 @@ export const isTestDownloaded = async (testId) => {
   }
 }
 
-// Получает тест из любого доступного хранилища
+// Получение оффлайн теста
 export const getOfflineTest = async (testId) => {
+  const db = await getDB()
   try {
-    const db = await getDB()
     const tx = db.transaction(
       [STORE_NAMES.TESTS_CONTENT, STORE_NAMES.TESTS],
       'readonly'
@@ -170,6 +167,25 @@ export const getOfflineTest = async (testId) => {
     return fullTest || basicTest
   } catch (e) {
     console.error('Get offline test failed:', e)
+    throw e
+  }
+}
+
+// Закрытие соединения
+export const closeDB = () => {
+  if (dbInstance) {
+    dbInstance.close()
+    dbInstance = null
+  }
+}
+
+// Удаление всей базы данных
+export const deleteDatabase = async (name) => {
+  try {
+    await deleteDB(name)
+    console.log(`Database ${name} deleted successfully`)
+  } catch (e) {
+    console.error(`Failed to delete database ${name}:`, e)
     throw e
   }
 }

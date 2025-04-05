@@ -61,7 +61,9 @@ const TestItem = memo(
 
       // Проверяем только если онлайн или при монтировании
       if (isOnline) {
-        checkDownloadStatus()
+        setTimeout(() => {
+          checkDownloadStatus()
+        })
       }
     }, [test?.id, isOnline])
 

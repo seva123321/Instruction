@@ -137,11 +137,11 @@ const useOfflineTest = (
             test = await getTestFromDB(id, STORE_NAMES.TESTS_CONTENT)
           }
 
-          // Проверяем структуру теста
-          if (!test.questions || !test.name) {
-            console.warn('Invalid test structure in IndexedDB:', test)
-            throw new Error('INVALID_TEST_DATA')
-          }
+          // // Проверяем структуру теста
+          // if (!test?.questions || !test?.name) {
+          //   console.warn('Invalid test structure in IndexedDB:', test)
+          //   throw new Error('INVALID_TEST_DATA')
+          // }
 
           setOfflineTest(test)
           setError(null)
@@ -485,7 +485,7 @@ const TestOnePage = () => {
   // }, [id, isOnline, getTestById])
 
   // Диалог для напоминания скачать тест
-  const [showDownloadDialog, setShowDownloadDialog] = useState(false)
+  // const [showDownloadDialog, setShowDownloadDialog] = useState(false)
 
   const handleCompleteTest = useCallback(async () => {
     if (!test?.questions || !id || !test?.name) return

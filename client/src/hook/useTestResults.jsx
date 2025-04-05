@@ -212,7 +212,7 @@ const useTestResults = () => {
 
       try {
         // Сохраняем полные результаты в основное хранилище
-        await saveResultsToDB(resultsWithMeta)
+        // await saveResultsToDB(resultsWithMeta) //@TODO - может понадобиться
 
         // Подготавливаем данные для сервера
         const resultToSync = {
@@ -244,7 +244,7 @@ const useTestResults = () => {
         throw new Error('Не удалось сохранить результаты теста')
       }
     },
-    [postTestResult, saveResultsToDB, addPendingResult]
+    [postTestResult, addPendingResult]
   )
   // const syncPendingResults = useCallback(async () => {
   //   try {

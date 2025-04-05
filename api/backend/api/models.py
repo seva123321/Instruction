@@ -207,9 +207,6 @@ class Tests(models.Model):
             MaxValueValidator(MAX_LENGTH_PASSING_SCORE),
         ],
     )
-    total_points = models.IntegerField(
-        'Максимальное количество баллов за тест',
-    )
 
     class Meta:
         verbose_name = 'Тест'

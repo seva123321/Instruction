@@ -24,10 +24,12 @@ from api.models import (
     TestResult,
     Video,
     UserAnswer,
-    NormativeLegislation
+    NormativeLegislation,
+    InstructionAgreementResult
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
+
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -226,11 +228,103 @@ class InstructionListSerializer(serializers.ModelSerializer):
 
 
 class InstructionResultSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели InstructionResult."""
+    """Сериализатор для результатов инструктажа с проверкой ключей согласий."""
+
+    instruction_agreement = serializers.ListField(
+        child=serializers.DictField(child=serializers.BooleanField()), required=True
+    )
+    face_descriptor = serializers.ListField(
+        child=serializers.FloatField(), write_only=True, required=True
+    )
 
     class Meta:
         model = InstructionResult
-        fields = '__all__'
+        fields = [
+            'instruction_id',
+            'instruction_agreement',
+            'face_descriptor',
+            'result',
+        ]
+        extra_kwargs = {
+            'instruction_id': {'source': 'instruction', 'required': True},
+            'result': {'read_only': True},
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.valid_agreement_keys = set(
+            InstructionAgreement.objects.values_list('name', flat=True)
+        )
+
+    def validate_instruction_agreement(self, value):
+        """Проверяем, что все ключи согласий существуют в InstructionAgreement."""
+        for agreement_dict in value:
+            agreement_key = list(agreement_dict.keys())[0]
+            if agreement_key not in self.valid_agreement_keys:
+                raise serializers.ValidationError(
+                    f"Неизвестный тип согласия: '{agreement_key}'. "
+                    f"Допустимые значения: {', '.join(sorted(self.valid_agreement_keys))}"
+                )
+        return value
+
+    def validate_face_descriptor(self, value):
+        """Проверяем, что лицо соответствует зарегистрированному пользователю."""
+        try:
+            input_descriptor = np.array(value, dtype=np.float32)
+            if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:
+                raise serializers.ValidationError(
+                    'Дескриптор лица должен содержать 128 элементов'
+                )
+
+            if not is_face_already_registered(input_descriptor):
+                raise serializers.ValidationError(
+                    'Лицо не распознано. Пройдите аутентификацию.'
+                )
+
+            return input_descriptor
+        except Exception as e:
+            raise serializers.ValidationError(
+                f'Ошибка обработки дескриптора лица: {str(e)}'
+            )
+
+    def validate(self, data):
+        """Проверяем, что хотя бы одно согласие получено."""
+        agreements = data.get('instruction_agreement', [])
+
+        if not any(list(agreement.values())[0] for agreement in agreements):
+            raise serializers.ValidationError(
+                'Необходимо подтвердить хотя бы одно согласие'
+            )
+        return data
+
+    def create(self, validated_data):
+        """Создаем запись о результате инструктажа с сохранением согласий."""
+        request = self.context.get('request')
+        agreements_data = validated_data.pop('instruction_agreement')
+        face_descriptor = validated_data.pop('face_descriptor')
+
+        is_passed = any(list(agreement.values())[0] for agreement in agreements_data)
+
+        instruction_result = InstructionResult.objects.create(
+            user=request.user,
+            instruction=validated_data['instruction'],
+            result=is_passed,
+        )
+
+        agreement_instances = []
+        for agreement_data in agreements_data:
+            for agreement_type, agreed in agreement_data.items():
+                agreement_instances.append(
+                    InstructionAgreementResult(
+                        instruction_result=instruction_result,
+                        agreement_type=agreement_type,
+                        agreed=agreed,
+                    )
+                )
+
+        InstructionAgreementResult.objects.bulk_create(agreement_instances)
+
+        return instruction_result
 
 
 class AnswerSerializer(serializers.ModelSerializer):

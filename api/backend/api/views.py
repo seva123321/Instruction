@@ -26,9 +26,11 @@ from api.serializers import (
     VideoSerializer,
     TestResultCreateSerializer,
     NormativeLegislationSerializer,
+    InstructionResultSerializer,
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
+
 
 
 @extend_schema(
@@ -354,3 +356,31 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = VideoSerializer
     permission_classes = (IsAuthenticated,)
     ordering = ('-date',)
+
+
+class InstructionResultView(APIView):
+    """API для сохранения результатов прохождения инструктажа."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = InstructionResultSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            instruction_result = serializer.save()
+            return Response(
+                {
+                    'status': 'success',
+                    'instruction_result_id': instruction_result.id,
+                    'is_passed': instruction_result.result
+                },
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

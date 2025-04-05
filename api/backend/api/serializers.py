@@ -260,6 +260,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'question_type',
+            'points',
             'answers',
             'explanation',
             'reference_link',
@@ -326,7 +328,10 @@ class TestResultCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user_answers_data = validated_data.pop('user_answers', [])
-        test_result = TestResult.objects.create(**validated_data)
+        total_points = self.context.get('total_points', 0)
+        test_result = TestResult.objects.create(
+            total_points=total_points, **validated_data
+        )
 
         for answer_data in user_answers_data:
             UserAnswer.objects.create(
@@ -375,6 +380,7 @@ class TestSerializer(BaseTestSerializer):
     """Сериализатор для детального просмотра теста"""
 
     questions = serializers.SerializerMethodField()
+    total_points = serializers.SerializerMethodField()
 
     class Meta:
         model = Tests
@@ -403,6 +409,11 @@ class TestSerializer(BaseTestSerializer):
         return QuestionSerializer(
             questions, many=True, context=question_context
         ).data
+
+    def get_total_points(self, obj):
+        """Вычисляем сумму баллов выбранных вопросов"""
+        questions = self.get_questions(obj)
+        return sum(q['points'] for q in questions)
 
 
 class VideoSerializer(serializers.ModelSerializer):

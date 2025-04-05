@@ -310,16 +310,6 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return TestSerializer
 
 
-@extend_schema(tags=["Tests"], description="Получение видео.")
-class VideoViewSet(viewsets.ReadOnlyModelViewSet):
-    """Представление для получения видео."""
-
-    queryset = Video.objects.all()
-    serializer_class = VideoSerializer
-    permission_classes = (IsAuthenticated,)
-    ordering = ('-date',)
-
-
 @extend_schema(
     tags=['TestResult'],
     description='Сохранение результатов тестов пользователя.',
@@ -344,6 +334,8 @@ class TestResultCreateView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
+@extend_schema(tags=['NLAs'], description='Получение НПА.')
 class NormativeLegislationViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения видео."""
 
@@ -352,3 +344,13 @@ class NormativeLegislationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
     ordering = ('-date',)
     ordering_fields = ('date', 'title')
+
+
+@extend_schema(tags=['Tests'], description='Получение видео.')
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения видео."""
+
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = (IsAuthenticated,)
+    ordering = ('-date',)

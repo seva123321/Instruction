@@ -27,12 +27,16 @@ export const isPhoneNumber = (value) =>
   /^\+?\d{1,3}[- ]?\d{3}[- ]?\d{3}[- ]?\d{2}[- ]?\d{2}$/.test(value)
 
 export const calculateMark = (score, totalPoints) => {
-  //7
+  if (totalPoints <= 0) return 1 // Prevent division by zero
+
   const percentage = (score / totalPoints) * 100
-  return Math.min(
+  const calculatedMark = Math.min(
     10,
     Math.floor(percentage / 10) + (percentage % 10 >= 5 ? 1 : 0)
   )
+
+  // Ensure the mark is at least 1
+  return Math.max(1, calculatedMark)
 }
 export const getYouTubeId = (url) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/

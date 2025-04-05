@@ -1,5 +1,6 @@
 import { openDB } from 'idb'
-import { initDB, getDB, STORE_NAMES, closeDB } from './offlineDB'
+
+import { initDB, getDB, DB_NAME, deleteDatabase, closeDB } from './offlineDB'
 
 const RESULTS_DB_NAME = 'TestResultsDB'
 const RESULTS_DB_VERSION = 1

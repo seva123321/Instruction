@@ -1,6 +1,6 @@
 import { openDB, deleteDB } from 'idb'
 
-const DB_NAME = 'TestsOfflineDB'
+export const DB_NAME = 'TestsOfflineDB'
 const DB_VERSION = 3
 export const STORE_NAMES = {
   TESTS: 'tests',

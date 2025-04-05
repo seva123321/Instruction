@@ -19,8 +19,9 @@ import OfflineBoltIcon from '@mui/icons-material/OfflineBolt'
 import { calculateMark } from '@/service/utilsFunction'
 import useTestState from '@/hook/useTestState'
 import useTestResults from '@/hook/useTestResults'
-import { initDB, getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
 import TabsWrapper from '@/components/TabsWrapper'
+
+import { initDB, getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
 import { useGetTestByIdQuery } from '../../slices/testApi'
 import TestControls from '../../components/TestControls/TestControls'
 import QuestionView from '../../components/QuestionView/QuestionView'
@@ -28,88 +29,100 @@ import TestResultsView from '../../components/TestResultsView/TestResultsView'
 import QuestionFeedback from '../../components/QuestionFeedback/QuestionFeedback'
 
 // Reusable components
-const OfflineIndicator = () => (
-  <Chip
-    icon={<OfflineBoltIcon />}
-    label="Оффлайн режим"
-    color="warning"
-    sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}
-  />
-)
+function OfflineIndicator() {
+  return (
+    <Chip
+      icon={<OfflineBoltIcon />}
+      label="Оффлайн режим"
+      color="warning"
+      sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}
+    />
+  )
+}
 
-const BackButton = ({ isMobile }) => (
-  <Box>
-    <Link to="/tests">
-      <Button
-        variant="outlined"
-        size={isMobile ? 'small' : 'medium'}
-        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
-      >
-        Назад к тестам
-      </Button>
-    </Link>
-  </Box>
-)
+function BackButton({ isMobile }) {
+  return (
+    <Box>
+      <Link to="/tests">
+        <Button
+          variant="outlined"
+          size={isMobile ? 'small' : 'medium'}
+          sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+        >
+          Назад к тестам
+        </Button>
+      </Link>
+    </Box>
+  )
+}
 
-const TestHeader = ({
+function TestHeader({
   testName,
   currentQuestionIndex,
   questionsLength,
   isMobile,
-}) => (
-  <>
-    <Typography
-      variant={isMobile ? 'h6' : 'h5'}
-      gutterBottom
-      sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem', pl: isMobile ? 3 : 0 }}
-    >
-      {testName}
-    </Typography>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+}) {
+  return (
+    <>
       <Typography
-        variant="subtitle1"
+        variant={isMobile ? 'h6' : 'h5'}
         gutterBottom
-        sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+        sx={{ fontSize: isMobile ? '1.25rem' : '1.5rem', pl: isMobile ? 3 : 0 }}
       >
-        {`Вопрос ${currentQuestionIndex + 1} из ${questionsLength}`}
+        {testName}
       </Typography>
-      <BackButton isMobile={isMobile} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Typography
+          variant="subtitle1"
+          gutterBottom
+          sx={{ fontSize: isMobile ? '0.875rem' : '1rem' }}
+        >
+          {`Вопрос ${currentQuestionIndex + 1} из ${questionsLength}`}
+        </Typography>
+        <BackButton isMobile={isMobile} />
+      </Box>
+      <Divider sx={{ my: isMobile ? 1 : 2 }} />
+    </>
+  )
+}
+
+function LoadingState() {
+  return null
+}
+
+// function ErrorState({ error, isOnline, onRetry, isLoading }) {
+//   return (
+//     <Box sx={{ p: 3, textAlign: 'center' }}>
+//       <Alert severity="error" sx={{ mb: 2 }}>
+//         {error?.message || 'Ошибка загрузки теста'}
+//       </Alert>
+//       {!isOnline && (
+//         <Button variant="contained" onClick={onRetry} disabled={isLoading}>
+//           Попробовать загрузить снова
+//         </Button>
+//       )}
+//     </Box>
+//   )
+// }
+
+function NotFoundState({ isOnline }) {
+  return (
+    <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Typography variant="h6">
+        {isOnline ? 'Тест не найден' : 'Тест не доступен в оффлайн-режиме'}
+      </Typography>
+      {!isOnline && (
+        <Button
+          variant="contained"
+          sx={{ mt: 2 }}
+          onClick={() => window.location.reload()}
+        >
+          Обновить страницу
+        </Button>
+      )}
     </Box>
-    <Divider sx={{ my: isMobile ? 1 : 2 }} />
-  </>
-)
-
-const LoadingState = () => null
-
-const ErrorState = ({ error, isOnline, onRetry, isLoading }) => (
-  <Box sx={{ p: 3, textAlign: 'center' }}>
-    <Alert severity="error" sx={{ mb: 2 }}>
-      {error?.message || 'Ошибка загрузки теста'}
-    </Alert>
-    {!isOnline && (
-      <Button variant="contained" onClick={onRetry} disabled={isLoading}>
-        Попробовать загрузить снова
-      </Button>
-    )}
-  </Box>
-)
-
-const NotFoundState = ({ isOnline }) => (
-  <Box sx={{ p: 3, textAlign: 'center' }}>
-    <Typography variant="h6">
-      {isOnline ? 'Тест не найден' : 'Тест не доступен в оффлайн-режиме'}
-    </Typography>
-    {!isOnline && (
-      <Button
-        variant="contained"
-        sx={{ mt: 2 }}
-        onClick={() => window.location.reload()}
-      >
-        Обновить страницу
-      </Button>
-    )}
-  </Box>
-)
+  )
+}
 
 // // Custom hooks
 
@@ -227,7 +240,7 @@ const useTestData = (id, initialTestData) => {
 }
 
 // Main component
-const TestOnePage = () => {
+function TestOnePage() {
   const { id } = useParams()
   const location = useLocation()
   const testOfflineData = location.state
@@ -284,7 +297,7 @@ const TestOnePage = () => {
     [test, currentQuestionIndex]
   )
 
-  const [unansweredQuestions, allQuestionsAnswered] = useMemo(() => {
+  const [allQuestionsAnswered] = useMemo(() => {
     const unanswered =
       test?.questions?.filter((q) => answers[q.id] === undefined) || []
     return [unanswered, unanswered.length === 0]
@@ -296,13 +309,6 @@ const TestOnePage = () => {
     : false
 
   // Event handlers
-  const handleDownloadTest = useCallback(async () => {
-    try {
-      await refetch()
-    } catch (err) {
-      setSyncError(`Ошибка загрузки: ${err.message}`)
-    }
-  }, [refetch, setSyncError])
 
   const navigateQuestion = useCallback(
     (direction) => {
@@ -341,8 +347,9 @@ const TestOnePage = () => {
     if (
       !testProps.currentQuestion?.id ||
       !answers[testProps.currentQuestion.id]
-    )
+    ) {
       return
+    }
 
     const isCorrect = testProps.currentQuestion.answers.some(
       (answer) =>
@@ -513,8 +520,8 @@ const TestOnePage = () => {
           totalPoints: testProps.totalPoints,
         },
       })
-    } catch (error) {
-      console.error('Save results error:', error)
+    } catch (err) {
+      console.error('Save results error:', err)
       updateState({
         completed: true,
         finalResults: {
@@ -723,7 +730,8 @@ const TestOnePage = () => {
       <TestControls
         onSubmit={handleSubmit}
         onComplete={handleCompleteTest}
-        onNextQuestion={navigateQuestion.bind(null, 1)}
+        onNextQuestion={navigateQuestion}
+        // onNextQuestion={navigateQuestion.bind(null, 1)}
         hasAnswer={
           !!(
             testProps.currentQuestion?.id &&
@@ -751,7 +759,7 @@ const TestOnePage = () => {
 
 export default React.memo(TestOnePage)
 
-/******************************************************* */
+/** ***************************************************** */
 
 // import React, { useMemo, useCallback, useEffect, useState } from 'react'
 // import {

@@ -121,7 +121,7 @@ const testApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${API_CONFIG.PROXY_PREFIX}/`,
     credentials: 'include', // важно для отправки кук
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
       // Устанавливаем CSRF-токен, если он есть
       if (csrfToken) {

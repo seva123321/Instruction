@@ -14,7 +14,8 @@ from api.views import (
     LogoutView,
     VideoViewSet,
     TestResultCreateView,
-    NormativeLegislationViewSet
+    NormativeLegislationViewSet,
+    InstructionResultView,
 )
 
 router = DefaultRouter()
@@ -34,6 +35,7 @@ auth_urls = [
 
 urlpatterns = [
     path('auth/', include(auth_urls)),
+    path('instruction_results/', InstructionResultView.as_view(), name='instruction_results'),
     path('test_results/', TestResultCreateView.as_view(), name='test_results'),
     path('', include(router.urls)),
 ]

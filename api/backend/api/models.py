@@ -428,6 +428,22 @@ class InstructionResult(models.Model):
         return f'{self.user} - {self.instruction} - {self.result}'
 
 
+class InstructionAgreementResult(models.Model):
+    """Модель для хранения результатов согласий инструктажа."""
+    instruction_result = models.ForeignKey(
+        InstructionResult,
+        on_delete=models.CASCADE,
+        related_name='agreement_results'
+    )
+    agreement_type = models.CharField(max_length=50)
+    agreed = models.BooleanField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Результат согласия инструктажа'
+        verbose_name_plural = 'Результаты согласий инструктажа'
+
+
 class Video(models.Model):
     """Модель видеофайлов."""
 

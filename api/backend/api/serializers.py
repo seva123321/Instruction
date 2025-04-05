@@ -260,6 +260,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'question_type',
+            'points',
             'answers',
             'explanation',
             'reference_link',

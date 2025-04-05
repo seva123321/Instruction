@@ -246,6 +246,13 @@ class Question(models.Model):
         choices=Type.choices,
         default=Type.SINGLE,
     )
+    points = models.IntegerField(
+        'Количество баллов за вопрос',
+        validators=[
+            MinValueValidator(MIN_LENGTH_PASSING_SCORE),
+            MaxValueValidator(MAX_LENGTH_PASSING_SCORE),
+        ],
+    )
 
     class Meta:
         verbose_name = 'Вопрос'

@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 /* eslint-disable no-unused-expressions */
 export function getCookie(name) {
   const value = `; ${document.cookie}`
@@ -11,8 +12,9 @@ export function getCookie(name) {
   return undefined
 }
 
-export const getCsrfToken = () =>
-  document.cookie
+export const getCsrfToken = () => {
+  return document.cookie
     .split('; ')
     .find((row) => row.startsWith('csrftoken='))
     ?.split('=')[1]
+}

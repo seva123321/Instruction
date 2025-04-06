@@ -10,7 +10,7 @@ import {
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState('null') // @TODO null
+  const [user, setUser] = useState(null) // @TODO null
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()
@@ -26,13 +26,11 @@ export function AuthProvider({ children }) {
   const auth = useCallback(
     async (userData) => {
       try {
-        console.log('userData > ', userData)
-
-        await postSignup(userData).unwrap()
-        setUser(userData)
-        return true
+        const response = await postSignup(userData).unwrap()
+        setUser(response)
+        return response
       } catch (error) {
-        return false
+        return error
       }
     },
     [postSignup]
@@ -40,16 +38,17 @@ export function AuthProvider({ children }) {
   const signIn = useCallback(
     async (authData) => {
       try {
+        let response = ''
         if (authData.face_descriptor) {
-          await postFaceLogin(authData).unwrap()
+          response = await postFaceLogin(authData).unwrap()
         } else {
-          await postLogin(authData).unwrap()
+          response = await postLogin(authData).unwrap()
         }
-        setUser(authData)
-        return true
+        setUser(response)
+
+        return response
       } catch (error) {
-        // console.error('SignIn error:', error)
-        return false
+        return error
       }
     },
     [postFaceLogin, postLogin]

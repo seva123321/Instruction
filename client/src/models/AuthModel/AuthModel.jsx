@@ -36,6 +36,7 @@ function AuthModel() {
 
   const { auth, isLoading, error: authError } = useAuth()
   const [faceDescriptor, setFaceDescriptor] = useState(null)
+  const [errorsServer, setErrorsServer] = useState(null)
   const fromPage = location.state?.from?.pathname || '/instructions'
 
   const onSubmit = async (data) => {
@@ -48,11 +49,13 @@ function AuthModel() {
     }
     delete userData.confirmPassword
 
-    const success = await auth(userData)
+    const result = await auth(userData)
 
-    if (success) {
+    if (result.status && !/^2/.test(String(result.status))) {
+      setErrorsServer(result.data.errors)
+    } else {
       reset()
-      navigate(fromPage, { replace: true })
+      navigate(fromPage, { replace: true, state: result.data })
     }
   }
 
@@ -114,7 +117,9 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText error>{errors.first_name?.message}</FormHelperText>
+            <FormHelperText error>
+              {errors.first_name?.message || errorsServer?.first_name?.at()}
+            </FormHelperText>
           </FormControl>
 
           {/* Фамилия */}
@@ -148,7 +153,9 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText error>{errors.last_name?.message}</FormHelperText>
+            <FormHelperText error>
+              {errors.last_name?.message || errorsServer?.last_name?.at()}
+            </FormHelperText>
           </FormControl>
 
           {/* Поле для email */}
@@ -180,7 +187,9 @@ function AuthModel() {
                 />
               )}
             />
-            <FormHelperText error>{errors.email?.message}</FormHelperText>
+            <FormHelperText error>
+              {errors.email?.message || errorsServer?.email?.at()}
+            </FormHelperText>
           </FormControl>
 
           {/* Поле для телефона */}
@@ -217,7 +226,7 @@ function AuthModel() {
               )}
             />
             <FormHelperText error>
-              {errors.mobile_phone?.message}
+              {errors.mobile_phone?.message || errorsServer?.mobile_phone?.at()}
             </FormHelperText>
           </FormControl>
 
@@ -248,6 +257,9 @@ function AuthModel() {
               })
             }}
           />
+          <FormHelperText error>
+            {errorsServer?.face_descriptor?.at()}
+          </FormHelperText>
 
           {/* Отображение ошибок из провайдера */}
           {authError && (

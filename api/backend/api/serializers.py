@@ -118,16 +118,16 @@ class SignUpSerializer(serializers.Serializer):
         try:
             input_descriptor = np.array(value, dtype=np.float32)
         except:
-            raise serializers.ValidationError('Invalid face descriptor format')
+            raise serializers.ValidationError('Неправильный формат дескриптора лица')
 
         if len(input_descriptor) != 128:
             raise serializers.ValidationError(
-                'Face descriptor must have 128 elements'
+                'Дескриптор лица должен содержать 128 элементов'
             )
 
         if is_face_already_registered(input_descriptor):
             raise serializers.ValidationError(
-                'User with similar face already exists'
+                'Пользователь с таким дескриптором лица уже существует'
             )
 
         return value
@@ -421,11 +421,8 @@ class TestResultCreateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user_answers_data = validated_data.pop('user_answers', [])
-        total_points = self.context.get('total_points', 0)
-        test_result = TestResult.objects.create(
-            total_points=total_points, **validated_data
-        )
+        user_answers_data = validated_data.pop("user_answers", [])
+        test_result = TestResult.objects.create(**validated_data)
 
         for answer_data in user_answers_data:
             UserAnswer.objects.create(

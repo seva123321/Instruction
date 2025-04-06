@@ -333,7 +333,7 @@ class TestResult(models.Model):
         null=True,
     )
     is_passed = models.BooleanField('Тест пройден', default=False)
-    mark = models.IntegerField(
+    mark = models.FloatField(
         'Оценка',
         validators=[
             MinValueValidator(MIN_LENGTH_PASSING_SCORE),

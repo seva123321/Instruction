@@ -11,9 +11,8 @@ export function getCookie(name) {
   return undefined
 }
 
-export const getCsrfToken = () => {
+export const getCsrfToken = () =>
   document.cookie
     .split('; ')
     .find((row) => row.startsWith('csrftoken='))
     ?.split('=')[1]
-}

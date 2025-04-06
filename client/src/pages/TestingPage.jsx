@@ -1,6 +1,9 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable indent */
 
+/* eslint-disable operator-linebreak */
+/* eslint-disable indent */
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   List,
@@ -18,23 +21,23 @@ import {
 } from '@mui/icons-material'
 
 import TabsWrapper from '@/components/TabsWrapper'
+import { initializeApplicationDatabases } from '@/service/databaseService'
 
 import {
   useLazyGetTestByIdQuery,
   useLazyGetTestsQuery,
 } from '../slices/testApi'
 import {
-  initDB,
   getTestsFromDB,
   saveTestToDB,
   deleteTestFromDB,
+  getTestFromDB,
   STORE_NAMES,
 } from '../service/offlineDB'
 import useTestResults from '../hook/useTestResults'
 
 import TestItem from './TestItem'
 
-// Компоненты для состояний
 function LoadingIndicator() {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -43,21 +46,12 @@ function LoadingIndicator() {
   )
 }
 
-function ErrorMessage() {
-  // { error }
+function ErrorMessage({ error }) {
   return (
     <Box sx={{ p: 3, textAlign: 'center' }}>
-      <Alert severity="error">Ошибка при загрузке тестов.</Alert>
-    </Box>
-  )
-}
-
-function EmptyState({ isOnline }) {
-  return (
-    <Box sx={{ p: 3, textAlign: 'center' }}>
-      <Typography variant="h6">
-        {`Нет доступных тестов ${!isOnline && 'в оффлайн-режиме'}`}
-      </Typography>
+      <Alert severity="error">
+        {error?.message || 'Ошибка при загрузке тестов'}
+      </Alert>
     </Box>
   )
 }
@@ -71,54 +65,145 @@ function OfflineIndicator() {
 }
 
 function TestingPage() {
-  // Состояния
   const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [offlineTests, setOfflineTests] = useState([])
   const [tests, setTests] = useState([])
   const [error, setError] = useState(null)
   const [loadingStates, setLoadingStates] = useState({})
   const [isDownloading, setIsDownloading] = useState({})
+  const [dbInitialized, setDbInitialized] = useState(false)
+  const { initializeDB } = useTestResults()
 
-  // API запросы
-  const { getTestResults, syncPendingResults } = useTestResults()
-  const [
-    getTests,
-    { data: testsData, isLoading, error: fetchError, isUninitialized },
-  ] = useLazyGetTestsQuery()
+  const { getTestResults, syncPendingResults, closeDB } = useTestResults()
+  const [getTests, { isLoading, error: fetchError }] = useLazyGetTestsQuery()
   const [getTestById] = useLazyGetTestByIdQuery()
 
-  // Инициализация и загрузка данных
-  useEffect(() => {
-    const initOfflineData = async () => {
+  const initializeDatabase = useCallback(async () => {
+    if (!isOnline) return false
+    try {
+      const success = await initializeApplicationDatabases()
+      if (!success) {
+        throw new Error('Database initialization failed')
+      }
+      setDbInitialized(true)
+      return true
+    } catch (e) {
       try {
-        await initDB()
-        if (!isOnline) {
-          const testsFromDB = await getTestsFromDB()
-          setOfflineTests(testsFromDB)
-          await syncPendingResults().catch(console.warn)
-        }
-      } catch (e) {
-        console.error('Offline init failed:', e)
+        await initializeApplicationDatabases()
+        setDbInitialized(true)
+        return true
+      } catch (e2) {
+        setError('Ошибка инициализации локального хранилища')
+        return false
       }
     }
+  }, [isOnline])
 
-    initOfflineData()
-  }, [isOnline, syncPendingResults])
+  const loadOnlineTests = useCallback(async () => {
+    try {
+      const { data } = await getTests()
+      if (data?.results?.length > 0) {
+        if (!dbInitialized) {
+          await initializeDatabase()
+        }
 
-  // Обработка изменений онлайн/офлайн статуса
+        const savePromises = data.results.map(
+          (test) =>
+            saveTestToDB(test, STORE_NAMES.TESTS).catch((e) => {
+              throw new Error(e.message)
+            })
+          // eslint-disable-next-line function-paren-newline
+        )
+
+        await Promise.all(savePromises)
+        return data.results
+      }
+      return []
+    } catch (e) {
+      setError('Ошибка загрузки тестов с сервера')
+      return []
+    }
+  }, [getTests, dbInitialized, initializeDatabase])
+
+  const loadOfflineTests = useCallback(async () => {
+    try {
+      if (!dbInitialized) {
+        await initializeDatabase()
+        setDbInitialized(true)
+      }
+      return await getTestsFromDB()
+    } catch (e) {
+      return []
+    }
+  }, [dbInitialized, initializeDatabase])
+
+  const mergeTestsWithResults = useCallback(
+    async (testsToMerge) => {
+      const merged = await Promise.all(
+        testsToMerge.map(async (test) => {
+          const testId = test.id
+          try {
+            setLoadingStates((prev) => ({ ...prev, [testId]: true }))
+
+            const results = await getTestResults(testId).catch(() => [])
+            const latestResult = results[0] || {}
+
+            return {
+              ...test,
+              ...latestResult,
+              name: latestResult.test_title || test.name,
+              is_passed: latestResult.is_passed ?? false,
+              mark: latestResult.mark ?? 0,
+              date: latestResult.completion_time ?? null,
+            }
+          } catch {
+            return test
+          } finally {
+            setLoadingStates((prev) => ({ ...prev, [testId]: false }))
+          }
+        })
+      )
+      return merged
+    },
+    [getTestResults]
+  )
+
+  const loadData = useCallback(async () => {
+    try {
+      const loadedTests = isOnline
+        ? await loadOnlineTests().catch(() => loadOfflineTests())
+        : await loadOfflineTests()
+
+      if (loadedTests.length > 0) {
+        const mergedTests = await mergeTestsWithResults(loadedTests)
+        setTests(mergedTests)
+      }
+    } catch {
+      setError('Ошибка загрузки данных. Попробуйте обновить страницу.')
+    }
+  }, [isOnline, loadOnlineTests, loadOfflineTests, mergeTestsWithResults])
+
+  useEffect(
+    () => () => {
+      closeDB()
+    },
+    [closeDB]
+  )
+
   useEffect(() => {
     const handleOnline = async () => {
       setIsOnline(true)
       try {
-        await getTests().unwrap()
         await syncPendingResults()
-      } catch (e) {
-        setError('Ошибка синхронизации результатов')
-        console.error('Sync error:', e)
+        await loadData()
+      } catch {
+        // Handle error silently
       }
     }
 
-    const handleOffline = () => setIsOnline(false)
+    const handleOffline = () => {
+      setIsOnline(false)
+      loadData()
+    }
 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
@@ -127,68 +212,40 @@ function TestingPage() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [getTests, syncPendingResults])
+  }, [loadData, syncPendingResults])
 
-  // Загрузка тестов при первом монтировании
-  useEffect(() => {
-    if (isOnline && isUninitialized) {
-      getTests()
+  const initializeAllDatabases = useCallback(async () => {
+    try {
+      await initializeApplicationDatabases()
+      await initializeDB()
+    } catch {
+      setError('Ошибка инициализации базы данных')
     }
-  }, [isOnline, isUninitialized, getTests])
-
-  // Объединение данных тестов и результатов
-  const getMergedTests = useCallback(async () => {
-    const sourceTests = isOnline ? testsData?.results || [] : offlineTests
-    return Promise.all(
-      sourceTests.map(async (test) => {
-        try {
-          setLoadingStates((prev) => ({ ...prev, [test.id]: true }))
-
-          const results = await getTestResults(test.id).catch((e) => {
-            console.warn(`Failed to load results for test ${test.id}:`, e)
-            return []
-          })
-
-          const latestResult = results[0] || {}
-
-          return {
-            ...test,
-            ...latestResult,
-            name: latestResult.test_title || test.name,
-            is_passed: latestResult.is_passed ?? false,
-            mark: latestResult.mark ?? 0,
-            date: latestResult.completion_time ?? null,
-          }
-        } catch (e) {
-          console.error(`Failed to process test ${test.id}:`, e)
-          return test
-        } finally {
-          setLoadingStates((prev) => ({ ...prev, [test.id]: false }))
-        }
-      })
-    )
-  }, [isOnline, testsData, offlineTests, getTestResults])
+  }, [initializeDB])
 
   useEffect(() => {
-    let isActive = true
+    let mounted = true
 
-    const loadData = async () => {
+    const init = async () => {
       try {
-        const merged = await getMergedTests()
-        if (isActive) setTests(merged)
-      } catch (e) {
-        console.error('Failed to load tests:', e)
+        await initializeAllDatabases()
+        if (mounted) {
+          await loadData()
+        }
+      } catch {
+        if (mounted) {
+          setError('Ошибка инициализации приложения')
+        }
       }
     }
 
-    loadData()
+    init()
 
     return () => {
-      isActive = false
+      mounted = false
     }
-  }, [getMergedTests])
+  }, [initializeAllDatabases, loadData])
 
-  // Обработчики действий
   const handleDownloadTest = useCallback(
     async (e, id) => {
       e.preventDefault()
@@ -198,16 +255,22 @@ function TestingPage() {
         setIsDownloading((prev) => ({ ...prev, [id]: true }))
         setError(null)
 
-        const { data: oneTest } = await getTestById(id)
-        if (!oneTest) throw new Error('Тест не найден')
+        const { data: test } = await getTestById(id)
+        if (!test) {
+          throw new Error('Тест не найден')
+        }
 
-        await saveTestToDB(
-          { ...oneTest, downloadedAt: new Date().toISOString() },
-          STORE_NAMES.TESTS_CONTENT
-        )
+        await saveTestToDB(test, STORE_NAMES.TESTS_CONTENT)
+
+        const savedTest = await getTestFromDB(id, STORE_NAMES.TESTS_CONTENT)
+        if (!savedTest) {
+          throw new Error('Не удалось сохранить тест')
+        }
+
+        return true
       } catch (err) {
-        console.error('Failed to download test:', err)
         setError(`Ошибка загрузки теста: ${err.message}`)
+        return false
       } finally {
         setIsDownloading((prev) => ({ ...prev, [id]: false }))
       }
@@ -215,18 +278,22 @@ function TestingPage() {
     [getTestById]
   )
 
-  const handleDeleteTest = useCallback(async (testId) => {
-    try {
-      await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
-      return true
-    } catch (e) {
-      console.error('Failed to delete test:', e)
-      setError('Не удалось удалить тест')
-      return false
-    }
-  }, [])
+  const handleDeleteTest = useCallback(
+    async (testId) => {
+      try {
+        await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
 
-  // Генерация вкладок
+        const updatedTests = await getTestsFromDB()
+        setTests(await mergeTestsWithResults(updatedTests))
+        return true
+      } catch {
+        setError('Не удалось удалить тест')
+        return false
+      }
+    },
+    [mergeTestsWithResults]
+  )
+
   const tabs = useMemo(() => {
     const renderTestList = (filterFn) => (
       <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
@@ -235,9 +302,10 @@ function TestingPage() {
             key={test.id}
             test={test}
             isLoading={loadingStates[test.id]}
-            isDownloading={isDownloading}
+            isDownloading={isDownloading[test.id]}
             onDeleteTest={handleDeleteTest}
             onDownloadTest={handleDownloadTest}
+            isOnline={isOnline}
           />
         ))}
       </List>
@@ -266,14 +334,11 @@ function TestingPage() {
     isDownloading,
     handleDeleteTest,
     handleDownloadTest,
+    isOnline,
   ])
 
-  // Рендер состояний
-  if (isLoading && isOnline && !isUninitialized) return <LoadingIndicator />
+  if (isLoading && isOnline) return <LoadingIndicator />
   if (fetchError && isOnline) return <ErrorMessage error={fetchError} />
-  if (!isLoading && !fetchError && tests.length === 0) {
-    return <EmptyState isOnline={isOnline} />
-  }
 
   return (
     <Box>
@@ -289,8 +354,13 @@ function TestingPage() {
         open={!!error}
         autoHideDuration={6000}
         onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="error" onClose={() => setError(null)}>
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          sx={{ width: '100%' }}
+        >
           {error}
         </Alert>
       </Snackbar>
@@ -300,7 +370,7 @@ function TestingPage() {
 
 export default TestingPage
 
-// import { useState, useEffect, useCallback, useMemo } from 'react'
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'
 // import {
 //   List,
 //   Typography,
@@ -317,67 +387,218 @@ export default TestingPage
 // } from '@mui/icons-material'
 
 // import TabsWrapper from '@/components/TabsWrapper'
+// import { initializeApplicationDatabases } from '@/service/databaseService'
+
 // import {
 //   useLazyGetTestByIdQuery,
 //   useLazyGetTestsQuery,
-//   useGetTestsQuery,
 // } from '../slices/testApi'
 // import {
-//   initDB,
 //   getTestsFromDB,
 //   saveTestToDB,
 //   deleteTestFromDB,
-//   checkStoresExist,
+//   getTestFromDB,
+//   STORE_NAMES,
 // } from '../service/offlineDB'
 // import useTestResults from '../hook/useTestResults'
-// import { STORE_NAMES } from '../service/offlineDB'
+
 // import TestItem from './TestItem'
+
+// function LoadingIndicator() {
+//   return (
+//     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+//       <CircularProgress size={60} />
+//     </Box>
+//   )
+// }
+
+// function ErrorMessage({ error }) {
+//   return (
+//     <Box sx={{ p: 3, textAlign: 'center' }}>
+//       <Alert severity="error">
+//         {error?.message || 'Ошибка при загрузке тестов'}
+//       </Alert>
+//     </Box>
+//   )
+// }
+
+// function OfflineIndicator() {
+//   return (
+//     <Box sx={{ position: 'fixed', top: 70, right: 20, zIndex: 1000 }}>
+//       <Chip label="Оффлайн режим" color="warning" icon={<OfflineBoltIcon />} />
+//     </Box>
+//   )
+// }
 
 // function TestingPage() {
 //   const [isOnline, setIsOnline] = useState(navigator.onLine)
-//   const [offlineTests, setOfflineTests] = useState([])
-//   const [syncError, setSyncError] = useState(null)
+//   // const [offlineTests, setOfflineTests] = useState([])
+//   const [tests, setTests] = useState([])
+//   const [error, setError] = useState(null)
 //   const [loadingStates, setLoadingStates] = useState({})
-//   const [downloadError, setDownloadError] = useState(null)
 //   const [isDownloading, setIsDownloading] = useState({})
+//   const [dbInitialized, setDbInitialized] = useState(false)
+//   // const [dbReady, setDbReady] = useState(false)
+//   const { initializeDB } = useTestResults()
 
-//   const { getTestResults, syncPendingResults } = useTestResults()
-//   const [getTests, { data: testsData, isLoading, error, isUninitialized }] =
+//   const { getTestResults, syncPendingResults, closeDB } = useTestResults()
+//   const [getTests, { data: testsData, isLoading, error: fetchError }] =
 //     useLazyGetTestsQuery()
+//   const [getTestById] = useLazyGetTestByIdQuery()
 
-//   // Инициализация базы данных и загрузка тестов
-//   useEffect(() => {
-//     const initOfflineData = async () => {
+//   // Инициализация базы данных с проверкой существования хранилищ
+//   const initializeDatabase = useCallback(async () => {
+//     if (!isOnline) return
+//     try {
+//       const success = await initializeApplicationDatabases()
+//       if (!success) {
+//         throw new Error('Database initialization failed')
+//       }
+//       setDbInitialized(true)
+//       return true
+//     } catch (e) {
+//       console.error('Database initialization failed:', e)
+//       // Попробуем восстановить базу данных
 //       try {
-//         await initDB()
-//         if (!isOnline) {
-//           const tests = await getTestsFromDB()
-//           setOfflineTests(tests)
-//           await syncPendingResults().catch(console.warn)
-//         }
-//       } catch (e) {
-//         console.error('Offline init failed:', e)
+//         await initializeApplicationDatabases()
+//         setDbInitialized(true)
+//         return true
+//       } catch (e2) {
+//         setError('Ошибка инициализации локального хранилища')
+//         return false
 //       }
 //     }
+//   }, [isOnline])
 
-//     initOfflineData()
-//   }, [isOnline, syncPendingResults])
+//   // Загрузка тестов с сервера и сохранение в IndexedDB
+//   const loadOnlineTests = useCallback(async () => {
+//     try {
+//       const { data } = await getTests()
+//       if (data?.results?.length > 0) {
+//         if (!dbInitialized) {
+//           await initializeDatabase()
+//         }
 
-//   // Обработка изменений онлайн/офлайн статуса
+//         // Сохраняем тесты с задержкой между операциями
+//         for (const test of data.results) {
+//           try {
+//             await saveTestToDB(test, STORE_NAMES.TESTS)
+//             // Небольшая задержка между сохранениями
+//             await new Promise((resolve) => setTimeout(resolve, 50))
+//           } catch (e) {
+//             console.error(`Failed to save test ${test.id}:`, e)
+//           }
+//         }
+
+//         return data.results
+//       }
+//       return []
+//     } catch (e) {
+//       console.error('Failed to load online tests:', e)
+//       setError('Ошибка загрузки тестов с сервера')
+//       return []
+//     }
+//   }, [getTests, dbInitialized, initializeDatabase])
+
+//   // Загрузка тестов из IndexedDB
+//   const loadOfflineTests = useCallback(async () => {
+//     try {
+//       if (!dbInitialized) {
+//         await initializeDatabase()
+//         setDbInitialized(true)
+//       }
+//       return await getTestsFromDB()
+//     } catch (e) {
+//       console.error('Failed to load offline tests:', e)
+//       return []
+//     }
+//   }, [dbInitialized, initializeDatabase])
+
+//   // Объединение тестов с результатами
+//   const mergeTestsWithResults = useCallback(
+//     async (testsToMerge) =>
+//       Promise.all(
+//         testsToMerge.map(async (test) => {
+//           const testId = test.id
+//           try {
+//             setLoadingStates((prev) => ({ ...prev, [testId]: true }))
+
+//             const results = await getTestResults(testId).catch(() => [])
+//             const latestResult = results[0] || {}
+
+//             return {
+//               ...test,
+//               ...latestResult,
+//               name: latestResult.test_title || test.name,
+//               is_passed: latestResult.is_passed ?? false,
+//               mark: latestResult.mark ?? 0,
+//               date: latestResult.completion_time ?? null,
+//             }
+//           } catch (e) {
+//             console.error(`Error processing test ${testId}:`, e)
+//             return test
+//           } finally {
+//             setLoadingStates((prev) => ({ ...prev, [testId]: false }))
+//           }
+//         })
+//       ),
+//     [getTestResults]
+//   )
+
+//   // Основная функция загрузки данных
+//   const loadData = useCallback(async () => {
+//     try {
+//       let loadedTests = []
+
+//       if (isOnline) {
+//         try {
+//           loadedTests = await loadOnlineTests()
+//         } catch (e) {
+//           console.error('Online load failed, trying offline:', e)
+//           loadedTests = await loadOfflineTests()
+//         }
+//       } else {
+//         loadedTests = await loadOfflineTests()
+//       }
+
+//       if (loadedTests.length > 0) {
+//         const mergedTests = await mergeTestsWithResults(loadedTests)
+//         setTests(mergedTests)
+//         if (!isOnline) {
+//           // setOfflineTests(mergedTests)
+//         }
+//       } else if (!isOnline) {
+//         // setOfflineTests([])
+//       }
+//     } catch (e) {
+//       console.error('Failed to load data:', e)
+//       setError('Ошибка загрузки данных. Попробуйте обновить страницу.')
+//     }
+//   }, [isOnline, loadOnlineTests, loadOfflineTests, mergeTestsWithResults])
+
+//   useEffect(
+//     () => () => {
+//       closeDB()
+//     },
+//     [closeDB]
+//   )
+
+//   // Обработчик изменения сетевого статуса
 //   useEffect(() => {
 //     const handleOnline = async () => {
 //       setIsOnline(true)
 //       try {
-//         // Явно запускаем запрос при восстановлении соединения
-//         await getTests().unwrap()
 //         await syncPendingResults()
+//         await loadData()
 //       } catch (e) {
-//         setSyncError('Ошибка синхронизации результатов')
-//         console.error('Sync error:', e)
+//         console.error('Online sync failed:', e)
 //       }
 //     }
 
-//     const handleOffline = () => setIsOnline(false)
+//     const handleOffline = () => {
+//       setIsOnline(false)
+//       loadData()
+//     }
 
 //     window.addEventListener('online', handleOnline)
 //     window.addEventListener('offline', handleOffline)
@@ -386,109 +607,88 @@ export default TestingPage
 //       window.removeEventListener('online', handleOnline)
 //       window.removeEventListener('offline', handleOffline)
 //     }
-//   }, [getTests, syncPendingResults])
+//   }, [loadData, syncPendingResults])
 
-//   // // Кэширование тестов при онлайн режиме
-//   // useEffect(() => {
-//   //   if (testsData?.results && isOnline) {
-//   //     const cacheTests = async () => {
-//   //       try {
-//   //         await Promise.all(
-//   //           testsData.results.map((test) =>
-//   //             saveTestToDB(test, STORE_NAMES.TESTS)
-//   //           )
-//   //         )
-//   //       } catch (e) {
-//   //         console.error('Cache tests failed:', e)
-//   //         setSyncError('Не удалось сохранить тесты для оффлайн-режима')
-//   //       }
-//   //     }
-//   //     cacheTests()
-//   //   }
-//   // }, [testsData, isOnline])
-
-//   useEffect(() => {
-//     if (isOnline && isUninitialized) {
-//       getTests()
+//   const initializeAllDatabases = useCallback(async () => {
+//     try {
+//       await initializeApplicationDatabases()
+//       await initializeDB()
+//       // setDbReady(true)
+//     } catch (e) {
+//       console.error('Failed to initialize databases:', e)
+//       setError('Ошибка инициализации базы данных')
+//       // setDbReady(false)
 //     }
-//   }, [isOnline, isUninitialized, getTests])
+//   }, [initializeDB])
+//   useEffect(() => {
+//     let mounted = true
 
-//   // Получение объединенных данных тестов и результатов
-//   const getMergedTests = useCallback(async () => {
-//     const sourceTests = isOnline ? testsData?.results || [] : offlineTests
-//     const merged = []
-
-//     for (const test of sourceTests) {
+//     const init = async () => {
 //       try {
-//         setLoadingStates((prev) => ({ ...prev, [test.id]: true }))
-//         let latestResult = {}
-
-//         try {
-//           const results = await getTestResults(test.id)
-//           if (results && results.length > 0) {
-//             latestResult = results[0] || {}
-//           }
-//         } catch (e) {
-//           console.warn(`Failed to load results for test ${test.id}:`, e)
+//         await initializeAllDatabases()
+//         if (mounted) {
+//           // setDbReady(true)
+//           await loadData()
 //         }
-
-//         merged.push({
-//           ...test,
-//           ...latestResult,
-//           name: latestResult.test_title || test.name,
-//           is_passed: latestResult.is_passed ?? false,
-//           mark: latestResult.mark ?? 0,
-//           date: latestResult.completion_time ?? null,
-//         })
 //       } catch (e) {
-//         console.error(`Failed to process test ${test.id}:`, e)
-//         merged.push(test)
-//       } finally {
-//         setLoadingStates((prev) => ({ ...prev, [test.id]: false }))
+//         console.error('Initialization failed:', e)
+//         if (mounted) {
+//           setError('Ошибка инициализации приложения')
+//         }
 //       }
 //     }
 
-//     return merged
-//   }, [isOnline, testsData, offlineTests, getTestResults])
-//   const [tests, setTests] = useState([])
-
-//   useEffect(() => {
-//     let isActive = true
-
-//     const loadData = async () => {
-//       try {
-//         const merged = await getMergedTests()
-//         if (isActive) setTests(merged)
-//       } catch (e) {
-//         console.error('Failed to load tests:', e)
-//       }
-//     }
-
-//     loadData()
+//     init()
 
 //     return () => {
-//       isActive = false
+//       mounted = false
 //     }
-//   }, [getMergedTests])
+//   }, [initializeAllDatabases, loadData])
 
-//   //  эффект для проверки хранилищ
+//   // Первоначальная загрузка данных
 //   // useEffect(() => {
-//   //   const verifyStores = async () => {
+//   //   const initialize = async () => {
 //   //     try {
-//   //       const storesExist = await checkStoresExist()
-//   //       if (!storesExist.testsContent) {
-//   //         console.error('Tests content store is missing!')
-//   //         // Можно предложить пользователю обновить страницу
-//   //       }
+//   //       await initializeDatabase()
+//   //       await loadData()
 //   //     } catch (e) {
-//   //       console.error('Failed to verify DB stores:', e)
+//   //       console.error('Initialization failed:', e)
 //   //     }
 //   //   }
 
-//   //   verifyStores()
-//   // }, [])
+//   //   initialize()
+//   // }, [initializeDatabase, loadData])
 
-//   const [getTestById] = useLazyGetTestByIdQuery()
+//   // Загрузка теста для оффлайн использования
+//   // const handleDownloadTest = useCallback(
+//   //   async (e, id) => {
+//   //     e.preventDefault()
+//   //     e.stopPropagation()
+
+//   //     try {
+//   //       setIsDownloading((prev) => ({ ...prev, [id]: true }))
+//   //       setError(null)
+
+//   //       const { data: test } = await getTestById(id)
+//   //       if (!test) throw new Error('Тест не найден')
+
+//   //       // Сохраняем в оба хранилища
+//   //       await saveTestToDB(test, STORE_NAMES.TESTS)
+//   //       await saveTestToDB(test, STORE_NAMES.TESTS_CONTENT)
+
+//   //       // Обновляем список оффлайн тестов
+//   //       const updatedTests = await getTestsFromDB()
+//   //       setOfflineTests(updatedTests)
+//   //       setTests(await mergeTestsWithResults(updatedTests))
+//   //     } catch (err) {
+//   //       console.error('Failed to download test:', err)
+//   //       setError(`Ошибка загрузки теста: ${err.message}`)
+//   //     } finally {
+//   //       setIsDownloading((prev) => ({ ...prev, [id]: false }))
+//   //     }
+//   //   },
+//   //   [getTestById, mergeTestsWithResults]
+//   // )
 
 //   const handleDownloadTest = useCallback(
 //     async (e, id) => {
@@ -497,24 +697,28 @@ export default TestingPage
 
 //       try {
 //         setIsDownloading((prev) => ({ ...prev, [id]: true }))
-//         setDownloadError(null)
+//         setError(null)
 
-//         const { data: oneTest } = await getTestById(id)
-//         if (!oneTest) throw new Error('Тест не найден')
+//         // Получаем полные данные теста
+//         const { data: test } = await getTestById(id)
+//         if (!test) {
+//           throw new Error('Тест не найден')
+//         }
 
-//         // Явно указываем хранилище для контента теста
-//         await saveTestToDB(
-//           {
-//             ...oneTest,
-//             downloadedAt: new Date().toISOString(),
-//           },
-//           STORE_NAMES.TESTS_CONTENT // Явное указание хранилища
-//         )
+//         // Сохраняем только в хранилище TESTS_CONTENT
+//         await saveTestToDB(test, STORE_NAMES.TESTS_CONTENT)
 
-//         console.log('Test downloaded:', oneTest)
+//         // Проверяем что тест действительно сохранился
+//         const savedTest = await getTestFromDB(id, STORE_NAMES.TESTS_CONTENT)
+//         if (!savedTest) {
+//           throw new Error('Не удалось сохранить тест')
+//         }
+
+//         return true // Успешное сохранение
 //       } catch (err) {
 //         console.error('Failed to download test:', err)
-//         setDownloadError(`Ошибка загрузки теста: ${err.message}`)
+//         setError(`Ошибка загрузки теста: ${err.message}`)
+//         return false
 //       } finally {
 //         setIsDownloading((prev) => ({ ...prev, [id]: false }))
 //       }
@@ -522,120 +726,76 @@ export default TestingPage
 //     [getTestById]
 //   )
 
-//   const handleDeleteTest = useCallback(async (testId) => {
-//     try {
-//       await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
-//       return true
-//     } catch (e) {
-//       console.error('Failed to delete test:', e)
-//       setDownloadError('Не удалось удалить тест')
-//       return false
-//     }
-//   }, [])
+//   // Удаление теста
+//   const handleDeleteTest = useCallback(
+//     async (testId) => {
+//       try {
+//         await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
 
-//   const tabs = useMemo(
-//     () => [
+//         const updatedTests = await getTestsFromDB()
+//         // setOfflineTests(updatedTests)
+//         setTests(await mergeTestsWithResults(updatedTests))
+//         return true
+//       } catch (e) {
+//         console.error('Failed to delete test:', e)
+//         setError('Не удалось удалить тест')
+//         return false
+//       }
+//     },
+//     [mergeTestsWithResults]
+//   )
+
+//   // Генерация вкладок
+//   const tabs = useMemo(() => {
+//     const renderTestList = (filterFn) => (
+//       <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
+//         {tests.filter(filterFn).map((test) => (
+//           <TestItem
+//             key={test.id}
+//             test={test}
+//             isLoading={loadingStates[test.id]}
+//             isDownloading={isDownloading[test.id]}
+//             onDeleteTest={handleDeleteTest}
+//             onDownloadTest={handleDownloadTest}
+//             isOnline={isOnline}
+//           />
+//         ))}
+//       </List>
+//     )
+
+//     return [
 //       {
 //         label: 'Все тесты',
 //         icon: <SchoolIcon />,
-//         content: (
-//           <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//             {tests.map((test) => (
-//               <TestItem
-//                 key={test.id}
-//                 test={test}
-//                 isLoading={loadingStates[test.id]}
-//                 isDownloading={isDownloading}
-//                 onDeleteTest={handleDeleteTest}
-//                 onDownloadTest={handleDownloadTest}
-//               />
-//             ))}
-//           </List>
-//         ),
+//         content: renderTestList(() => true),
 //       },
 //       {
 //         label: 'Учебные',
 //         icon: <SchoolIcon />,
-//         content: (
-//           <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//             {tests
-//               .filter((test) => !test.test_is_control)
-//               .map((test) => (
-//                 <TestItem
-//                   key={test.id}
-//                   test={test}
-//                   isLoading={loadingStates[test.id]}
-//                   isDownloading={isDownloading}
-//                   onDeleteTest={handleDeleteTest}
-//                   onDownloadTest={handleDownloadTest}
-//                 />
-//               ))}
-//           </List>
-//         ),
+//         content: renderTestList((test) => !test.test_is_control),
 //       },
 //       {
 //         label: 'Контрольные',
 //         icon: <AssignmentIcon />,
-//         content: (
-//           <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//             {tests
-//               .filter((test) => test.test_is_control)
-//               .map((test) => (
-//                 <TestItem
-//                   key={test.id}
-//                   test={test}
-//                   isLoading={loadingStates[test.id]}
-//                   isDownloading={isDownloading}
-//                   onDeleteTest={handleDeleteTest}
-//                   onDownloadTest={handleDownloadTest}
-//                 />
-//               ))}
-//           </List>
-//         ),
+//         content: renderTestList((test) => test.test_is_control),
 //       },
-//     ],
-//     [tests, loadingStates, isDownloading, handleDeleteTest, handleDownloadTest]
-//   )
+//     ]
+//   }, [
+//     tests,
+//     loadingStates,
+//     isDownloading,
+//     handleDeleteTest,
+//     handleDownloadTest,
+//     isOnline,
+//   ])
 
-//   if (isLoading && isOnline && !isUninitialized) {
-//     return (
-//       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-//         <CircularProgress size={60} />
-//       </Box>
-//     )
-//   }
-
-//   if (error && isOnline) {
-//     return (
-//       <Box sx={{ p: 3, textAlign: 'center' }}>
-//         <Alert severity="error">
-//           Ошибка при загрузке тестов: {error.message}
-//         </Alert>
-//       </Box>
-//     )
-//   }
-
-//   if (!isLoading && !error && tests.length === 0) {
-//     return (
-//       <Box sx={{ p: 3, textAlign: 'center' }}>
-//         <Typography variant="h6">
-//           Нет доступных тестов {!isOnline && 'в оффлайн-режиме'}
-//         </Typography>
-//       </Box>
-//     )
-//   }
+//   // Рендер состояний
+//   if (isLoading && isOnline) return <LoadingIndicator />
+//   if (fetchError && isOnline) return <ErrorMessage error={fetchError} />
 
 //   return (
 //     <Box>
-//       {!isOnline && (
-//         <Box sx={{ position: 'fixed', top: 70, right: 20, zIndex: 1000 }}>
-//           <Chip
-//             label="Оффлайн режим"
-//             color="warning"
-//             icon={<OfflineBoltIcon />}
-//           />
-//         </Box>
-//       )}
+//       {!isOnline && <OfflineIndicator />}
 
 //       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
 //         Тестирование
@@ -644,268 +804,19 @@ export default TestingPage
 //       <TabsWrapper tabs={tabs} />
 
 //       <Snackbar
-//         open={!!syncError}
+//         open={!!error}
 //         autoHideDuration={6000}
-//         onClose={() => setSyncError(null)}
+//         onClose={() => setError(null)}
+//         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
 //       >
-//         <Alert severity="error" onClose={() => setSyncError(null)}>
-//           {syncError}
+//         <Alert
+//           severity="error"
+//           onClose={() => setError(null)}
+//           sx={{ width: '100%' }}
+//         >
+//           {error}
 //         </Alert>
 //       </Snackbar>
-
-//       <Snackbar
-//         open={!!downloadError}
-//         autoHideDuration={6000}
-//         onClose={() => setDownloadError(null)}
-//       >
-//         <Alert severity="error" onClose={() => setDownloadError(null)}>
-//           {downloadError}
-//         </Alert>
-//       </Snackbar>
-//     </Box>
-//   )
-// }
-
-// export default TestingPage
-
-/** *************************************************************************** */
-
-// import {
-//   List,
-//   ListItem,
-//   Typography,
-//   Box,
-//   Chip,
-//   CircularProgress,
-// } from '@mui/material'
-// import { Link } from 'react-router-dom'
-// import SchoolIcon from '@mui/icons-material/School'
-// import AssignmentIcon from '@mui/icons-material/Assignment'
-
-// import ColoredBadge from '@/components/ColoredBadge'
-// import TabsWrapper from '@/components/TabsWrapper'
-
-// import { useGetTestsQuery } from '../slices/testApi'
-
-// // Компонент для отображения теста
-// function TestItem({ test }) {
-//   return (
-//     <ListItem
-//       component={Link}
-//       to={`/tests/${test.id}`}
-//       sx={{
-//         mb: 3,
-//         bgcolor: 'background.paper',
-//         borderRadius: '12px',
-//         boxShadow: '0 3px 6px rgba(0, 0, 0, 0.1)',
-//         textDecoration: 'none',
-//         color: 'inherit',
-//         display: 'flex',
-//         flexDirection: 'column',
-//         p: 3,
-//         position: 'relative',
-//         overflow: 'hidden',
-//         transition: 'all 0.3s ease',
-//         '&:hover': {
-//           transform: 'translateY(-3px)',
-//           boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-//         },
-//       }}
-//     >
-//       {/* Тег типа теста - верхний правый угол */}
-//       <Chip
-//         label={test.test_is_control ? 'Контрольный' : 'Учебный'}
-//         color={test.test_is_control ? 'primary' : 'secondary'}
-//         size="small"
-//         icon={
-//           test.test_is_control ? (
-//             <AssignmentIcon fontSize="small" />
-//           ) : (
-//             <SchoolIcon fontSize="small" />
-//           )
-//         }
-//         sx={{
-//           position: 'absolute',
-//           top: 12,
-//           right: test.mark ? 40 : 10,
-//           height: 26,
-//           borderRadius: '12px',
-//           fontWeight: '600',
-//         }}
-//       />
-
-//       {/* Основное содержимое карточки */}
-//       <Box
-//         sx={{
-//           display: 'flex',
-//           flexDirection: 'column',
-//           width: '100%',
-//           // Оставляем место для оценки
-//         }}
-//       >
-//         {/* Заголовок с переносом слов */}
-//         <Typography
-//           variant="subtitle1"
-//           fontWeight="600"
-//           sx={{
-//             mb: 1,
-//             mt: 1.5,
-//             wordBreak: 'break-word',
-//             display: '-webkit-box',
-//             WebkitLineClamp: 2,
-//             WebkitBoxOrient: 'vertical',
-//             overflow: 'hidden',
-//             lineHeight: 1.4,
-//           }}
-//         >
-//           {test.name}
-//         </Typography>
-
-//         {/* Описание теста */}
-//         <Typography
-//           variant="body2"
-//           color="text.secondary"
-//           sx={{
-//             mb: 2,
-//             display: '-webkit-box',
-//             WebkitLineClamp: 3,
-//             WebkitBoxOrient: 'vertical',
-//             overflow: 'hidden',
-//             lineHeight: 1.5,
-//           }}
-//         >
-//           {test.description}
-//         </Typography>
-
-//         {/* Дата прохождения */}
-//         {test.is_passed && test.date && (
-//           <Typography
-//             variant="caption"
-//             color="text.secondary"
-//             sx={{
-//               mt: 'auto',
-//               alignSelf: 'flex-start',
-//               backgroundColor: 'action.hover',
-//               px: 1,
-//               borderRadius: '4px',
-//             }}
-//           >
-//             {`Пройден: ${new Date(test.date).toLocaleString()}`}
-//           </Typography>
-//         )}
-//       </Box>
-
-//       {/* Оценка - правый верхний угол (с отступом от тега) */}
-//       {test.is_passed && (
-//         <Box
-//           sx={{
-//             position: 'absolute',
-//             top: -2,
-//             right: test.mark && 12,
-//           }}
-//         >
-//           <ColoredBadge mark={test.mark} />
-//         </Box>
-//       )}
-//     </ListItem>
-//   )
-// }
-
-// function TestingPage() {
-//   const { data: testsData, isLoading, error } = useGetTestsQuery()
-
-//   // Получаем результаты из localStorage
-//   const localResults = (() => {
-//     try {
-//       return JSON.parse(localStorage.getItem('testResults')) || {}
-//     } catch {
-//       return {}
-//     }
-//   })()
-
-//   // Мемоизированный список тестов
-//   const tests = (testsData?.results || []).map((test) => {
-//     const localResult = localResults[test.id]
-//     const apiResult = test.test_results?.[0] || {}
-
-//     return localResult
-//       ? {
-//           ...test,
-//           ...apiResult,
-//           ...localResult,
-//           name: localResult.test_title || test.name,
-//           is_passed: localResult.is_passed ?? apiResult.result ?? false,
-//           mark: localResult.mark ?? apiResult.mark ?? 0,
-//           date: localResult.completion_time ?? apiResult.date ?? null,
-//         }
-//       : {
-//           ...test,
-//           ...apiResult,
-//           is_passed: apiResult.result ?? false,
-//           mark: apiResult.mark ?? 0,
-//           date: apiResult.date ?? null,
-//         }
-//   })
-
-//   if (isLoading) return <CircularProgress size={50} />
-//   if (error) return <div>Ошибка при загрузке тестов</div>
-
-//   // Вкладки с фильтрацией тестов (остается без изменений)
-//   const tabs = [
-//     {
-//       label: 'Все тесты',
-//       icon: <SchoolIcon />,
-//       content: (
-//         <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//           {tests.map((test) => (
-//             <TestItem key={test.id} test={test} />
-//           ))}
-//         </List>
-//       ),
-//     },
-//     {
-//       label: 'Учебные',
-//       icon: <SchoolIcon />,
-//       content: (
-//         <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//           {tests
-//             .filter((test) => !test.test_is_control)
-//             .map((test) => (
-//               <TestItem key={test.id} test={test} />
-//             ))}
-//         </List>
-//       ),
-//     },
-//     {
-//       label: 'Контрольные',
-//       icon: <AssignmentIcon />,
-//       content: (
-//         <List sx={{ width: '100%', maxWidth: 800, p: 0 }}>
-//           {tests
-//             .filter((test) => test.test_is_control)
-//             .map((test) => (
-//               <TestItem key={test.id} test={test} />
-//             ))}
-//         </List>
-//       ),
-//     },
-//   ]
-
-//   return (
-//     <Box>
-//       <Typography
-//         variant="h4"
-//         gutterBottom
-//         sx={{
-//           textAlign: 'center',
-//           mb: 4,
-//           fontWeight: 'bold',
-//           color: 'primary.main',
-//         }}
-//       >
-//         Тестирование
-//       </Typography>
-//       <TabsWrapper tabs={tabs} />
 //     </Box>
 //   )
 // }

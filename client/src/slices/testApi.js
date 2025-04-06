@@ -119,14 +119,16 @@ import { getCsrfToken } from '../utils/cookies'
 const testApi = createApi({
   reducerPath: 'testApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, //    '/api/'
-    credentials: 'include',
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`,
+    credentials: 'include', // важно для отправки кук
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
-      headers.set('Content-Type', 'application/json')
+      // Устанавливаем CSRF-токен, если он есть
       if (csrfToken) {
         headers.set('X-CSRFToken', csrfToken)
       }
+      // Устанавливаем Content-Type по умолчанию для всех запросов
+      headers.set('Content-Type', 'application/json')
       return headers
     },
   }),
@@ -147,16 +149,56 @@ const testApi = createApi({
     }),
     postTestResult: build.mutation({
       query: (body) => ({
-        url: 'test_result/',
+        url: 'test_results/',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       }),
+      // Не нужно дублировать headers здесь, они уже установлены в prepareHeaders
     }),
   }),
 })
+
+// const testApi = createApi({
+//   reducerPath: 'testApi',
+//   baseQuery: fetchBaseQuery({
+//     baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, //    '/api/'
+//     credentials: 'include',
+//     prepareHeaders: (headers) => {
+//       const csrfToken = getCsrfToken()
+//       headers.set('Content-Type', 'application/json')
+//       if (csrfToken) {
+//         headers.set('X-CSRFToken', csrfToken)
+//       }
+//       return headers
+//     },
+//   }),
+//   tagTypes: ['test'],
+//   endpoints: (build) => ({
+//     getTests: build.query({
+//       query: () => 'tests/',
+//       providesTags: ['test'],
+//     }),
+//     getTestById: build.query({
+//       query: (id) => {
+//         if (!id) {
+//           throw new Error('ID is required')
+//         }
+//         return `tests/${id}/`
+//       },
+//       transformErrorResponse: (response) => response.data,
+//     }),
+//     postTestResult: build.mutation({
+//       query: (body) => ({
+//         url: 'test_results/',
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body,
+//       }),
+//     }),
+//   }),
+// })
 
 export const {
   useGetTestsQuery,

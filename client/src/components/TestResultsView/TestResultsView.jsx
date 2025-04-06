@@ -18,6 +18,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   CircularProgress,
+  Alert,
+  Tooltip,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -83,6 +85,17 @@ function TestResultsView({
     }
   }
 
+  if (!questions || !answers) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Alert severity="error">Не удалось загрузить результаты теста</Alert>
+        <Button variant="contained" onClick={onRestart} sx={{ mt: 2 }}>
+          Попробовать снова
+        </Button>
+      </Box>
+    )
+  }
+
   return (
     <Box sx={{ width: '100%' }}>
       <Paper
@@ -121,16 +134,20 @@ function TestResultsView({
               Общий результат
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
-              <Chip
-                label={`${score}/${totalPoints}`}
-                color="primary"
-                size={isMobile ? 'medium' : 'large'}
-              />
-              <Chip
-                label={`Оценка: ${mark}/10`}
-                color={parseFloat(mark) >= 6 ? 'success' : 'error'}
-                size={isMobile ? 'medium' : 'large'}
-              />
+              <Tooltip title="Количество баллов из максимально возможных">
+                <Chip
+                  label={`${score}/${totalPoints}`}
+                  color="primary"
+                  size={isMobile ? 'medium' : 'large'}
+                />
+              </Tooltip>
+              <Tooltip title="Оценка по 10ти бальной шкале">
+                <Chip
+                  label={`Оценка: ${mark}/10`}
+                  color={parseFloat(mark) >= 6 ? 'success' : 'error'}
+                  size={isMobile ? 'medium' : 'large'}
+                />
+              </Tooltip>
             </Stack>
           </Box>
 

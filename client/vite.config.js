@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
       outDir: resolve(__dirname, '../../api/backend/static'),
       emptyOutDir: true,
       manifest: true,
+      assetsInlineLimit: 4096, // файлы меньше этого размера будут инлайниться
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),

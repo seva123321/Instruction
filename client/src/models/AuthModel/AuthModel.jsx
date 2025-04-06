@@ -8,6 +8,7 @@ import {
   Typography,
   InputLabel,
   OutlinedInput,
+  CircularProgress,
 } from '@mui/material'
 import { useForm, Controller } from 'react-hook-form'
 
@@ -267,7 +268,7 @@ function AuthModel() {
             fullWidth
             sx={{ mt: 2 }}
           >
-            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+            {isLoading ? <CircularProgress /> : 'Зарегистрироваться'}
           </Button>
         </Box>
       </form>

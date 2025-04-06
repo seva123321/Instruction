@@ -1,4 +1,5 @@
 /* eslint-disable operator-linebreak */
+
 import {
   useEffect,
   useRef,
@@ -67,7 +68,12 @@ const FaceRecognition = forwardRef(
     const startVideo = useCallback(async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          // video: true,
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: 'user',
+          },
         })
         videoRef.current.srcObject = stream
         // @TODO очистка если сначала камера блокирована, а потом разблокирована

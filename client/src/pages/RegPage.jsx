@@ -1,6 +1,7 @@
 import { Box, Grid2, Typography } from '@mui/material'
 
 import LoginPage from '@/models/LoginModel'
+import enterpriseDawn2 from '@/assets/img/enterpriseDawn2.jpg'
 
 export default function RegistrationPage() {
   return (
@@ -20,8 +21,7 @@ export default function RegistrationPage() {
             justifyContent: 'center',
             padding: 2,
             position: 'relative',
-            background:
-              'rgb(74, 84, 86) url(@/../img/enterpriseDawn2.jpg) no-repeat center / cover',
+            background: `rgb(74, 84, 86) url(${enterpriseDawn2}) no-repeat center / cover`,
           }}
         >
           <Box

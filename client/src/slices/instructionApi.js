@@ -20,7 +20,7 @@ const instructionApi = createApi({
   tagTypes: ['Instruction'],
   endpoints: (build) => ({
     getInstructions: build.query({
-      query: () => 'instructions/',
+      query: () => 'instructions',
       providesTags: ['Instruction'],
     }),
     getInstructionById: build.query({

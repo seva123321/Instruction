@@ -64,11 +64,11 @@ class UserViewSet(ModelViewSet):
         """Представление профиля текущего пользователя."""
         user = request.user
 
-        if request.method == "GET":
+        if request.method == 'GET':
             serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        elif request.method == "PATCH":
+        elif request.method == 'PATCH':
             serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -91,14 +91,14 @@ class SignUpView(APIView):
             user = serializer.save()
         except IntegrityError as e:
             error_messages = {
-                "api_user_email": {
-                    "email": "Пользователь с таким email уже существует"
+                'api_user_email': {
+                    'email': 'Пользователь с таким email уже существует'
                 },
-                "api_user_mobile_phone": {
-                    "mobile_phone": "Пользователь с таким номером телефона уже существует"
+                'api_user_mobile_phone': {
+                    'mobile_phone': 'Пользователь с таким номером телефона уже существует'
                 },
-                "api_user_face_descriptor": {
-                    "face_descriptor": "Такой дескриптор лица уже существует"
+                'api_user_face_descriptor': {
+                    'face_descriptor': 'Такой дескриптор лица уже существует'
                 },
             }
 
@@ -106,12 +106,12 @@ class SignUpView(APIView):
                 if db_error in str(e):
                     raise ValidationError(message)
 
-            raise ValidationError({"detail": "Ошибка при создании пользователя"})
+            raise ValidationError({'detail': 'Ошибка при создании пользователя'})
         except Exception as e:
-            raise ValidationError({"detail": str(e)})
+            raise ValidationError({'detail': str(e)})
 
         return Response(
-            {"id": user.id, "email": user.email},
+            {'id': user.id, 'email': user.email},
             status=status.HTTP_201_CREATED,
         )
 
@@ -208,7 +208,7 @@ class FaceLoginView(APIView):
 
         # 3. Ищем ближайшего пользователя
         best_match = None
-        min_distance = float("inf")
+        min_distance = float('inf')
 
         for user in User.objects.exclude(face_descriptor__isnull=True):
             try:
@@ -234,7 +234,7 @@ class FaceLoginView(APIView):
 
             except Exception as e:
                 print(
-                    f"Error processing user {user.id} face descriptor: {str(e)}"
+                    f'Error processing user {user.id} face descriptor: {str(e)}'
                 )
                 continue
 
@@ -243,10 +243,10 @@ class FaceLoginView(APIView):
             login(request, best_match)
             return Response(
                 {
-                    "status": "success",
-                    "user_id": best_match.id,
-                    "distance": float(min_distance),
-                    "threshold": settings.FACE_MATCH_THRESHOLD,
+                    'detail': 'Успешный вход',
+                    'user_id': best_match.id,
+                    'email': best_match.email,
+                    'first_name': best_match.first_name,
                 }
             )
 

@@ -28,7 +28,7 @@ import {
   Person as PersonIcon,
   Work as WorkIcon,
   Cake as CakeIcon,
-  Edit as EditIcon,
+  // Edit as EditIcon,
   Info as InfoIcon,
 } from '@mui/icons-material'
 
@@ -51,7 +51,6 @@ function ProfilePage() {
     formState: { errors, isDirty, isValid },
     reset,
     watch,
-    formState,
   } = useForm({
     defaultValues: {
       id: 0,
@@ -161,7 +160,8 @@ function ProfilePage() {
                     mb: 1,
                   }}
                 >
-                  {watch('first_name') || 'Пользователь'} {watch('last_name')}
+                  {watch('first_name') || 'Пользователь'}
+                  {watch('last_name')}
                 </Typography>
 
                 <Chip

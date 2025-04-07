@@ -298,9 +298,11 @@ function TestOnePage() {
   )
 
   const [allQuestionsAnswered] = useMemo(() => {
-    const unanswered =
-      test?.questions?.filter((q) => answers[q.id] === undefined) || []
-    return [unanswered, unanswered.length === 0]
+    if (!test?.questions) return [false]
+
+    // Проверяем, что для всех вопросов есть ответы в объекте answers
+    const allAnswered = test.questions.every((q) => answers[q.id] !== undefined)
+    return [allAnswered]
   }, [answers, test?.questions])
 
   const isLastQuestion = currentQuestionIndex === testProps.questionsLength - 1
@@ -329,6 +331,10 @@ function TestOnePage() {
     trackMouse: true,
     preventDefaultTouchmoveEvent: true,
   })
+
+  const handleNextQuestion = useCallback(() => {
+    navigateQuestion(1)
+  }, [navigateQuestion])
 
   const handleAnswerChange = useCallback(
     (event) => {
@@ -730,8 +736,7 @@ function TestOnePage() {
       <TestControls
         onSubmit={handleSubmit}
         onComplete={handleCompleteTest}
-        onNextQuestion={navigateQuestion}
-        // onNextQuestion={navigateQuestion.bind(null, 1)}
+        onNextQuestion={handleNextQuestion}
         hasAnswer={
           !!(
             testProps.currentQuestion?.id &&

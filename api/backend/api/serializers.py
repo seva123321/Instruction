@@ -346,7 +346,7 @@ class ReferenceLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReferenceLink
-        fields = ('id', 'title', 'url')
+        fields = ('id', 'title', 'source')
 
 
 class QuestionSerializer(serializers.ModelSerializer):

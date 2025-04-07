@@ -69,10 +69,24 @@ class UserViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         elif request.method == 'PATCH':
-            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer = self.get_serializer(
+                user,
+                data=request.data,
+                partial=True,
+                context={"request": request},
+            )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except IntegrityError as e:
+                return Response(
+                    {
+                        'error': f'Ошибка сохранения данных. {e}'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
 
 @extend_schema(tags=['SignUp'], description='Регистрация пользователей.')

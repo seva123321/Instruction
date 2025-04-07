@@ -88,9 +88,11 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_EMAIL_ADDRESS,
     )
     mobile_phone = models.CharField(
-        'Мобильный телефон',
+        "Мобильный телефон",
         unique=True,
         max_length=MAX_LENGTH_PHONE,
+        blank=True,
+        null=True,
     )
     role = models.CharField(
         'Роль',

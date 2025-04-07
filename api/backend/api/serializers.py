@@ -57,8 +57,14 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
         )
         extra_kwargs = {
-            "email": {"read_only": True},
+            "email": {"read_only": True, "required": False},
             "role": {"read_only": True},
+            "position": {"read_only": True},
+            "mobile_phone": {"required": False},
+            "first_name": {"required": False},
+            "last_name": {"required": False},
+            "middle_name": {"required": False},
+            "birthday": {"required": False},
         }
 
 

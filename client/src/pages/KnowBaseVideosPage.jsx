@@ -18,8 +18,8 @@ import {
 import { Search, YouTube, VideoFile } from '@mui/icons-material'
 
 import { useGetKnowladgeVideosQuery } from '../slices/knowladgeApi'
+import UniversalVideoPlayer from '../components/VideoPlayer/VideoPlayer'
 
-import UniversalVideoPlayer from './UniversalVideoPlayer'
 import KnowBaseHeader from './KnowBaseHeader'
 
 // Вынесенный компонент карточки видео для лучшей производительности

@@ -1,9 +1,6 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable indent */
 
-/* eslint-disable operator-linebreak */
-/* eslint-disable indent */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   List,

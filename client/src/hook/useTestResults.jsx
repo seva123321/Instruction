@@ -92,6 +92,24 @@ const useTestResults = () => {
     [withDB]
   )
 
+  // const getTestResults = useCallback(
+  //   (testId) =>
+  //     withDB(async (db) => {
+  //       const pendingTx = db.transaction('pendingResults', 'readonly')
+  //       const store = pendingTx.objectStore('pendingResults')
+
+  //       // Получаем все записи и фильтруем их по testId
+  //       const allResults = await store.getAll()
+  //       await pendingTx.done
+
+  //       // Фильтруем результаты, где ключ начинается с testId
+  //       return allResults
+  //         .filter((result) => result.id.startsWith(`${testId}-`))
+  //         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  //     }),
+  //   [withDB]
+  // )
+  // @TODO рабочая версия
   const getTestResults = useCallback(
     (testId) =>
       withDB(async (db) => {

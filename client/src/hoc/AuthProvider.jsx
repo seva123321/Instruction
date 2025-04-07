@@ -8,9 +8,15 @@ import {
 } from '../slices/userApi'
 
 export const AuthContext = createContext(null)
+const testUser = {
+  detail: 'Успешный вход',
+  user_id: 1,
+  email: 'admin@admin.com',
+  first_name: 'admin',
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null) // @TODO null
+  const [user, setUser] = useState(testUser) // @TODO null
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()
@@ -45,6 +51,7 @@ export function AuthProvider({ children }) {
           response = await postLogin(authData).unwrap()
         }
         setUser(response)
+        console.log(response)
 
         return response
       } catch (error) {

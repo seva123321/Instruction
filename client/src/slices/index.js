@@ -4,6 +4,7 @@ import userReducer from './userSlice'
 import userApi from './userApi'
 import instructionApi from './instructionApi'
 import testApi from './testApi'
+import knowladgeApi from './knowladgeApi'
 
 export default configureStore({
   reducer: {
@@ -11,12 +12,14 @@ export default configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [instructionApi.reducerPath]: instructionApi.reducer,
     [testApi.reducerPath]: testApi.reducer,
+    [knowladgeApi.reducerPath]: knowladgeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
       userApi.middleware,
       instructionApi.middleware,
-      testApi.middleware
+      testApi.middleware,
+      knowladgeApi.middleware
     ),
 })
 

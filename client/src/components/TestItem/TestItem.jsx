@@ -23,7 +23,7 @@ import {
 
 import ColoredBadge from '@/components/ColoredBadge'
 
-import { getTestFromDB, STORE_NAMES } from '../service/offlineDB'
+import { getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
 
 const TestItem = memo(
   ({
@@ -42,6 +42,11 @@ const TestItem = memo(
     const isControlTest = test?.test_is_control || false
     const hasPassed = test?.is_passed || false
     const testDate = test?.date
+    const testHighestMark = test?.mark
+    // const lastTest = test.test_results.toSorted((obj1, obj2) => obj1 - obj2)[0]
+    // const lastMark = lastTest?.mark
+    // const lastTimeCompletion = lastTest?.completion_time
+    // console.log('lastMark > ', lastMark);
 
     // Проверка скачанного состояния
     useEffect(() => {
@@ -192,7 +197,7 @@ const TestItem = memo(
             sx={{
               position: 'absolute',
               top: 12,
-              right: test.mark ? 40 : 10,
+              right: testHighestMark ? 40 : 10,
               height: 26,
               borderRadius: '12px',
               fontWeight: '600',
@@ -315,8 +320,14 @@ const TestItem = memo(
           </Box>
 
           {hasPassed && (
-            <Box sx={{ position: 'absolute', top: -2, right: test.mark && 12 }}>
-              <ColoredBadge mark={test.mark} />
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -2,
+                right: testHighestMark && 12,
+              }}
+            >
+              <ColoredBadge mark={testHighestMark} />
             </Box>
           )}
         </ListItem>

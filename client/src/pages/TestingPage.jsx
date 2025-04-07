@@ -20,8 +20,8 @@ import {
   Assignment as AssignmentIcon,
 } from '@mui/icons-material'
 
-import TabsWrapper from '@/components/TabsWrapper'
 import { initializeApplicationDatabases } from '@/service/databaseService'
+import TabsWrapper from '@/components/TabsWrapper'
 
 import {
   useLazyGetTestByIdQuery,
@@ -35,8 +35,7 @@ import {
   STORE_NAMES,
 } from '../service/offlineDB'
 import useTestResults from '../hook/useTestResults'
-
-import TestItem from './TestItem'
+import TestItem from '../components/TestItem/TestItem'
 
 function LoadingIndicator() {
   return (
@@ -98,6 +97,35 @@ function TestingPage() {
     }
   }, [isOnline])
 
+  // const loadOnlineTests = useCallback(async () => {
+  //   try {
+  //     const { data } = await getTests()
+  //     if (data?.results?.length > 0) {
+  //       if (!dbInitialized) {
+  //         await initializeDatabase()
+  //       }
+
+  //       const savePromises = data.results.map(
+  //         async (test) => {
+  //           const testModified = { ...test }
+  //           delete testModified.test_results
+  //           return saveTestToDB(testModified, STORE_NAMES.TESTS).catch((e) => {
+  //             throw new Error(e.message)
+  //           })
+  //         }
+  //         // eslint-disable-next-line function-paren-newline
+  //       )
+
+  //       await Promise.all(savePromises)
+  //       return data.results
+  //     }
+  //     return []
+  //   } catch (e) {
+  //     setError('Ошибка загрузки тестов с сервера')
+  //     return []
+  //   }
+  // }, [getTests, dbInitialized, initializeDatabase])
+
   const loadOnlineTests = useCallback(async () => {
     try {
       const { data } = await getTests()
@@ -106,16 +134,52 @@ function TestingPage() {
           await initializeDatabase()
         }
 
-        const savePromises = data.results.map(
-          (test) =>
-            saveTestToDB(test, STORE_NAMES.TESTS).catch((e) => {
-              throw new Error(e.message)
-            })
-          // eslint-disable-next-line function-paren-newline
-        )
+        const savePromises = data.results.map(async (test) => {
+          try {
+            const testModified = { ...test }
+            // delete testModified.test_results
 
-        await Promise.all(savePromises)
-        return data.results
+            // Проверяем существует ли уже такой тест в IndexedDB
+            const existingTest = await getTestFromDB(test.id, STORE_NAMES.TESTS)
+
+            // Функция для глубокого сравнения объектов тестов
+            const areTestsEqual = (test1, test2) => {
+              if (!test1 || !test2) return false
+              const keys1 = Object.keys(test1)
+              const keys2 = Object.keys(test2)
+
+              if (keys1.length !== keys2.length) return false
+
+              return keys1.every((key) => {
+                // Исключаем поля, которые могут изменяться без существенных изменений
+                if (key === 'updated_at' || key === 'created_at') return true
+
+                // Сравниваем примитивы и массивы
+                if (Array.isArray(test1[key]) && Array.isArray(test2[key])) {
+                  return (
+                    test1[key].length === test2[key].length &&
+                    test1[key].every((val, i) => val === test2[key][i])
+                  )
+                }
+
+                return test1[key] === test2[key]
+              })
+            }
+
+            // Если теста нет или он отличается от полученного с сервера
+            if (!existingTest || !areTestsEqual(existingTest, testModified)) {
+              await saveTestToDB(testModified, STORE_NAMES.TESTS)
+              return testModified
+            }
+
+            return existingTest // Возвращаем существующий если он идентичен
+          } catch (e) {
+            throw new Error(`Failed to process test ${test.id}: ${e.message}`)
+          }
+        })
+
+        const savedTests = await Promise.all(savePromises)
+        return savedTests.filter((test) => test !== null)
       }
       return []
     } catch (e) {
@@ -136,6 +200,41 @@ function TestingPage() {
     }
   }, [dbInitialized, initializeDatabase])
 
+  // const mergeTestsWithResults = useCallback(
+  //   async (testsToMerge) => {
+  //     const merged = await Promise.all(
+  //       testsToMerge.map(async (test) => {
+  //         const testId = test.id
+  //         try {
+  //           setLoadingStates((prev) => ({ ...prev, [testId]: true }))
+
+  //           // Получаем все результаты для данного теста
+  //           const results = await getTestResults(testId)
+  //           // Сортируем по дате (новые сначала) и берем последний результат
+  //           const latestResult = results[0] || {}
+  //           return {
+  //             ...test,
+  //             ...latestResult,
+  //             name: latestResult.test_title || test.name,
+  //             is_passed: latestResult.is_passed ?? false,
+  //             mark: latestResult.mark ?? 0,
+  //             date:
+  //               latestResult.completion_time ?? latestResult.createdAt ?? null,
+  //           }
+  //         } catch (error) {
+  //           console.error(`Error merging results for test ${test.id}:`, error)
+  //           return test
+  //         } finally {
+  //           setLoadingStates((prev) => ({ ...prev, [testId]: false }))
+  //         }
+  //       })
+  //     )
+  //     return merged
+  //   },
+  //   [getTestResults]
+  // )
+
+  // @TODO рабочий вариант
   const mergeTestsWithResults = useCallback(
     async (testsToMerge) => {
       const merged = await Promise.all(

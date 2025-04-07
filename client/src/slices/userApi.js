@@ -6,7 +6,7 @@ import { getCsrfToken } from '../utils/cookies'
 const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.PROXY_PREFIX}/auth/`, // Теперь будет /api/auth/
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, // Теперь будет /api/auth/
     credentials: 'include',
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
@@ -21,7 +21,7 @@ const userApi = createApi({
   endpoints: (build) => ({
     login: build.mutation({
       query: (body) => ({
-        url: 'login/',
+        url: 'auth/login/',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ const userApi = createApi({
     }),
     signUp: build.mutation({
       query: (body) => ({
-        url: 'signup/',
+        url: 'auth/signup/',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ const userApi = createApi({
     }),
     faceLogin: build.mutation({
       query: (body) => ({
-        url: 'face_login/',
+        url: 'auth/face_login/',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,8 +51,18 @@ const userApi = createApi({
     }),
     logout: build.mutation({
       query: () => ({
-        url: 'logout/',
+        url: 'auth/logout/',
         method: 'POST',
+      }),
+    }),
+    getProfile: build.query({
+      query: () => 'users/profile/',
+    }),
+    patchProfile: build.mutation({
+      query: (body) => ({
+        url: 'users/profile/',
+        method: 'PATCH',
+        body,
       }),
     }),
   }),
@@ -63,6 +73,8 @@ export const {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
+  useGetProfileQuery,
+  usePatchProfileMutation,
 } = userApi
 
 export default userApi

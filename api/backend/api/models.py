@@ -268,7 +268,7 @@ class ReferenceLink(models.Model):
     title = models.TextField(
         'Заголовок',
     )
-    url = models.URLField('URL')
+    source = models.TextField('Источник')
     question = models.ForeignKey(
         'Question',
         on_delete=models.SET_NULL,
@@ -491,6 +491,11 @@ class NormativeLegislation(models.Model):
         null=True,
     )
     url = models.URLField('URL', blank=True, null=True)
+    file = models.FileField(
+        'НПА',
+        upload_to='media/nlas/',
+        blank=True,
+    )
     date = models.DateTimeField('Дата загрузки', auto_now_add=True)
 
     class Meta:

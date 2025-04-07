@@ -14,6 +14,7 @@ import {
   ListItem,
   useMediaQuery,
   SwipeableDrawer,
+  Typography,
 } from '@mui/material'
 import {
   School as SchoolIcon,
@@ -150,10 +151,28 @@ export default function MenuBox() {
       <Box
         sx={{
           display: 'flex',
-          justifyContent: isDrawerOpen ? 'flex-end' : 'center',
+          justifyContent: isDrawerOpen ? 'space-between' : 'center',
+          alignItems: 'center',
           p: 1,
+          gap: 1,
+          minHeight: 48, // Фиксированная высота для стабильного отображения
         }}
       >
+        {isDrawerOpen && (
+          <Typography
+            variant="body1"
+            sx={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: 'calc(100% - 48px)', // Оставляем место для кнопки
+              fontWeight: 500,
+            }}
+            title={`Привет, ${user?.first_name}`} // Подсказка с полным именем
+          >
+            {`Привет, ${user?.first_name}`}
+          </Typography>
+        )}
         <Tooltip
           title={isDrawerOpen ? 'Закрыть меню' : 'Открыть меню'}
           placement="right"
@@ -165,6 +184,7 @@ export default function MenuBox() {
       </Box>
       <Divider />
 
+      {/* Остальной код меню без изменений */}
       <List component="nav">
         <ListItemButton
           component={CustomLink}

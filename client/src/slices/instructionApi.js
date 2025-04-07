@@ -32,21 +32,22 @@ const instructionApi = createApi({
       },
       transformErrorResponse: (response) => response.data,
     }),
-    postInstructionResult: build.mutation({
+    postInstructionResults: build.mutation({
       query: (body) => ({
-        url: 'instruction_result/',
+        url: 'instruction_results/',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       }),
     }),
   }),
 })
 
-export const { useGetInstructionsQuery, useGetInstructionByIdQuery } =
-  instructionApi
+export const {
+  useGetInstructionsQuery,
+  useGetInstructionByIdQuery,
+  usePostInstructionResultsMutation,
+} = instructionApi
+
 export default instructionApi
 // import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react' // Изменили импорт
 // import { API_CONFIG } from '../config'

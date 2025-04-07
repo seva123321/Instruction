@@ -6,11 +6,10 @@ import { getCsrfToken } from '../utils/cookies'
 const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`, // Теперь будет /api/auth/
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`,
     credentials: 'include',
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
-
       headers.set('Content-Type', 'application/json')
       if (csrfToken) {
         headers.set('X-CSRFToken', csrfToken)
@@ -18,14 +17,12 @@ const userApi = createApi({
       return headers
     },
   }),
+  tagTypes: ['Profile'], // Объявляем тип тега
   endpoints: (build) => ({
     login: build.mutation({
       query: (body) => ({
         url: 'auth/login/',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       }),
     }),
@@ -33,9 +30,6 @@ const userApi = createApi({
       query: (body) => ({
         url: 'auth/signup/',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       }),
     }),
@@ -43,9 +37,6 @@ const userApi = createApi({
       query: (body) => ({
         url: 'auth/face_login/',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       }),
     }),
@@ -57,6 +48,7 @@ const userApi = createApi({
     }),
     getProfile: build.query({
       query: () => 'users/profile/',
+      providesTags: ['Profile'], // Указываем, что этот запрос предоставляет данные с тегом 'Profile'
     }),
     patchProfile: build.mutation({
       query: (body) => ({
@@ -64,6 +56,20 @@ const userApi = createApi({
         method: 'PATCH',
         body,
       }),
+      invalidatesTags: ['Profile'], // Указываем, что эта мутация делает недействительными данные с тегом 'Profile'
+      // Дополнительно можно добавить автоматическое обновление кеша
+      async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled
+          dispatch(
+            userApi.util.updateQueryData('getProfile', undefined, (draft) => {
+              Object.assign(draft, data)
+            })
+          )
+        } catch (error) {
+          console.error('Error updating cache:', error)
+        }
+      },
     }),
   }),
 })

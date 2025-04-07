@@ -51,8 +51,6 @@ export function AuthProvider({ children }) {
           response = await postLogin(authData).unwrap()
         }
         setUser(response)
-        console.log(response)
-
         return response
       } catch (error) {
         return error

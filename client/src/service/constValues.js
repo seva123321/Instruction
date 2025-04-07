@@ -734,22 +734,93 @@ export const instructionsData = {
   },
 }
 
-export const videoData = [
+export const legalDocuments = [
   {
     id: 1,
+    title: 'Конституция Российской Федерации',
+    description:
+      'Основной закон Российской Федерации, обладающий высшей юридической силой.',
+    date: '12.12.1993',
+  },
+  {
+    id: 2,
+    title: 'Гражданский кодекс РФ',
+    description:
+      'Кодифицированный федеральный закон, регулирующий гражданско-правовые отношения.',
+    date: '30.11.1994',
+  },
+  {
+    id: 3,
+    title: 'Налоговый кодекс РФ',
+    description:
+      'Основной законодательный акт, регулирующий налогообложение в России.',
+    date: '31.07.1998',
+  },
+  {
+    id: 4,
+    title: 'Трудовой кодекс РФ',
+    description:
+      'Основной источник трудового права, регулирующий отношения между работниками и работодателями.',
+    date: '30.12.2001',
+  },
+  {
+    id: 5,
+    // eslint-disable-next-line quotes
+    title: "Федеральный закон 'О персональных данных'",
+    description: 'Регулирует обработку персональных данных операторами.',
+    date: '27.07.2006',
+  },
+  {
+    id: 6,
+    // eslint-disable-next-line quotes
+    title: "Федеральный закон 'О защите прав потребителей '",
+    description:
+      'Регулирует отношения между потребителями и изготовителями, исполнителями, продавцами.',
+    date: '07.02.1992',
+  },
+]
+
+export const videoData = [
+  // YouTube видео
+  {
+    id: 1,
+    type: 'youtube',
+    url: 'https://www.youtube.com/watch?v=C0fBnil_Im4&t=4s',
     title: 'Основы гражданского права в РФ',
-    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     duration: '15:30',
     views: '1.2K',
     date: '12.05.2023',
   },
+  // Видео с вашего сервера
   {
     id: 2,
-    title: 'Налоговое законодательство 2023',
-    url: 'https://www.youtube.com/watch?v=C0fBnil_Im4&t=4s',
+    type: 'server',
+    url: 'https://ваш-сервер.com/videos/example.mp4',
+    title: 'Корпоративное обучение',
     duration: '22:45',
     views: '3.4K',
     date: '20.06.2023',
+    thumbnail: 'https://ваш-сервер.com/thumbnails/example.jpg',
   },
-  // ... другие видео
+  // Еще YouTube видео
+  {
+    id: 3,
+    type: 'youtube',
+    url: 'https://www.youtube.com/watch?v=C0fBnil_Im4&t=4s',
+    title: 'Налоговое законодательство 2023',
+    duration: '10:15',
+    views: '5.7K',
+    date: '05.07.2023',
+  },
+  // Еще видео с сервера
+  {
+    id: 4,
+    type: 'server',
+    url: 'https://ваш-сервер.com/videos/tutorial.mp4',
+    title: 'Руководство пользователя',
+    duration: '08:20',
+    views: '1.8K',
+    date: '15.08.2023',
+    thumbnail: 'https://ваш-сервер.com/thumbnails/tutorial.jpg',
+  },
 ]

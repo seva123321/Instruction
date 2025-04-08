@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -50,7 +51,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -156,10 +157,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 UNFOLD = {
-    "SITE_TITLE": "Аналитика инструктажей",
+    "SITE_TITLE": "Админ-панель системы инструктажей",
     "SITE_HEADER": "Панель администратора",
-    "SITE_ICON": {
-        "light": lambda request: "/icon-light.svg",
-        "dark": lambda request: "/icon-dark.svg",
-    },
+    "DASHBOARD_CALLBACK": "api.admin.dashboard_callback",
 }

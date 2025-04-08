@@ -1,0 +1,183 @@
+{% extends "admin/index.html" %}
+{% load static %}
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <!-- Блоки статистики -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Тесты -->
+        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">Тесты</h3>
+            <div class="text-2xl dark:text-white">{{ test_stats.total }}</div>
+            <div class="text-green-600 dark:text-green-400">{{ test_stats.passed }} пройдено</div>
+            <div class="text-red-600 dark:text-red-400">{{ test_stats.failed }} не пройдено</div>
+        </div>
+
+        <!-- Инструктажи -->
+        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">Инструктажи</h3>
+            <div class="text-2xl dark:text-white">{{ instruction_stats.total }}</div>
+            <div class="text-green-600 dark:text-green-400">{{ instruction_stats.passed }} пройдено</div>
+            <div class="text-red-600 dark:text-red-400">{{ instruction_stats.failed }} не пройдено</div>
+        </div>
+
+        <!-- Средний балл -->
+<!--        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">-->
+<!--            <h3 class="text-lg font-semibold mb-2 text-gray-700 dark:text-gray-200">Средний балл</h3>-->
+<!--            <div class="text-2xl dark:text-white">{{ test_stats.avg_score|floatformat:1 }}</div>-->
+<!--        </div>-->
+    </div>
+
+    <!-- Графики и списки -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- График тестов -->
+        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Результаты тестов</h3>
+            <canvas id="testResultsChart"></canvas>
+        </div>
+
+        <!-- График инструктажей -->
+        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Результаты инструктажей</h3>
+            <canvas id="instructionResultsChart"></canvas>
+        </div>
+
+        <!-- Последние провалы -->
+        <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Проваленные тесты</h3>
+                    <ul class="space-y-3">
+                        {% for result in recent_failed_tests %}
+                        <li class="flex items-center justify-between p-3 bg-red-100 dark:bg-red-900/20 rounded">
+                            <span class="dark:text-gray-300">{{ result.user }}</span>
+                            <span class="dark:text-gray-400">{{ result.test }}</span>
+                            <span class="text-sm dark:text-gray-500">{{ result.completion_time|date:"d.m.Y" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Проваленные инструктажи</h3>
+                    <ul class="space-y-3">
+                        {% for result in recent_failed_instructions %}
+                        <li class="flex items-center justify-between p-3 bg-red-100 dark:bg-red-900/20 rounded">
+                            <span class="dark:text-gray-300">{{ result.user }}</span>
+                            <span class="dark:text-gray-400">{{ result.instruction }}</span>
+                            <span class="text-sm dark:text-gray-500">{{ result.date|date:"d.m.Y" }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Конфигурация цветов
+const getChartColors = () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    text: getComputedStyle(document.documentElement).getPropertyValue('--chart-text').trim(),
+    border: getComputedStyle(document.documentElement).getPropertyValue('--chart-border').trim(),
+    testPassed: getComputedStyle(document.documentElement).getPropertyValue('--test-passed').trim(),
+    testFailed: getComputedStyle(document.documentElement).getPropertyValue('--test-failed').trim(),
+    instructionPassed: getComputedStyle(document.documentElement).getPropertyValue('--instruction-passed').trim(),
+    instructionFailed: getComputedStyle(document.documentElement).getPropertyValue('--instruction-failed').trim(),
+  }
+};
+
+// Функция обновления графиков
+let testChart, instructionChart;
+
+const updateChartsTheme = () => {
+  const colors = getChartColors();
+
+  // Обновляем тестовый график
+  testChart.data.datasets[0].backgroundColor = [colors.testPassed, colors.testFailed];
+  testChart.options.plugins.legend.labels.color = colors.text;
+  testChart.update();
+
+  // Обновляем график инструктажей
+  instructionChart.data.datasets[0].backgroundColor = [colors.instructionPassed, colors.instructionFailed];
+  instructionChart.options.plugins.legend.labels.color = colors.text;
+  instructionChart.update();
+};
+
+// Инициализация графиков
+document.addEventListener('DOMContentLoaded', () => {
+  const colors = getChartColors();
+
+  // Общие настройки Chart.js
+  Chart.defaults.color = colors.text;
+  Chart.defaults.borderColor = colors.border;
+
+  // Тестовый график
+  testChart = new Chart(document.getElementById('testResultsChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Пройдено', 'Не пройдено'],
+      datasets: [{
+        data: [{{ test_stats.passed }}, {{ test_stats.failed }}],
+        backgroundColor: [colors.testPassed, colors.testFailed],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            color: colors.text
+          }
+        }
+      }
+    }
+  });
+
+  // График инструктажей
+  instructionChart = new Chart(document.getElementById('instructionResultsChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Пройдено', 'Не пройдено'],
+      datasets: [{
+        data: [{{ instruction_stats.passed }}, {{ instruction_stats.failed }}],
+        backgroundColor: [colors.instructionPassed, colors.instructionFailed],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            color: colors.text
+          }
+        }
+      }
+    }
+  });
+
+  // Слушатель изменения темы
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.attributeName === 'data-theme') {
+        updateChartsTheme();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true
+  });
+});
+</script>
+{% endblock %}

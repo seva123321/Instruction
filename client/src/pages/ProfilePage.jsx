@@ -1,4 +1,6 @@
-import { useEffect, useMemo } from 'react'
+/* eslint-disable operator-linebreak */
+
+import { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   TextField,
@@ -15,6 +17,7 @@ import {
   Slide,
   Fade,
   CircularProgress,
+  Alert,
 } from '@mui/material'
 import { useForm, Controller } from 'react-hook-form'
 import { MobileDatePicker, DesktopDatePicker } from '@mui/x-date-pickers'
@@ -28,9 +31,9 @@ import {
   Person as PersonIcon,
   Work as WorkIcon,
   Cake as CakeIcon,
-  // Edit as EditIcon,
   Info as InfoIcon,
 } from '@mui/icons-material'
+import { format } from 'date-fns'
 
 import { useGetProfileQuery, usePatchProfileMutation } from '@/slices/userApi'
 import {
@@ -42,8 +45,14 @@ import {
 function ProfilePage() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const { data: profileData, isLoading, isError } = useGetProfileQuery()
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
+  const {
+    data: profileData,
+    isLoading,
+    isError: profileError,
+  } = useGetProfileQuery()
   const [patchProfile] = usePatchProfileMutation()
+  const [submitError, setSubmitError] = useState(null)
 
   const {
     control,
@@ -51,6 +60,7 @@ function ProfilePage() {
     formState: { errors, isDirty, isValid },
     reset,
     watch,
+    setError,
   } = useForm({
     defaultValues: {
       id: 0,
@@ -66,10 +76,7 @@ function ProfilePage() {
     mode: 'onBlur',
   })
 
-  // Проверяем, есть ли ошибки валидации
   const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors])
-
-  // Проверяем, изменились ли данные и они валидны
   const isSaveDisabled = useMemo(
     () => !isDirty || hasErrors || !isValid,
     [isDirty, hasErrors, isValid]
@@ -85,15 +92,29 @@ function ProfilePage() {
   }, [profileData, reset])
 
   const onSubmit = async (data) => {
-    console.log('Form data:', data)
-    const newData = {
-      ...data,
-      role: 'admin',
-      mobile_phone: data.mobile_phone.replaceAll('-', ''),
+    try {
+      setSubmitError(null)
+      const newData = {
+        ...data,
+        mobile_phone: data.mobile_phone.replaceAll('-', ''),
+        birthday: data.birthday ? format(data.birthday, 'yyyy-MM-dd') : null,
+      }
+      await patchProfile(newData).unwrap()
+    } catch (err) {
+      if (err.data) {
+        Object.entries(err.data).forEach(([fieldName, messages]) => {
+          setError(fieldName, {
+            type: 'server',
+            message: Array.isArray(messages) ? messages.join(', ') : messages,
+          })
+        })
+      } else {
+        setSubmitError('Произошла ошибка при обновлении профиля')
+      }
     }
-    await patchProfile(newData)
-    // Логика отправки данных
   }
+
+  const getCombinedError = (fieldName) => errors[fieldName]?.message
 
   if (isLoading) {
     return (
@@ -104,7 +125,7 @@ function ProfilePage() {
       </Fade>
     )
   }
-  if (isError) {
+  if (profileError) {
     return (
       <Fade in>
         <Typography color="error">Ошибка загрузки профиля</Typography>
@@ -112,9 +133,83 @@ function ProfilePage() {
     )
   }
 
+  const renderBirthdayPicker = (field, isDesktopPicker) => {
+    if (isDesktopPicker) {
+      return (
+        <DesktopDatePicker
+          label="Дата рождения"
+          value={field.value}
+          onChange={field.onChange}
+          format="dd.MM.yyyy"
+          maxDate={new Date()}
+          slotProps={{
+            popper: {
+              sx: {
+                '& .MuiPaper-root': {
+                  transform: 'scale(1.2)',
+                  transformOrigin: 'top left',
+                  boxShadow: theme.shadows[10],
+                  borderRadius: 4,
+                },
+              },
+            },
+            textField: {
+              fullWidth: true,
+              InputProps: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CakeIcon color="action" />
+                  </InputAdornment>
+                ),
+              },
+            },
+          }}
+          views={['year', 'month', 'day']}
+          showDaysOutsideCurrentMonth
+          fixedWeekNumber={6}
+        />
+      )
+    }
+    return (
+      <MobileDatePicker
+        label="Дата рождения"
+        value={field.value}
+        onChange={field.onChange}
+        format="dd.MM.yyyy"
+        maxDate={new Date()}
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            InputProps: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CakeIcon color="action" />
+                </InputAdornment>
+              ),
+            },
+          },
+          dialog: {
+            sx: {
+              '& .MuiDialog-paper': {
+                width: '90vw',
+                maxWidth: '400px',
+                maxHeight: '70vh',
+              },
+            },
+          },
+        }}
+      />
+    )
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
       <Container maxWidth="md">
+        {submitError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {submitError}
+          </Alert>
+        )}
         <Slide in direction="up" timeout={300}>
           <Paper
             elevation={isMobile ? 0 : 6}
@@ -160,8 +255,7 @@ function ProfilePage() {
                     mb: 1,
                   }}
                 >
-                  {watch('first_name') || 'Пользователь'}
-                  {watch('last_name')}
+                  {`${watch('first_name') || 'Пользователь'} ${watch('last_name')}`}
                 </Typography>
 
                 <Chip
@@ -193,7 +287,6 @@ function ProfilePage() {
                 },
               }}
             >
-              {/* Персональная информация */}
               <Typography
                 variant="h6"
                 sx={{
@@ -262,11 +355,12 @@ function ProfilePage() {
                     label="Отчество"
                     fullWidth
                     variant="outlined"
+                    error={!!errors.middle_name}
+                    helperText={getCombinedError('middle_name')}
                   />
                 )}
               />
 
-              {/* Контактная информация */}
               <Typography
                 variant="h6"
                 sx={{
@@ -403,7 +497,6 @@ function ProfilePage() {
                 }}
               />
 
-              {/* Дополнительная информация */}
               <Typography
                 variant="h6"
                 sx={{
@@ -447,75 +540,7 @@ function ProfilePage() {
                 <Controller
                   name="birthday"
                   control={control}
-                  render={({ field }) => {
-                    const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
-
-                    return isDesktop ? (
-                      // Десктопная версия с увеличенным календарем
-                      <DesktopDatePicker
-                        label="Дата рождения"
-                        value={field.value}
-                        onChange={field.onChange}
-                        format="dd.MM.yyyy"
-                        maxDate={new Date()}
-                        slotProps={{
-                          popper: {
-                            sx: {
-                              '& .MuiPaper-root': {
-                                transform: 'scale(1.2)', // Увеличиваем календарь
-                                transformOrigin: 'top left',
-                                boxShadow: theme.shadows[10],
-                                borderRadius: 4,
-                              },
-                            },
-                          },
-                          textField: {
-                            fullWidth: true,
-                            InputProps: {
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <CakeIcon color="action" />
-                                </InputAdornment>
-                              ),
-                            },
-                          },
-                        }}
-                        views={['year', 'month', 'day']}
-                        showDaysOutsideCurrentMonth
-                        fixedWeekNumber={6}
-                      />
-                    ) : (
-                      // Мобильная версия
-                      <MobileDatePicker
-                        label="Дата рождения"
-                        value={field.value}
-                        onChange={field.onChange}
-                        format="dd.MM.yyyy"
-                        maxDate={new Date()}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            InputProps: {
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <CakeIcon color="action" />
-                                </InputAdornment>
-                              ),
-                            },
-                          },
-                          dialog: {
-                            sx: {
-                              '& .MuiDialog-paper': {
-                                width: '90vw',
-                                maxWidth: '400px',
-                                maxHeight: '70vh',
-                              },
-                            },
-                          },
-                        }}
-                      />
-                    )
-                  }}
+                  render={({ field }) => renderBirthdayPicker(field, isDesktop)}
                 />
               </Box>
 

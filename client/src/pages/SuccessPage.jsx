@@ -1,7 +1,10 @@
 import React from 'react'
 
+import CalendarResults from './CalendarResults'
+
 function SuccessPage() {
-  return <div>SuccessPage</div>
+  return <CalendarResults />
+  // return <div>SuccessPage</div>
 }
 
 export default SuccessPage

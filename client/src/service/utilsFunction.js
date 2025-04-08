@@ -43,3 +43,17 @@ export const getYouTubeId = (url) => {
   const match = url.match(regExp)
   return match && match[2].length === 11 ? match[2] : null
 }
+
+export const getTestEnding = (count) => {
+  if (count % 10 === 1 && count % 100 !== 11) {
+    return ''
+  }
+  if (
+    count % 10 >= 2 &&
+    count % 10 <= 4 &&
+    (count % 100 < 10 || count % 100 >= 20)
+  ) {
+    return 'а'
+  }
+  return 'ов'
+}

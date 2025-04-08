@@ -16,7 +16,7 @@ const testUser = {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(testUser) // @TODO null
+  const [user, setUser] = useState(null) // @TODO null
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()

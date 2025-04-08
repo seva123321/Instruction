@@ -63,14 +63,14 @@ function QuestionFeedback({
               <List dense sx={{ py: 0 }}>
                 {referenceLink.map((link) => (
                   <ListItem
-                    key={link.source} //@TODO url
+                    key={link.source} // @TODO url
                     sx={{
                       py: 0.5,
                       px: 0,
                     }}
                   >
                     <a
-                      href={link.source} //@TODO url
+                      href={link.source} // @TODO url
                       target="_blank"
                       rel="noopener noreferrer"
                     >

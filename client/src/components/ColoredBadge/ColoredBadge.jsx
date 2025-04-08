@@ -6,9 +6,9 @@ import { styled } from '@mui/material/styles'
 const StyledBadge = styled(Badge)(({ theme, mark, size }) => {
   const getColor = () => {
     const numericMark = parseFloat(mark)
-    if (numericMark >= 8.5) return theme.palette.success.main
-    if (numericMark >= 6.5) return '#48ff74'
-    if (numericMark >= 5) return theme.palette.warning.main
+    if (numericMark >= 8.0) return theme.palette.success.main
+    if (numericMark >= 6.0) return '#48ff74'
+    if (numericMark >= 4) return theme.palette.warning.main
     return theme.palette.error.main
   }
 

@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.db.models.aggregates import Count, Avg
+from django.db.models.expressions import F
+from django.db.models import CharField, Value
+from django.db.models.functions import Concat
 from django.db.models.query_utils import Q
+
 
 from .models import (
     User,
@@ -69,6 +73,10 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ('name', 'tests__name')
     inlines = (ReferenceLinkInline, AnswerInline)
 
+@admin.register(ReferenceLink)
+class ReferenceLinkAdmin(admin.ModelAdmin):
+    list_display = ('title', 'source', 'question')
+    search_fields = ('name',)
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
@@ -144,10 +152,75 @@ def dashboard_callback(request, context):
         result=False
     ).select_related('user', 'instruction')[:5]
 
-    context.update({
-        'test_stats': test_stats,
-        'instruction_stats': instruction_stats,
-        'recent_failed_tests': recent_failed_tests,
-        'recent_failed_instructions': recent_failed_instructions,
-    })
+    # Проблемные вопросы (топ 5)
+    problematic_questions = (
+        UserAnswer.objects
+        .filter(is_correct=False)
+        .values('question__name')
+        .annotate(
+            total_errors=Count('id'),
+            question_id=F('question__id')
+        )
+        .order_by('-total_errors')[:5]
+    )
+
+    # Слабоквалифицированные сотрудники (топ 5)
+    test_fails = (
+        TestResult.objects.filter(is_passed=False)
+        .annotate(
+            user_name=Concat(
+                "user__last_name",
+                Value(" "),
+                "user__first_name",
+                output_field=CharField(),
+            )
+        )
+        .values("user")
+        .annotate(test_fails=Count("id"), user_name=F("user_name"))
+    )
+
+    # Для instruction_fails
+    instruction_fails = (
+        InstructionResult.objects.filter(result=False)
+        .annotate(
+            user_name=Concat(
+                "user__last_name",
+                Value(" "),
+                "user__first_name",
+                output_field=CharField(),
+            )
+        )
+        .values("user")
+        .annotate(instruction_fails=Count("id"), user_name=F("user_name"))
+    )
+
+    # Объединяем результаты
+    from collections import defaultdict
+    user_stats = defaultdict(lambda: {'test_fails': 0, 'instruction_fails': 0})
+
+    for entry in test_fails:
+        user_stats[entry['user']]['test_fails'] = entry['test_fails']
+        user_stats[entry['user']]['user_name'] = entry['user_name']
+
+    for entry in instruction_fails:
+        user_stats[entry['user']]['instruction_fails'] = entry['instruction_fails']
+        user_stats[entry['user']]['user_name'] = entry['user_name']
+
+    # Сортируем по общему количеству провалов
+    weak_users = sorted(
+        user_stats.values(),
+        key=lambda x: (x['test_fails'] + x['instruction_fails']),
+        reverse=True
+    )[:5]
+
+    context.update(
+        {
+            "problematic_questions": problematic_questions,
+            "weak_users": weak_users,
+            "test_stats": test_stats,
+            "instruction_stats": instruction_stats,
+            "recent_failed_tests": recent_failed_tests,
+            "recent_failed_instructions": recent_failed_instructions,
+        }
+    )
     return context

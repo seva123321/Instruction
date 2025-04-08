@@ -6,7 +6,6 @@ import numpy as np
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-
 from rest_framework.filters import SearchFilter
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -173,7 +172,11 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
-
+            if user.is_staff:
+                return Response(
+                    {'detail': 'Администраторы могут входить только через /admin/login/'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             login(request, user)
 
             return Response(
@@ -254,6 +257,11 @@ class FaceLoginView(APIView):
 
         # 4. Проверяем результат
         if best_match:
+            if best_match.is_staff:
+                return Response(
+                    {'detail': 'Администраторы могут входить только через /admin/login/'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             login(request, best_match)
             return Response(
                 {

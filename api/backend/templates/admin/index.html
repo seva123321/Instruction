@@ -75,6 +75,51 @@
                 </div>
             </div>
         </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <!-- Проблемные вопросы -->
+    <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Проблемные вопросы</h3>
+        <div class="space-y-3">
+            {% for question in problematic_questions %}
+            <div class="flex items-center justify-between p-3 bg-orange-100 dark:bg-orange-900/20 rounded">
+                <div class="flex-1 truncate">
+                    <span class="dark:text-gray-300">{{ question.question__name|truncatechars:40 }}</span>
+                    <span class="text-sm dark:text-gray-500 ml-2">(ID: {{ question.question_id }})</span>
+                </div>
+                <span class="text-red-600 dark:text-red-400 ml-2">{{ question.total_errors }} ошибок</span>
+            </div>
+            {% empty %}
+            <div class="p-3 text-gray-500 dark:text-gray-400">
+                Нет проблемных вопросов
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Слабоквалифицированные сотрудники -->
+    <div class="bg-opacity-10 bg-gray-500 p-6 rounded-lg shadow backdrop-blur">
+        <h3 class="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Требуют внимания</h3>
+        <div class="space-y-3">
+            {% for user in weak_users %}
+            <div class="flex items-center justify-between p-3 bg-purple-100 dark:bg-purple-900/20 rounded">
+                <span class="dark:text-gray-300">{{ user.user_name }}</span>
+                <div class="flex gap-2">
+                    <span class="text-red-600 dark:text-red-400" title="Проваленные тесты">
+                        {{ user.test_fails }} ⚠️
+                    </span>
+                    <span class="text-yellow-600 dark:text-yellow-400" title="Проваленные инструктажи">
+                        {{ user.instruction_fails }} 📋
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-3 text-gray-500 dark:text-gray-400">
+                Все сотрудники успешно прошли проверки
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
     </div>
 </div>
 

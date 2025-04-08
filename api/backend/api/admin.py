@@ -73,6 +73,10 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ('name', 'tests__name')
     inlines = (ReferenceLinkInline, AnswerInline)
 
+@admin.register(ReferenceLink)
+class ReferenceLinkAdmin(admin.ModelAdmin):
+    list_display = ('title', 'source', 'question')
+    search_fields = ('name',)
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):

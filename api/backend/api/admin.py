@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.db.models.aggregates import Count, Avg
+from django.db.models.query_utils import Q
+
 from .models import (
     User,
     TypeOfInstruction,
@@ -113,3 +116,38 @@ class NormativeLegislationAdmin(admin.ModelAdmin):
     list_display = ('title', 'date')
     search_fields = ('title', 'description')
     list_filter = ('date',)
+
+
+def dashboard_callback(request, context):
+    # Статистика по тестам
+    test_stats = TestResult.objects.aggregate(
+        total=Count('id'),
+        passed=Count('id', filter=Q(is_passed=True)),
+        failed=Count('id', filter=Q(is_passed=False)),
+        avg_score=Avg('score')
+    )
+
+    # Статистика по инструктажам
+    instruction_stats = InstructionResult.objects.aggregate(
+        total=Count('id'),
+        passed=Count('id', filter=Q(result=True)),
+        failed=Count('id', filter=Q(result=False))
+    )
+
+    # Последние проваленные тесты
+    recent_failed_tests = TestResult.objects.filter(
+        is_passed=False
+    ).select_related('user', 'test')[:5]
+
+    # Последние проваленные инструктажи
+    recent_failed_instructions = InstructionResult.objects.filter(
+        result=False
+    ).select_related('user', 'instruction')[:5]
+
+    context.update({
+        'test_stats': test_stats,
+        'instruction_stats': instruction_stats,
+        'recent_failed_tests': recent_failed_tests,
+        'recent_failed_instructions': recent_failed_instructions,
+    })
+    return context

@@ -1,4 +1,3 @@
-
 from django.conf import settings
 import numpy as np
 from rest_framework import serializers
@@ -25,11 +24,11 @@ from api.models import (
     Video,
     UserAnswer,
     NormativeLegislation,
-    InstructionAgreementResult
+    InstructionAgreementResult,
+    Notification,
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
-
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -124,7 +123,9 @@ class SignUpSerializer(serializers.Serializer):
         try:
             input_descriptor = np.array(value, dtype=np.float32)
         except:
-            raise serializers.ValidationError('Неправильный формат дескриптора лица')
+            raise serializers.ValidationError(
+                'Неправильный формат дескриптора лица'
+            )
 
         if len(input_descriptor) != 128:
             raise serializers.ValidationError(
@@ -237,7 +238,8 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     """Сериализатор для результатов инструктажа с проверкой ключей согласий."""
 
     instruction_agreement = serializers.ListField(
-        child=serializers.DictField(child=serializers.BooleanField()), required=True
+        child=serializers.DictField(child=serializers.BooleanField()),
+        required=True,
     )
     face_descriptor = serializers.ListField(
         child=serializers.FloatField(), write_only=True, required=True
@@ -309,7 +311,9 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         agreements_data = validated_data.pop('instruction_agreement')
         face_descriptor = validated_data.pop('face_descriptor')
 
-        is_passed = any(list(agreement.values())[0] for agreement in agreements_data)
+        is_passed = any(
+            list(agreement.values())[0] for agreement in agreements_data
+        )
 
         instruction_result = InstructionResult.objects.create(
             user=request.user,
@@ -526,3 +530,25 @@ class NormativeLegislationSerializer(serializers.ModelSerializer):
         model = NormativeLegislation
         fields = ('id', 'title', 'description', 'url', 'date')
         read_only_fields = fields
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    test_result = serializers.HyperlinkedRelatedField(
+        view_name="testresult-detail", read_only=True
+    )
+    instruction_result = serializers.HyperlinkedRelatedField(
+        view_name="instructionresult-detail", read_only=True
+    )
+
+    class Meta:
+        model = Notification
+        fields = (
+            "id",
+            "notification_type",
+            "created_at",
+            "is_read",
+            "test_result",
+            "instruction_result",
+            "employee",
+        )
+        read_only_fields = ("created_at",)

@@ -6,7 +6,10 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0032_alter_testresult_options_remove_testresult_date_and_more"),
+        (
+            "api",
+            "0032_alter_testresult_options_remove_testresult_date_and_more",
+        ),
     ]
 
     operations = [
@@ -25,9 +28,14 @@ class Migration(migrations.Migration):
                 ("title", models.TextField(verbose_name="Название")),
                 (
                     "description",
-                    models.TextField(blank=True, null=True, verbose_name="Описание"),
+                    models.TextField(
+                        blank=True, null=True, verbose_name="Описание"
+                    ),
                 ),
-                ("url", models.URLField(blank=True, null=True, verbose_name="URL")),
+                (
+                    "url",
+                    models.URLField(blank=True, null=True, verbose_name="URL"),
+                ),
                 (
                     "date",
                     models.DateTimeField(

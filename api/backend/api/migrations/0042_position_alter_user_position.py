@@ -2,15 +2,18 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
+
 def migrate_positions_forward(apps, schema_editor):
     User = apps.get_model('api', 'User')
     Position = apps.get_model('api', 'Position')
 
     # Собираем все существующие должности
-    positions = User.objects.exclude(position__isnull=True) \
-        .exclude(position__exact='') \
-        .values_list('position', flat=True) \
+    positions = (
+        User.objects.exclude(position__isnull=True)
+        .exclude(position__exact='')
+        .values_list('position', flat=True)
         .distinct()
+    )
 
     # Создаем записи в Position
     position_map = {}
@@ -25,6 +28,7 @@ def migrate_positions_forward(apps, schema_editor):
             user.position_fk = position_map[user.position]
             user.save()
 
+
 class Migration(migrations.Migration):
     dependencies = [
         ('api', '0041_rename_url_referencelink_source'),
@@ -34,15 +38,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Position',
             fields=[
-                ('id', models.BigAutoField(
-                    auto_created=True,
-                    primary_key=True,
-                    serialize=False,
-                    verbose_name='ID')),
-                ('name', models.CharField(
-                    max_length=150,
-                    unique=True,
-                    verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(
+                        max_length=150, unique=True, verbose_name='Название'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Должность',
@@ -58,7 +68,8 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name='users',
                 to='api.position',
-                verbose_name='Должность'),
+                verbose_name='Должность',
+            ),
         ),
         migrations.RunPython(migrate_positions_forward),
         migrations.RemoveField(

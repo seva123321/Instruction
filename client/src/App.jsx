@@ -118,6 +118,7 @@ function App() {
             }
           />
         </Route>
+        <Route path="/admin/*" element={<AdminRedirect />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {/* </ThemeProvider> */}
@@ -125,4 +126,8 @@ function App() {
   )
 }
 
+function AdminRedirect() {
+  window.location.href = 'http://localhost:8000/admin' // Порт Django
+  return null
+}
 export default App

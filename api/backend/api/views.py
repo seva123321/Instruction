@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
@@ -12,7 +14,14 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.models import User, Instruction, Tests, Video, NormativeLegislation
+from api.models import (
+    User,
+    Instruction,
+    Tests,
+    Video,
+    NormativeLegislation,
+    Notification,
+)
 from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
@@ -26,10 +35,10 @@ from api.serializers import (
     TestResultCreateSerializer,
     NormativeLegislationSerializer,
     InstructionResultSerializer,
+    NotificationSerializer,
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
-
 
 
 @extend_schema(
@@ -81,9 +90,7 @@ class UserViewSet(ModelViewSet):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except IntegrityError as e:
                 return Response(
-                    {
-                        'error': f'Ошибка сохранения данных. {e}'
-                    },
+                    {'error': f'Ошибка сохранения данных. {e}'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -119,7 +126,9 @@ class SignUpView(APIView):
                 if db_error in str(e):
                     raise ValidationError(message)
 
-            raise ValidationError({'detail': 'Ошибка при создании пользователя'})
+            raise ValidationError(
+                {'detail': 'Ошибка при создании пользователя'}
+            )
         except Exception as e:
             raise ValidationError({'detail': str(e)})
 
@@ -174,7 +183,10 @@ class LoginView(APIView):
                 )
             if user.is_staff:
                 return Response(
-                    {'detail': 'Администраторы могут входить только через /admin/login/'},
+                    {
+                        "detail": "Администраторы могут входить только через /admin/login/",
+                        "errors": {"admin": "/admin/login/"},
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             login(request, user)
@@ -259,7 +271,10 @@ class FaceLoginView(APIView):
         if best_match:
             if best_match.is_staff:
                 return Response(
-                    {'detail': 'Администраторы могут входить только через /admin/login/'},
+                    {
+                        "detail": "Администраторы могут входить только через /admin/login/",
+                        "errors": {"admin": "/admin/login/"},
+                    },
                     status=status.HTTP_403_FORBIDDEN,
                 )
             login(request, best_match)
@@ -382,12 +397,12 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
 
 class InstructionResultView(APIView):
     """API для сохранения результатов прохождения инструктажа."""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = InstructionResultSerializer(
-            data=request.data,
-            context={'request': request}
+            data=request.data, context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
 
@@ -397,12 +412,33 @@ class InstructionResultView(APIView):
                 {
                     'status': 'success',
                     'instruction_result_id': instruction_result.id,
-                    'is_passed': instruction_result.result
+                    'is_passed': instruction_result.result,
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
         except Exception as e:
             return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        Notification.objects.filter(user=request.user, is_read=False).update(
+            is_read=True
+        )
+        return Response({'status': 'all marked as read'})

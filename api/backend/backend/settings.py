@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
     'two_factor',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -109,7 +110,23 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_IMPORTS = ('api.tasks',)
+
+CELERY_BEAT_SCHEDULE = {
+    'send-instruction-reminders': {
+        'task': 'api.tasks.send_instruction_reminders',
+        'schedule': 300,
+    }
+}
+
 LOGIN_URL = 'two_factor:login'
+
+# TODO: Change before production
+TELEGRAM_BOT_TOKEN = '7535987443:AAHyzgz8M1Eelp3cX9XXiEZfTcxVtAhIKl4'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -159,6 +176,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

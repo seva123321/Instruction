@@ -26,6 +26,8 @@ from api.models import (
     NormativeLegislation,
     InstructionAgreementResult,
     Notification,
+    Shift,
+    DutySchedule
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
@@ -528,7 +530,7 @@ class NormativeLegislationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NormativeLegislation
-        fields = ('id', 'title', 'description', 'url', 'date')
+        fields = ('id', 'title', 'description', 'url', 'file', 'date')
         read_only_fields = fields
 
 

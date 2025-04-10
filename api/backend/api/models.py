@@ -1,5 +1,10 @@
+import asyncio
+from asgiref.sync import sync_to_async, async_to_sync
+from django.db import transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.conf import settings
+from telegram import Bot
 
 from django.db import models
 
@@ -81,7 +86,15 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_MIDDLE_NAME,
     )
     birthday = models.DateField('Дата рождения', blank=True, null=True)
-    position = models.CharField('Должность', max_length=MAX_LENGTH_POSITION)
+    position = models.ForeignKey(
+        'Position',
+        on_delete=models.SET_NULL,
+        verbose_name='Название должности',
+        related_name='users',
+        max_length=MAX_LENGTH_POSITION,
+        blank=True,
+        null=True,
+    )
     email = models.EmailField(
         'Электронная почта',
         unique=True,
@@ -105,6 +118,18 @@ class User(AbstractUser):
         blank=True,
         null=True,
     )
+    supervisor = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'role': Role.MANAGEMENT},
+        verbose_name='Руководитель',
+        related_name='subordinates',
+    )
+    telegram_chat_id = models.CharField(
+        'Telegram Chat ID', max_length=255, blank=True, null=True
+    )
 
     objects = UserManager()
 
@@ -121,6 +146,127 @@ class User(AbstractUser):
         if self.mobile_phone:
             self.mobile_phone = normalize_phone_number(self.mobile_phone)
         super().save(*args, **kwargs)
+
+
+class Position(models.Model):
+    """Модель должности пользователя."""
+
+    name = models.CharField(
+        'Название',
+        max_length=MAX_LENGTH_POSITION,
+    )
+
+    class Meta:
+        verbose_name = 'Должность'
+        verbose_name_plural = 'Должности'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта должности."""
+        return self.name
+
+
+class Notification(models.Model):
+    class NotificationType(models.TextChoices):
+        TEST = 'test', 'Результат теста'
+        INSTRUCTION = 'instruction', 'Результат инструктажа'
+
+    user = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        verbose_name='Руководитель',
+    )
+    employee = models.ForeignKey(
+        'User', on_delete=models.CASCADE, verbose_name='Сотрудник'
+    )
+    notification_type = models.CharField(
+        'Тип уведомления', max_length=20, choices=NotificationType.choices
+    )
+    is_read = models.BooleanField('Прочитано', default=False)
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+
+    # Связи с результатами
+    test_result = models.ForeignKey(
+        'TestResult', on_delete=models.CASCADE, null=True, blank=True
+    )
+    instruction_result = models.ForeignKey(
+        'InstructionResult', on_delete=models.CASCADE, null=True, blank=True
+    )
+    is_sent = models.BooleanField("Отправлено", default=False)
+    error = models.CharField(
+        'Ошибка отправки', max_length=255, null=True, blank=True
+    )
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f"{self.employee} - {self.get_notification_type_display()}"
+
+    def send_notification(self):
+        """Синхронный метод для отправки уведомления"""
+        async_to_sync(self._async_send_notification)()
+
+    async def _async_send_notification(self):
+        """Асинхронная логика отправки уведомления"""
+        try:
+            bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+            message = self._generate_message()
+
+            await bot.send_message(
+                chat_id=self.user.telegram_chat_id,
+                text=message,
+                parse_mode='Markdown',
+            )
+            await self._async_save(sent=True)
+        except Exception as e:
+            await self._async_save(error=str(e))
+            print(f"Ошибка: {str(e)}")
+
+    @sync_to_async
+    def _async_save(self, sent=False, error=None):
+        """Асинхронное сохранение статуса отправки"""
+        with transaction.atomic():
+            update_fields = []
+
+            if sent:
+                self.is_sent = True
+                update_fields.append("is_sent")
+
+            if error and hasattr(self, "error"):
+                self.error = error[:255]
+                update_fields.append("error")
+
+            if update_fields:
+                self.save(update_fields=update_fields)
+            else:
+                self.save()
+
+    def _generate_message(self):
+        """Генерирует текст уведомления с Markdown-разметкой"""
+        if self.test_result:
+            status = (
+                "✅ Прошел" if self.test_result.is_passed else "❌ Не прошел"
+            )
+            return (
+                f"*Тест*: {self.test_result.test.name}\n"
+                f"*Сотрудник*: *{self.employee}*\n"
+                f"*Статус*: {status}\n"
+                f"*Дата*: {self.test_result.completion_time.strftime('%d.%m.%Y %H:%M')}"
+            )
+        elif self.instruction_result:
+            status = (
+                "✅ Прошел"
+                if self.instruction_result.result
+                else "❌ Не прошел"
+            )
+            return (
+                f"*Инструктаж*: {self.instruction_result.instruction.name}\n"
+                f"*Сотрудник*: *{self.employee}*\n"
+                f"*Статус*: {status}\n"
+                f"*Дата*: {self.instruction_result.date.strftime('%d.%m.%Y %H:%M')}"
+            )
+        return "Новое уведомление"
 
 
 class TypeOfInstruction(models.Model):
@@ -151,7 +297,7 @@ class Instruction(models.Model):
         max_length=MAX_LENGTH_INSTRUCTION,
     )
     type_of_instruction = models.ForeignKey(
-        TypeOfInstruction,
+        'TypeOfInstruction',
         on_delete=models.SET_NULL,
         related_name='instructions',
         verbose_name='Тип инструктажа',
@@ -361,6 +507,19 @@ class TestResult(models.Model):
             f" - {'Пройден' if self.is_passed else 'Не пройден'}"
         )
 
+    def create_notification(self):
+        if self.user.supervisor:
+            # Создаем уведомление
+            notification = Notification.objects.create(
+                user=self.user.supervisor,
+                employee=self.user,
+                notification_type=Notification.NotificationType.TEST,
+                test_result=self,
+            )
+
+            # Отправляем уведомление в Телеграмм
+            notification.send_notification()
+
 
 class UserAnswer(models.Model):
     """Модель ответов пользователя на вопросы теста."""
@@ -429,13 +588,27 @@ class InstructionResult(models.Model):
         """Возвращает строковое представление объекта результата инструктажа."""
         return f'{self.user} - {self.instruction} - {self.result}'
 
+    def create_notification(self):
+        if self.user.supervisor:
+            # Создаем уведомление
+            notification = Notification.objects.create(
+                user=self.user.supervisor,
+                employee=self.user,
+                notification_type=Notification.NotificationType.INSTRUCTION,
+                instruction_result=self,
+            )
+
+            # Отправляем уведомление в Телеграмм
+            notification.send_notification()
+
 
 class InstructionAgreementResult(models.Model):
     """Модель для хранения результатов согласий инструктажа."""
+
     instruction_result = models.ForeignKey(
         InstructionResult,
         on_delete=models.CASCADE,
-        related_name='agreement_results'
+        related_name='agreement_results',
     )
     agreement_type = models.CharField(max_length=50)
     agreed = models.BooleanField()
@@ -465,7 +638,7 @@ class Video(models.Model):
     )
     file = models.FileField(
         'Видеофайл',
-        upload_to='media/videos/',
+        upload_to='videos/',
         blank=True,
     )
     date = models.DateTimeField(
@@ -481,6 +654,7 @@ class Video(models.Model):
         """Возвращает строковое представление объекта видеофайла."""
         return self.title
 
+
 class NormativeLegislation(models.Model):
     """Модель нормативно-правовых актов."""
 
@@ -493,7 +667,7 @@ class NormativeLegislation(models.Model):
     url = models.URLField('URL', blank=True, null=True)
     file = models.FileField(
         'НПА',
-        upload_to='media/nlas/',
+        upload_to='nlas/',
         blank=True,
     )
     date = models.DateTimeField('Дата загрузки', auto_now_add=True)
@@ -505,3 +679,48 @@ class NormativeLegislation(models.Model):
     def __str__(self):
         """Возвращает строковое представление объекта нормативно-правового акта."""
         return self.title
+
+
+class Shift(models.Model):
+    """Модель смены"""
+    name = models.CharField('Название смены', max_length=50)
+    start_time = models.TimeField('Время начала')
+    end_time = models.TimeField('Время окончания')
+
+    class Meta:
+        verbose_name = 'Смена'
+        verbose_name_plural = 'Смены'
+
+    def __str__(self):
+        return f"{self.name} ({self.start_time}-{self.end_time})"
+
+
+class DutySchedule(models.Model):
+    """График дежурств сотрудников"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='duty_schedules',
+        verbose_name='Сотрудник'
+    )
+    shift = models.ForeignKey(
+        Shift,
+        on_delete=models.CASCADE,
+        verbose_name='Смена'
+    )
+    date = models.DateField('Дата дежурства')
+    instruction = models.ForeignKey(
+        Instruction,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Инструктаж для смены'
+    )
+
+    class Meta:
+        verbose_name = 'График дежурств'
+        verbose_name_plural = 'Графики дежурств'
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user} - {self.date} ({self.shift})"

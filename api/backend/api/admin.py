@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.contrib import admin
 from django.db.models.aggregates import Count, Avg
 from django.db.models.expressions import F
@@ -20,6 +22,8 @@ from .models import (
     ReferenceLink,
     UserAnswer,
     NormativeLegislation,
+    Shift,
+    DutySchedule,
 )
 
 
@@ -73,10 +77,12 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ('name', 'tests__name')
     inlines = (ReferenceLinkInline, AnswerInline)
 
+
 @admin.register(ReferenceLink)
 class ReferenceLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'source', 'question')
     search_fields = ('name',)
+
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
@@ -86,7 +92,14 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'is_passed', 'mark', 'score', 'completion_time')
+    list_display = (
+        'user',
+        'test',
+        'is_passed',
+        'mark',
+        'score',
+        'completion_time',
+    )
     search_fields = ('user__email', 'test__name')
 
 
@@ -132,14 +145,14 @@ def dashboard_callback(request, context):
         total=Count('id'),
         passed=Count('id', filter=Q(is_passed=True)),
         failed=Count('id', filter=Q(is_passed=False)),
-        avg_score=Avg('score')
+        avg_score=Avg('score'),
     )
 
     # Статистика по инструктажам
     instruction_stats = InstructionResult.objects.aggregate(
         total=Count('id'),
         passed=Count('id', filter=Q(result=True)),
-        failed=Count('id', filter=Q(result=False))
+        failed=Count('id', filter=Q(result=False)),
     )
 
     # Последние проваленные тесты
@@ -154,13 +167,9 @@ def dashboard_callback(request, context):
 
     # Проблемные вопросы (топ 5)
     problematic_questions = (
-        UserAnswer.objects
-        .filter(is_correct=False)
+        UserAnswer.objects.filter(is_correct=False)
         .values('question__name')
-        .annotate(
-            total_errors=Count('id'),
-            question_id=F('question__id')
-        )
+        .annotate(total_errors=Count('id'), question_id=F('question__id'))
         .order_by('-total_errors')[:5]
     )
 
@@ -194,8 +203,6 @@ def dashboard_callback(request, context):
         .annotate(instruction_fails=Count("id"), user_name=F("user_name"))
     )
 
-    # Объединяем результаты
-    from collections import defaultdict
     user_stats = defaultdict(lambda: {'test_fails': 0, 'instruction_fails': 0})
 
     for entry in test_fails:
@@ -203,14 +210,16 @@ def dashboard_callback(request, context):
         user_stats[entry['user']]['user_name'] = entry['user_name']
 
     for entry in instruction_fails:
-        user_stats[entry['user']]['instruction_fails'] = entry['instruction_fails']
+        user_stats[entry['user']]['instruction_fails'] = entry[
+            'instruction_fails'
+        ]
         user_stats[entry['user']]['user_name'] = entry['user_name']
 
     # Сортируем по общему количеству провалов
     weak_users = sorted(
         user_stats.values(),
         key=lambda x: (x['test_fails'] + x['instruction_fails']),
-        reverse=True
+        reverse=True,
     )[:5]
 
     context.update(
@@ -224,3 +233,16 @@ def dashboard_callback(request, context):
         }
     )
     return context
+
+
+@admin.register(Shift)
+class ShiftAdmin(admin.ModelAdmin):
+    list_display = ('name', 'start_time', 'end_time')
+    list_editable = ('start_time', 'end_time')
+
+@admin.register(DutySchedule)
+class DutyScheduleAdmin(admin.ModelAdmin):
+    list_display = ('user', 'date', 'shift', 'instruction')
+    list_filter = ('date', 'shift')
+    search_fields = ('user__last_name', 'user__first_name')
+    date_hierarchy = 'date'

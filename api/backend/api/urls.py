@@ -16,6 +16,7 @@ from api.views import (
     TestResultCreateView,
     NormativeLegislationViewSet,
     InstructionResultView,
+    NotificationViewSet,
 )
 
 router = DefaultRouter()
@@ -23,7 +24,10 @@ router = DefaultRouter()
 router.register('instructions', InstructionViewSet, basename='instructions')
 router.register('tests', TestViewSet, basename='tests')
 router.register('knowladge/videos', VideoViewSet, basename='knowladge/videos')
-router.register('knowladge/nlas', NormativeLegislationViewSet, basename='knowladge/nlas')
+router.register(
+    'knowladge/nlas', NormativeLegislationViewSet, basename='knowladge/nlas'
+)
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 router.register('users', UserViewSet, basename='users')
 auth_urls = [
@@ -35,7 +39,11 @@ auth_urls = [
 
 urlpatterns = [
     path('auth/', include(auth_urls)),
-    path('instruction_results/', InstructionResultView.as_view(), name='instruction_results'),
+    path(
+        'instruction_results/',
+        InstructionResultView.as_view(),
+        name='instruction_results',
+    ),
     path('test_results/', TestResultCreateView.as_view(), name='test_results'),
     path('', include(router.urls)),
 ]

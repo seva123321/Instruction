@@ -85,7 +85,6 @@ function CheckboxFields({ agreements = [], id }) {
           face_descriptor: descriptor || faceDescriptor,
         }
 
-        console.log('Form data:', submissionData)
         await postInstructionResults(submissionData).unwrap()
 
         // Сброс формы после успешной отправки

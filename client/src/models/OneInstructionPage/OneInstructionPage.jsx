@@ -37,7 +37,17 @@ function OneInstructionPage({ data, isLoading, error }) {
 
   // Состояния загрузки
   if (finalIsLoading) {
-    return <CircularProgress size={60} />
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    )
   }
 
   // Обработка ошибок
@@ -83,44 +93,3 @@ function OneInstructionPage({ data, isLoading, error }) {
 }
 
 export default OneInstructionPage
-
-// import React from 'react'
-// import { Grid2, Container } from '@mui/material'
-// // import { agreements, instructionMarkdown } from '@/service/constValues'
-// import CheckboxFields from '@/models/CheckboxFields'
-// import MarkdownContext from '@/models/MarkdownContext'
-// import { useGetInstructionByIdQuery } from '../slices/instructionApi'
-// import { useParams } from 'react-router-dom'
-
-// function OneInstructionPage({ data }) {
-//   const {
-//     type_of_instruction: instrType,
-//     name,
-//     text: instructionMarkdown,
-//     instruction_agreement: agreements,
-//   } = data
-
-//   return (
-//     <div>
-//       {/* Передаем контент инструкции или fallback */}
-//       <MarkdownContext
-//         markdown={instructionMarkdown}
-//         header={name || 'Инструктаж'}
-//       />
-
-//       <Grid2 container spacing={2}>
-//         <Grid2 size={{ xs: 12, sm: 9 }} sx={{ padding: 3 }}>
-//           <Container maxWidth="lg" sx={{ padding: 3 }}>
-//             <CheckboxFields agreements={agreements} />
-//           </Container>
-//         </Grid2>
-//         <Grid2
-//           size={{ xs: 12, sm: 3 }}
-//           sx={{ display: { xs: 'none', sm: 'flex' } }}
-//         />
-//       </Grid2>
-//     </div>
-//   )
-// }
-
-// export default OneInstructionPage

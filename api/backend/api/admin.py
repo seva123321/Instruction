@@ -22,6 +22,8 @@ from .models import (
     ReferenceLink,
     UserAnswer,
     NormativeLegislation,
+    Shift,
+    DutySchedule,
 )
 
 
@@ -231,3 +233,16 @@ def dashboard_callback(request, context):
         }
     )
     return context
+
+
+@admin.register(Shift)
+class ShiftAdmin(admin.ModelAdmin):
+    list_display = ('name', 'start_time', 'end_time')
+    list_editable = ('start_time', 'end_time')
+
+@admin.register(DutySchedule)
+class DutyScheduleAdmin(admin.ModelAdmin):
+    list_display = ('user', 'date', 'shift', 'instruction')
+    list_filter = ('date', 'shift')
+    search_fields = ('user__last_name', 'user__first_name')
+    date_hierarchy = 'date'

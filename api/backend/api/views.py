@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
@@ -182,9 +184,8 @@ class LoginView(APIView):
             if user.is_staff:
                 return Response(
                     {
-                        'detail': 'Администраторы могут входить только через /admin/login/',
-                        'url_redirect': 'admin/login/',
-                        'user': 'admin'
+                        "detail": "Администраторы могут входить только через /admin/login/",
+                        "errors": {"admin": "/admin/login/"},
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )
@@ -271,9 +272,8 @@ class FaceLoginView(APIView):
             if best_match.is_staff:
                 return Response(
                     {
-                        'detail': 'Администраторы могут входить только через /admin/login/',
-                        'url_redirect': 'admin/login/',
-                        'user': 'admin'
+                        "detail": "Администраторы могут входить только через /admin/login/",
+                        "errors": {"admin": "/admin/login/"},
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )

@@ -54,36 +54,35 @@ function QuestionFeedback({
             variant="body2"
             dangerouslySetInnerHTML={{ __html: explanation }}
           />
-          {/* reference_link
-: 
-[{id: 319, title: "", source: "ПДД РФ, п. 11.4."}] */}
-          {referenceLink?.source !== '' ||
-            (referenceLink?.title !== '' && (
-              <>
-                <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-                  Ссылки для изучения:
-                </Typography>
-                <List dense sx={{ py: 0 }}>
-                  {referenceLink.map((link) => (
-                    <ListItem
-                      key={link.source} // @TODO url
-                      sx={{
-                        py: 0.5,
-                        px: 0,
-                      }}
+
+          {(referenceLink[0]?.source !== '' ||
+            referenceLink[0]?.title !== '') && (
+            <>
+              <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+                Ссылки для изучения:
+              </Typography>
+
+              <List dense sx={{ py: 0 }}>
+                {referenceLink.map((link) => (
+                  <ListItem
+                    key={link.source}
+                    sx={{
+                      py: 0.5,
+                      px: 0,
+                    }}
+                  >
+                    <a
+                      href={link.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      <a
-                        href={link.source} // @TODO url
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {link.title}
-                      </a>
-                    </ListItem>
-                  ))}
-                </List>
-              </>
-            ))}
+                      {link.title}
+                    </a>
+                  </ListItem>
+                ))}
+              </List>
+            </>
+          )}
         </Paper>
       )}
     </Collapse>

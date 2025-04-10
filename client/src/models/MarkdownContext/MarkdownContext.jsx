@@ -299,24 +299,21 @@ function MarkdownContext({ markdown, header }) {
     }
   }, [headings])
 
-  const scrollToHeading = useCallback(
-    (id) => {
-      // Добавляем небольшую задержку для гарантированной прокрутки
-      setTimeout(() => {
-        const element = document.getElementById(id)
-        if (element) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
+  const scrollToHeading = useCallback((id) => {
+    // Добавляем небольшую задержку для гарантированной прокрутки
+    setTimeout(() => {
+      const element = document.getElementById(id)
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
 
-          // Обновляем URL без перезагрузки страницы
-          window.history.replaceState(null, null, `#${id}`)
-        }
-      }, 50)
-    },
-    [isMobile]
-  )
+        // Обновляем URL без перезагрузки страницы
+        window.history.replaceState(null, null, `#${id}`)
+      }
+    }, 50)
+  }, [])
 
   const styles = {
     root: {

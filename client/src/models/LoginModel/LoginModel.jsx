@@ -1,7 +1,7 @@
 /* eslint-disable indent */
 /* eslint-disable operator-linebreak */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -90,6 +90,18 @@ function LoginModel() {
     setFaceDescriptor(null)
     setErrorMessage(null)
   }
+
+  useEffect(() => {
+    console.log('errorsServer > ', errorsServer)
+
+    if (errorsServer?.email === 'Пользователь с таким email не найден') {
+      navigate('/admin/login/')
+    }
+    //@TODO
+    // if (errorsServer?.admin) {
+    //   navigate(`${errorsServer?.admin}, {replace: true}`)
+    // }
+  }, [errorsServer, navigate])
 
   return (
     <div>

@@ -27,6 +27,7 @@ import {
   ErrorOutline,
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material'
+import { getTestEnding } from '@/service/utilsFunction'
 
 function TestResultsView({
   testTitle = '',
@@ -262,7 +263,7 @@ function TestResultsView({
                             color={isCorrect ? 'success.main' : 'error.main'}
                           >
                             {isCorrect
-                              ? `Правильно (+${question.points} баллов)`
+                              ? `Правильно (+${question.points} балл${getTestEnding(question.points)})`
                               : 'Неправильно (0 баллов)'}
                           </Typography>
                         </Stack>

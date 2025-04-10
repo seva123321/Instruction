@@ -368,9 +368,11 @@ function TestOnePage() {
         ...correctAnswers,
         [testProps.currentQuestion.id]: isCorrect,
       },
-      score: isCorrect ? score + 1 : score,
+      score: isCorrect ? score + testProps.currentQuestion.points : score,
       showFeedback: true,
     })
+
+    // points
   }, [answers, correctAnswers, score, testProps.currentQuestion, updateState])
 
   const handleTabChange = useCallback(

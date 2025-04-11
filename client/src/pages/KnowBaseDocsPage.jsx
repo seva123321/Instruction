@@ -5,12 +5,12 @@ import {
   CardContent,
   Typography,
   Container,
-  Button,
   Box,
   useTheme,
   useMediaQuery,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material'
 
 import { useGetKnowladgeNLAsQuery } from '../slices/knowladgeApi'
@@ -22,7 +22,6 @@ function KnowBasePageDocs() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const { data: documents, isError, isLoading } = useGetKnowladgeNLAsQuery()
 
-  // Мемоизированные стили для оптимизации производительности
   const styles = useMemo(
     () => ({
       card: {
@@ -93,11 +92,6 @@ function KnowBasePageDocs() {
     [theme, isMobile]
   )
 
-  const handleDocumentClick = (title) => {
-    console.log(`Открыт документ: ${title}`)
-    // Здесь можно добавить логику навигации или открытия модального окна
-  }
-
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -164,12 +158,17 @@ function KnowBasePageDocs() {
 
               <Box sx={{ px: 2, pb: 2, display: 'flex' }}>
                 <Button
+                  component="a"
+                  // href={document.file?.replace('/media/media/', '/media/')}
+                  href={document.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   variant="contained"
                   size={isMobile ? 'small' : 'medium'}
                   sx={styles.button}
-                  onClick={() => handleDocumentClick(document.title)}
+                  download
                 >
-                  Подробнее
+                  Открыть
                 </Button>
               </Box>
             </Card>

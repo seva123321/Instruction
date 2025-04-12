@@ -28,10 +28,10 @@ import { ru } from 'date-fns/locale'
 
 import { getTestsFromDB } from '@/service/offlineDB'
 
-import TestResultsList from './TestResultsList'
-import CalendarDay from './CalendarDay'
-import Legend from './CalendarLegend'
-import { useLazyGetTestsQuery } from '../slices/testApi'
+import TestResultsList from '../../components/TestResultsList'
+import CalendarDay from '../../components/CalendarDay'
+import Legend from '../../components/CalendarLegend'
+import { useLazyGetTestsQuery } from '../../slices/testApi'
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const MIN_CALENDAR_WIDTH = 700

@@ -16,6 +16,8 @@ function InstructionsPage() {
   const { id } = useParams()
   const theme = useTheme()
 
+  console.log('paint InstructionsPage ')
+
   // Запрос для получения списка инструкций
   const {
     data: instructions,

@@ -15,7 +15,7 @@ import { Close } from '@mui/icons-material'
 
 import { getTestEnding } from '@/service/utilsFunction'
 
-import TestResultsTooltip from './TestResultsTooltip'
+import TestResultsTooltip from '../TestResultsTooltip/TestResultsTooltip'
 
 function CalendarDay({
   day,

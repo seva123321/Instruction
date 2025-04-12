@@ -43,14 +43,6 @@ function App() {
             }
           />
           <Route
-            path="knowladge"
-            element={
-              <RequireAuth>
-                <KnowBasePage />
-              </RequireAuth>
-            }
-          />
-          <Route
             path="knowladge/nlas"
             element={
               <RequireAuth>

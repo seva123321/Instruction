@@ -34,7 +34,7 @@ import {
 import useTestResults from '../hook/useTestResults'
 import TestItem from '../components/TestItem/TestItem'
 
-import KnowBaseHeader from './KnowBaseHeader'
+import KnowBaseHeader from '@/components/KnowBaseHeader'
 
 function ErrorMessage({ error }) {
   return (

@@ -20,7 +20,7 @@ import { Search, YouTube, VideoFile } from '@mui/icons-material'
 import { useGetKnowladgeVideosQuery } from '../slices/knowladgeApi'
 import UniversalVideoPlayer from '../components/VideoPlayer/VideoPlayer'
 
-import KnowBaseHeader from '../components/KnowBaseHeader/KnowBaseHeader'
+import KnowBaseHeader from '@/components/KnowBaseHeader'
 
 // Вынесенный компонент карточки видео для лучшей производительности
 const VideoCard = memo(({ video, isMobile, theme }) => {

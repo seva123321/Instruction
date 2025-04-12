@@ -15,7 +15,7 @@ import {
 
 import { useGetKnowladgeNLAsQuery } from '../slices/knowladgeApi'
 
-import KnowBaseHeader from './KnowBaseHeader'
+import KnowBaseHeader from '@/components/KnowBaseHeader'
 
 function KnowBasePageDocs() {
   const theme = useTheme()

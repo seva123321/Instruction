@@ -23,7 +23,7 @@ function Layout() {
     },
     mainContent: {
       flex: 1,
-      padding: '2rem',
+      padding: '3rem 0',
       maxWidth: 1200,
       margin: '0 auto',
       '& h1': { fontSize: `${2.5 * fontSize}rem` }, // Масштабируем заголовки

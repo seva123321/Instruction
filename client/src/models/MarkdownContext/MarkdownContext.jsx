@@ -10,7 +10,6 @@ import {
   Container,
   IconButton,
   Drawer,
-  useMediaQuery,
   useTheme,
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
@@ -18,15 +17,14 @@ import CloseIcon from '@mui/icons-material/Close'
 import './Markdown.css'
 
 // Генератор уникальных ID для заголовков
-const generateHeadingId = (text) => {
-  return text
+const generateHeadingId = (text) =>
+  text
     .toString()
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .slice(0, 50)
-}
 
 const MarkdownComponents = {
   h1: ({ children, ...props }) => {
@@ -196,7 +194,6 @@ const MarkdownComponents = {
 
 function MarkdownContext({ markdown, header }) {
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [headings, setHeadings] = useState([])
   const [currentHeading, setCurrentHeading] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -220,10 +217,11 @@ function MarkdownContext({ markdown, header }) {
   // Извлечение заголовков из markdown
   useEffect(() => {
     const headingRegex = /^(#{1,3})\s+(.*)$/gm
-    const matches = [...markdown.matchAll(headingRegex)] // Используем matchAll для получения позиций
+    const matches = [...markdown.matchAll(headingRegex)] // matchAll для получения позиций
     setHeadings([])
     if (matches.length > 0) {
       const extractedHeadings = matches.map((match) => {
+        // eslint-disable-next-line no-unused-vars
         const [fullMatch, hashes, text] = match
         const level = hashes.length
         const id = generateHeadingId(text)
@@ -280,8 +278,9 @@ function MarkdownContext({ markdown, header }) {
       }
     )
 
-    headingRefs.current = headings.map((heading) =>
-      document.getElementById(heading.id)
+    headingRefs.current = headings.map(
+      (heading) => document.getElementById(heading.id)
+      // eslint-disable-next-line function-paren-newline
     )
 
     headingRefs.current.forEach((heading) => {

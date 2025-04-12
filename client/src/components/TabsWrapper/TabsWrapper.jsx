@@ -41,8 +41,8 @@ const StyledTab = styled(Tab, {
     },
     [theme.breakpoints.up('md')]: {
       fontSize: '0.875rem',
-      // padding: theme.spacing(1, 2),
-      // maxWidth: '200px',
+      padding: theme.spacing(1, 2),
+      maxWidth: '180px',
     },
   }
 
@@ -146,6 +146,7 @@ export default function TabsWrapper({
           allowScrollButtonsMobile
           sx={{
             maxHeight: '96px',
+            maxWidth: isMobile ? '320px' : '100%',
             '& .MuiTabs-flexContainer': {
               justifyContent: centered && !isMobile ? 'center' : 'flex-start',
               gap: '4px',

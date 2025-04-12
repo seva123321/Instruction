@@ -11,7 +11,7 @@ const getMarkColor = (mark) => {
   return 'error'
 }
 
-export const TestResultsList = memo(({ events, currentDate, theme }) => {
+const TestResultsList = memo(({ events, currentDate, theme }) => {
   const monthEvents = events
     ?.filter((event) => isSameMonth(event.date, currentDate))
     .sort((a, b) => b.date - a.date)

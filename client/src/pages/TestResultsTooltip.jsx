@@ -1,10 +1,9 @@
 import { Box, List, ListItem, Typography } from '@mui/material'
-import React from 'react'
 
-const TestResultsTooltip = ({ dayEvents }) => {
+function TestResultsTooltip({ dayEvents }) {
   return (
     <List>
-      {dayEvents.map((event, index) => (
+      {dayEvents.map((event) => (
         <ListItem
           sx={{
             display: 'flex',
@@ -12,8 +11,7 @@ const TestResultsTooltip = ({ dayEvents }) => {
             alignItems: 'flex-start',
             borderTop: '1px solid grey',
           }}
-          // key={event.id + event.duration + event.score}
-          key={index}
+          key={event.id + event.date}
         >
           <Typography variant="subtitle2">{event.testName}</Typography>
           <Box display="flex" alignItems="center" gap={1} mt={0.5}>

@@ -59,14 +59,15 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route
+          {/* @TODO when add audio */}
+          {/* <Route
             path="knowladge/audios"
             element={
               <RequireAuth>
                 <KnowBasePage />
               </RequireAuth>
             }
-          />
+          /> */}
           <Route
             path="knowladge/videos"
             element={
@@ -75,16 +76,6 @@ function App() {
               </RequireAuth>
             }
           />
-          {/* <Route
-            path="tests"
-            element={
-              <RequireAuth>
-                <TestingPage />
-              </RequireAuth>
-            }
-          >
-            <Route path=":id" element={<TestOnePage />} />
-          </Route> */}
           <Route
             path="tests"
             element={

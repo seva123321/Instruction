@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, Fragment } from 'react'
+import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -6,7 +6,7 @@ import {
   Typography,
   List,
   ListItem,
-  Link,
+  Link as MuiLink,
   Container,
   IconButton,
   Drawer,
@@ -26,70 +26,61 @@ const generateHeadingId = (text) =>
     .replace(/-+/g, '-')
     .slice(0, 50)
 
-const MarkdownComponents = {
-  h1: ({ children, ...props }) => {
-    const id = generateHeadingId(children)
-    return (
-      <Typography
-        variant="h4"
-        gutterBottom
-        id={id}
-        sx={{
-          textAlign: 'center',
-          fontWeight: 700,
-          color: 'text.primary',
-          mt: 4,
-          mb: 3,
-          lineHeight: 1.3,
-        }}
-        {...props}
-      >
-        {children}
-      </Typography>
-    )
-  },
-  h2: ({ children, ...props }) => {
-    const id = generateHeadingId(children)
-    return (
-      <Typography
-        variant="h5"
-        gutterBottom
-        id={id}
-        sx={{
-          textAlign: 'center',
-          fontWeight: 600,
-          color: 'text.primary',
-          mt: 3,
-          mb: 2,
-          lineHeight: 1.3,
-        }}
-        {...props}
-      >
-        {children}
-      </Typography>
-    )
-  },
-  h3: ({ children, ...props }) => {
-    const id = generateHeadingId(children)
-    return (
-      <Typography
-        variant="h6"
-        gutterBottom
-        id={id}
-        sx={{
-          fontWeight: 500,
-          color: 'text.primary',
-          mt: 2,
-          mb: 1.5,
-          lineHeight: 1.4,
-        }}
-        {...props}
-      >
-        {children}
-      </Typography>
-    )
-  },
-  p: (props) => (
+const createMarkdownComponents = (theme) => ({
+  h1: ({ children, ...props }) => (
+    <Typography
+      variant="h4"
+      gutterBottom
+      id={generateHeadingId(children)}
+      sx={{
+        textAlign: 'center',
+        fontWeight: 700,
+        color: 'text.primary',
+        mt: 4,
+        mb: 3,
+        lineHeight: 1.3,
+      }}
+      {...props}
+    >
+      {children}
+    </Typography>
+  ),
+  h2: ({ children, ...props }) => (
+    <Typography
+      variant="h5"
+      gutterBottom
+      id={generateHeadingId(children)}
+      sx={{
+        textAlign: 'center',
+        fontWeight: 600,
+        color: 'text.primary',
+        mt: 3,
+        mb: 2,
+        lineHeight: 1.3,
+      }}
+      {...props}
+    >
+      {children}
+    </Typography>
+  ),
+  h3: ({ children, ...props }) => (
+    <Typography
+      variant="h6"
+      gutterBottom
+      id={generateHeadingId(children)}
+      sx={{
+        fontWeight: 500,
+        color: 'text.primary',
+        mt: 2,
+        mb: 1.5,
+        lineHeight: 1.4,
+      }}
+      {...props}
+    >
+      {children}
+    </Typography>
+  ),
+  p: ({ children, ...props }) => (
     <Typography
       component="p"
       gutterBottom
@@ -105,9 +96,11 @@ const MarkdownComponents = {
         },
       }}
       {...props}
-    />
+    >
+      {children}
+    </Typography>
   ),
-  ul: (props) => (
+  ul: ({ children, ...props }) => (
     <List
       sx={{
         pl: 2,
@@ -115,9 +108,11 @@ const MarkdownComponents = {
         listStyleType: 'disc',
       }}
       {...props}
-    />
+    >
+      {children}
+    </List>
   ),
-  li: (props) => (
+  li: ({ children, ...props }) => (
     <ListItem
       sx={{
         display: 'list-item',
@@ -126,10 +121,13 @@ const MarkdownComponents = {
         lineHeight: 1.6,
       }}
       {...props}
-    />
+    >
+      {children}
+    </ListItem>
   ),
-  a: (props) => (
-    <Link
+  a: ({ children, href, ...props }) => (
+    <MuiLink
+      href={href}
       sx={{
         color: 'primary.main',
         textDecoration: 'underline',
@@ -138,9 +136,11 @@ const MarkdownComponents = {
         },
       }}
       {...props}
-    />
+    >
+      {children}
+    </MuiLink>
   ),
-  strong: (props) => (
+  strong: ({ children, ...props }) => (
     <Typography
       component="strong"
       sx={{
@@ -148,9 +148,11 @@ const MarkdownComponents = {
         color: 'text.primary',
       }}
       {...props}
-    />
+    >
+      {children}
+    </Typography>
   ),
-  em: (props) => (
+  em: ({ children, ...props }) => (
     <Typography
       component="em"
       sx={{
@@ -158,9 +160,11 @@ const MarkdownComponents = {
         color: 'text.secondary',
       }}
       {...props}
-    />
+    >
+      {children}
+    </Typography>
   ),
-  blockquote: (props) => (
+  blockquote: ({ children, ...props }) => (
     <Box
       component="blockquote"
       sx={{
@@ -174,9 +178,11 @@ const MarkdownComponents = {
         color: 'text.secondary',
       }}
       {...props}
-    />
+    >
+      {children}
+    </Box>
   ),
-  code: (props) => (
+  code: ({ children, ...props }) => (
     <Box
       component="code"
       sx={{
@@ -188,83 +194,255 @@ const MarkdownComponents = {
         fontSize: '0.9em',
       }}
       {...props}
-    />
+    >
+      {children}
+    </Box>
   ),
-}
+})
 
-function MarkdownContext({ markdown, header }) {
+const useStyles = (theme) =>
+  useMemo(
+    () => ({
+      root: {
+        display: 'flex',
+        position: 'relative',
+        width: '100%',
+      },
+      content: {
+        flexGrow: 1,
+        width: '100%',
+        maxWidth: { md: 'calc(100% - 300px)' },
+        padding: 3,
+        '& p, & ul, & ol': {
+          maxWidth: '800px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        },
+        '& h1, & h2, & h3, & h4, & h5, & h6': {
+          scrollMarginTop: '80px',
+        },
+      },
+      sidebarDesktop: {
+        width: 300,
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
+        bgcolor: 'background.paper',
+        boxShadow: 1,
+        p: 2,
+        display: {
+          xs: 'none',
+          md: 'block',
+        },
+        borderRight: '1px solid',
+        borderColor: 'divider',
+        '&::-webkit-scrollbar': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: theme.palette.action.hover,
+          borderRadius: '3px',
+        },
+      },
+      sidebarMobile: {
+        width: 280,
+        height: '100%',
+        bgcolor: 'background.paper',
+        p: 2,
+      },
+      link: (level, isActive) => ({
+        textAlign: 'left',
+        display: 'block',
+        width: '100%',
+        py: 0.5,
+        pl: level * 2,
+        pr: 1,
+        textDecoration: 'none',
+        borderRadius: 1,
+        bgcolor: isActive ? 'action.selected' : 'transparent',
+        '&:hover': {
+          bgcolor: 'action.hover',
+        },
+      }),
+      menuButton: {
+        position: 'fixed',
+        bottom: 16,
+        right: 16,
+        zIndex: 1200,
+        display: { md: 'none' },
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
+        '&:hover': {
+          bgcolor: 'primary.dark',
+        },
+      },
+    }),
+    [theme]
+  )
+
+const SidebarContent = memo(
+  ({ headings, currentHeading, scrollToHeading, styles }) => {
+    return (
+      <>
+        <Typography textAlign="center" variant="h6" mt={2} mb={2}>
+          Содержание
+        </Typography>
+        <List>
+          {headings.map((heading) => (
+            <ListItem
+              key={`${heading.id}-${heading.position}`}
+              id={`sidebar-item-${heading.id}`}
+              disablePadding
+              dense
+            >
+              <MuiLink
+                href={`#${heading.id}`}
+                sx={{
+                  ...styles.link(heading.level, currentHeading === heading.id),
+                  lineHeight: 1.6,
+                  flexGrow: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 4,
+                  WebkitBoxOrient: 'vertical',
+                  transition: 'background-color 0.3s ease', // Добавляем плавный переход
+                }}
+                onClick={(e) => {
+                  e.preventDefault()
+                  scrollToHeading(heading.id)
+                }}
+              >
+                {heading.text}
+              </MuiLink>
+            </ListItem>
+          ))}
+        </List>
+      </>
+    )
+  }
+)
+
+const MarkdownContext = memo(({ markdown, header }) => {
   const theme = useTheme()
+  const styles = useStyles(theme)
   const [headings, setHeadings] = useState([])
   const [currentHeading, setCurrentHeading] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const headingRefs = useRef({})
   const sidebarRef = useRef(null)
   const location = useLocation()
+  const updateTimeoutRef = useRef(null) // Таймер для задержки обновления
+  const lastHeadingRef = useRef(null) // Последний активный заголовок
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen)
-  }
+  const markdownComponents = useMemo(
+    () => createMarkdownComponents(theme),
+    [theme]
+  )
+
+  const handleDrawerToggle = useCallback(() => {
+    setMobileOpen((prev) => !prev)
+  }, [])
+
+  const scrollToHeading = useCallback((id) => {
+    // Очищаем предыдущий таймер при клике
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+      window.history.replaceState(null, null, `#${id}`)
+      setCurrentHeading(id) // Мгновенное обновление при клике
+      lastHeadingRef.current = id
+    }
+  }, [])
+
+  // Оптимизированное обновление текущего заголовка с задержкой
+  const updateCurrentHeading = useCallback((id) => {
+    if (id !== lastHeadingRef.current) {
+      // Очищаем предыдущий таймер
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+
+      // Устанавливаем новый таймер с задержкой 300мс
+      updateTimeoutRef.current = setTimeout(() => {
+        lastHeadingRef.current = id
+        setCurrentHeading(id)
+      }, 300)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      // Очищаем таймер при размонтировании
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (location.hash) {
-      const element = document.getElementById(location.hash.slice(1))
+      const id = location.hash.slice(1)
+      const element = document.getElementById(id)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' })
+        setCurrentHeading(id)
+        lastHeadingRef.current = id
       }
     }
   }, [location])
 
-  // Извлечение заголовков из markdown
   useEffect(() => {
     const headingRegex = /^(#{1,3})\s+(.*)$/gm
-    const matches = [...markdown.matchAll(headingRegex)] // matchAll для получения позиций
-    setHeadings([])
+    const matches = [...markdown.matchAll(headingRegex)]
+
     if (matches.length > 0) {
       const extractedHeadings = matches.map((match) => {
-        // eslint-disable-next-line no-unused-vars
-        const [fullMatch, hashes, text] = match
-        const level = hashes.length
-        const id = generateHeadingId(text)
+        const [_, hashes, text] = match
         return {
-          level,
+          level: hashes.length,
           text,
-          id,
-          position: match.index, // Используем позицию в тексте для уникальности
+          id: generateHeadingId(text),
+          position: match.index,
         }
       })
 
-      // Удаляем дубликаты по ID (если такие есть)
-      const uniqueHeadings = extractedHeadings.reduce((acc, heading) => {
-        if (!acc.some((h) => h.id === heading.id)) {
-          acc.push(heading)
-        }
-        return acc
-      }, [])
+      const uniqueHeadings = extractedHeadings.filter(
+        (heading, index, self) =>
+          index === self.findIndex((h) => h.id === heading.id)
+      )
 
       setHeadings(uniqueHeadings)
+    } else {
+      setHeadings([])
     }
   }, [markdown])
 
-  // Настройка IntersectionObserver для отслеживания видимости заголовков
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setCurrentHeading(entry.target.id)
+            updateCurrentHeading(entry.target.id)
 
-            // Прокручиваем sidebar к активному элементу
             const activeItem = document.getElementById(
               `sidebar-item-${entry.target.id}`
             )
-            if (activeItem && sidebarRef.current) {
-              const sidebar = sidebarRef.current
-              const itemTop = activeItem.offsetTop
-              const itemHeight = activeItem.offsetHeight
-              const sidebarHeight = sidebar.offsetHeight
 
-              // Центрируем активный элемент в sidebar
-              sidebar.scrollTo({
+            if (activeItem && sidebarRef.current) {
+              const { offsetTop: itemTop, offsetHeight: itemHeight } =
+                activeItem
+              const { offsetHeight: sidebarHeight } = sidebarRef.current
+
+              sidebarRef.current.scrollTo({
                 top: itemTop - sidebarHeight / 2 + itemHeight / 2,
                 behavior: 'smooth',
               })
@@ -272,184 +450,44 @@ function MarkdownContext({ markdown, header }) {
           }
         })
       },
-      {
-        rootMargin: '0px 0px -60% 0px',
-        threshold: 0.5,
-      }
+      { rootMargin: '0px 0px -60% 0px', threshold: 0.5 }
     )
 
-    headingRefs.current = headings.map(
-      (heading) => document.getElementById(heading.id)
-      // eslint-disable-next-line function-paren-newline
+    const currentRefs = headings.map((heading) =>
+      document.getElementById(heading.id)
     )
-
-    headingRefs.current.forEach((heading) => {
-      if (heading) {
-        observer.observe(heading)
-      }
-    })
+    currentRefs.forEach((heading) => heading && observer.observe(heading))
+    headingRefs.current = currentRefs
 
     return () => {
-      headingRefs.current.forEach((heading) => {
-        if (heading) {
-          observer.unobserve(heading)
-        }
-      })
+      headingRefs.current.forEach(
+        (heading) => heading && observer.unobserve(heading)
+      )
     }
-  }, [headings])
-
-  const scrollToHeading = useCallback((id) => {
-    // Добавляем небольшую задержку для гарантированной прокрутки
-    setTimeout(() => {
-      const element = document.getElementById(id)
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-
-        // Обновляем URL без перезагрузки страницы
-        window.history.replaceState(null, null, `#${id}`)
-      }
-    }, 50)
-  }, [])
-
-  const styles = {
-    root: {
-      display: 'flex',
-      position: 'relative',
-      width: '100%',
-    },
-    content: {
-      flexGrow: 1,
-      width: '100%',
-      maxWidth: { md: 'calc(100% - 300px)' },
-      padding: 3,
-      '& p, & ul, & ol': {
-        maxWidth: '800px',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-      },
-      '& h1, & h2, & h3, & h4, & h5, & h6': {
-        scrollMarginTop: '80px',
-      },
-    },
-    sidebarDesktop: {
-      width: 300,
-      position: 'sticky',
-      top: 0,
-      height: '100vh',
-      overflowY: 'auto',
-      bgcolor: 'background.paper',
-      boxShadow: 1,
-      mt: 3,
-      p: 2,
-      display: {
-        xs: 'none',
-        md: 'block',
-      },
-      borderRight: '1px solid',
-      borderColor: 'divider',
-      '&::-webkit-scrollbar': {
-        width: '6px',
-      },
-      '&::-webkit-scrollbar-thumb': {
-        backgroundColor: theme.palette.action.hover,
-        borderRadius: '3px',
-      },
-    },
-    sidebarMobile: {
-      width: 280,
-      height: '100%',
-      bgcolor: 'background.paper',
-      p: 2,
-    },
-    link: (level, isActive) => ({
-      textAlign: 'left',
-      display: 'block',
-      width: '100%',
-      py: 0.5,
-      pl: level * 2,
-      pr: 1,
-      textDecoration: 'none',
-      borderRadius: 1,
-      bgcolor: isActive ? 'action.selected' : 'transparent',
-      '&:hover': {
-        bgcolor: 'action.hover',
-      },
-    }),
-    menuButton: {
-      position: 'fixed',
-      bottom: 16,
-      right: 16,
-      zIndex: 1200,
-      display: { md: 'none' },
-      bgcolor: 'primary.main',
-      color: 'primary.contrastText',
-      '&:hover': {
-        bgcolor: 'primary.dark',
-      },
-    },
-  }
-
-  const renderSidebarContent = () => (
-    <>
-      <Typography textAlign="center" variant="h6" mt={2} mb={2}>
-        Содержание
-      </Typography>
-      <List>
-        {headings.map((heading) => (
-          <ListItem
-            key={`${heading.id}-${heading.position}`} // Уникальный ключ с ID и позицией
-            id={`sidebar-item-${heading.id}`}
-            disablePadding
-            dense
-          >
-            <Link
-              href={`#${heading.id}`}
-              sx={{
-                ...styles.link(heading.level, currentHeading === heading.id),
-                lineHeight: 1.6,
-                flexGrow: 1,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 4,
-                WebkitBoxOrient: 'vertical',
-              }}
-              onClick={(e) => {
-                e.preventDefault()
-                scrollToHeading(heading.id)
-              }}
-            >
-              {heading.text}
-            </Link>
-          </ListItem>
-        ))}
-      </List>
-    </>
-  )
+  }, [headings, updateCurrentHeading])
 
   return (
     <Box sx={styles.root}>
-      {/* Основное содержимое */}
       <Box component="main" sx={styles.content}>
         <Container maxWidth="lg">
           <Typography variant="h3" gutterBottom>
             {header}
           </Typography>
-          <ReactMarkdown components={MarkdownComponents}>
+          <ReactMarkdown components={markdownComponents}>
             {markdown}
           </ReactMarkdown>
         </Container>
       </Box>
 
-      {/* Навигационная панель для десктопа */}
       <Box component="aside" sx={styles.sidebarDesktop} ref={sidebarRef}>
-        {renderSidebarContent()}
+        <SidebarContent
+          headings={headings}
+          currentHeading={currentHeading}
+          scrollToHeading={scrollToHeading}
+          styles={styles}
+        />
       </Box>
 
-      {/* Кнопка меню для мобильных */}
       <IconButton
         sx={styles.menuButton}
         onClick={handleDrawerToggle}
@@ -458,30 +496,30 @@ function MarkdownContext({ markdown, header }) {
         {mobileOpen ? <CloseIcon /> : <MenuIcon />}
       </IconButton>
 
-      {/* Навигационная панель для мобильных */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
+        ModalProps={{ keepMounted: true }}
         sx={{
-          display: {
-            xs: 'block',
-            md: 'none',
-          },
+          display: { xs: 'block', md: 'none' },
           '& .MuiDrawer-paper': styles.sidebarMobile,
         }}
         anchor="right"
       >
-        {renderSidebarContent()}
+        <SidebarContent
+          headings={headings}
+          currentHeading={currentHeading}
+          scrollToHeading={scrollToHeading}
+          styles={styles}
+        />
       </Drawer>
     </Box>
   )
-}
+})
 
 export default MarkdownContext
+
 // import { useState, useRef, useEffect, useCallback } from 'react'
 // import { useLocation } from 'react-router-dom'
 // import ReactMarkdown from 'react-markdown'
@@ -785,82 +823,82 @@ export default MarkdownContext
 //     [isMobile]
 //   )
 
-//   const styles = {
-//     root: {
-//       display: 'flex',
-//       position: 'relative',
-//       width: '100%',
+// const styles = {
+//   root: {
+//     display: 'flex',
+//     position: 'relative',
+//     width: '100%',
+//   },
+//   content: {
+//     flexGrow: 1,
+//     width: '100%',
+//     maxWidth: { md: 'calc(100% - 300px)' },
+//     padding: 3,
+//     '& p, & ul, & ol': {
+//       maxWidth: '800px',
+//       marginLeft: 'auto',
+//       marginRight: 'auto',
 //     },
-//     content: {
-//       flexGrow: 1,
-//       width: '100%',
-//       maxWidth: { md: 'calc(100% - 300px)' },
-//       padding: 3,
-//       '& p, & ul, & ol': {
-//         maxWidth: '800px',
-//         marginLeft: 'auto',
-//         marginRight: 'auto',
-//       },
-//       '& h1, & h2, & h3, & h4, & h5, & h6': {
-//         scrollMarginTop: '80px',
-//       },
+//     '& h1, & h2, & h3, & h4, & h5, & h6': {
+//       scrollMarginTop: '80px',
 //     },
-//     sidebarDesktop: {
-//       width: 300,
-//       position: 'sticky',
-//       top: 0,
-//       height: '100vh',
-//       overflowY: 'auto',
-//       bgcolor: 'background.paper',
-//       boxShadow: 1,
-//       p: 2,
-//       display: {
-//         xs: 'none',
-//         md: 'block',
-//       },
-//       borderRight: '1px solid',
-//       borderColor: 'divider',
-//       '&::-webkit-scrollbar': {
-//         width: '6px',
-//       },
-//       '&::-webkit-scrollbar-thumb': {
-//         backgroundColor: theme.palette.action.hover,
-//         borderRadius: '3px',
-//       },
+//   },
+//   sidebarDesktop: {
+//     width: 300,
+//     position: 'sticky',
+//     top: 0,
+//     height: '100vh',
+//     overflowY: 'auto',
+//     bgcolor: 'background.paper',
+//     boxShadow: 1,
+//     p: 2,
+//     display: {
+//       xs: 'none',
+//       md: 'block',
 //     },
-//     sidebarMobile: {
-//       width: 280,
-//       height: '100%',
-//       bgcolor: 'background.paper',
-//       p: 2,
+//     borderRight: '1px solid',
+//     borderColor: 'divider',
+//     '&::-webkit-scrollbar': {
+//       width: '6px',
 //     },
-//     link: (level, isActive) => ({
-//       textAlign: 'left',
-//       display: 'block',
-//       width: '100%',
-//       py: 0.5,
-//       pl: level * 2,
-//       pr: 1,
-//       textDecoration: 'none',
-//       borderRadius: 1,
-//       bgcolor: isActive ? 'action.selected' : 'transparent',
-//       '&:hover': {
-//         bgcolor: 'action.hover',
-//       },
-//     }),
-//     menuButton: {
-//       position: 'fixed',
-//       bottom: 16,
-//       right: 16,
-//       zIndex: 1200,
-//       display: { md: 'none' },
-//       bgcolor: 'primary.main',
-//       color: 'primary.contrastText',
-//       '&:hover': {
-//         bgcolor: 'primary.dark',
-//       },
+//     '&::-webkit-scrollbar-thumb': {
+//       backgroundColor: theme.palette.action.hover,
+//       borderRadius: '3px',
 //     },
-//   }
+//   },
+//   sidebarMobile: {
+//     width: 280,
+//     height: '100%',
+//     bgcolor: 'background.paper',
+//     p: 2,
+//   },
+//   link: (level, isActive) => ({
+//     textAlign: 'left',
+//     display: 'block',
+//     width: '100%',
+//     py: 0.5,
+//     pl: level * 2,
+//     pr: 1,
+//     textDecoration: 'none',
+//     borderRadius: 1,
+//     bgcolor: isActive ? 'action.selected' : 'transparent',
+//     '&:hover': {
+//       bgcolor: 'action.hover',
+//     },
+//   }),
+//   menuButton: {
+//     position: 'fixed',
+//     bottom: 16,
+//     right: 16,
+//     zIndex: 1200,
+//     display: { md: 'none' },
+//     bgcolor: 'primary.main',
+//     color: 'primary.contrastText',
+//     '&:hover': {
+//       bgcolor: 'primary.dark',
+//     },
+//   },
+// }
 
 //   const renderSidebarContent = () => (
 //     <>
@@ -899,6 +937,7 @@ export default MarkdownContext
 //       </List>
 //     </>
 //   )
+//   console.log('render MarkdownContext > ')
 
 //   return (
 //     <Box sx={styles.root}>

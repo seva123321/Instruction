@@ -1,12 +1,14 @@
 /* eslint-disable operator-linebreak */
-import { Box, Grid2, CircularProgress } from '@mui/material'
+import { memo, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
+import { Box, Grid2, CircularProgress, Typography } from '@mui/material'
 
-import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
+import LoadingIndicator from '@/components/LoadingIndicator'
 import CheckboxFields from '@/models/CheckboxFields'
+import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
 import MarkdownContext from '@/models/MarkdownContext'
 
-function OneInstructionPage({ data, isLoading, error }) {
+const OneInstructionPage = memo(({ data, isLoading, error }) => {
   // Если данные переданы через props (из first_instruction), используем их
   // Иначе делаем запрос по ID
   const { id } = useParams()
@@ -25,30 +27,36 @@ function OneInstructionPage({ data, isLoading, error }) {
   const finalIsLoading = isLoading || (isQueryLoading && !data)
   const finalError = error || queryError
 
-  // Полная защита от undefined
-  const pageData = {
-    text: finalData?.text ?? '',
-    id: finalData?.id,
-    name: finalData?.name ?? 'Инструктаж',
-    agreements: Array.isArray(finalData?.instruction_agreement)
-      ? finalData.instruction_agreement
-      : [],
-  }
+  const pageData = useMemo(
+    () => ({
+      text: finalData?.text ?? '',
+      id: finalData?.id,
+      name: finalData?.name ?? 'Инструктаж',
+      agreements: Array.isArray(finalData?.instruction_agreement)
+        ? finalData.instruction_agreement
+        : [],
+    }),
+    [finalData]
+  )
 
-  // Состояния загрузки
+  const styles = useMemo(
+    () => ({
+      root: {
+        width: '100%',
+      },
+      formContainer: {
+        width: '100%',
+        p: {
+          xs: 2,
+          md: 3,
+        },
+      },
+    }),
+    []
+  )
+
   if (finalIsLoading) {
-    return (
-      <Box
-        sx={{
-          height: '70vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <CircularProgress size={60} />
-      </Box>
-    )
+    return <LoadingIndicator />
   }
 
   // Обработка ошибок
@@ -62,21 +70,10 @@ function OneInstructionPage({ data, isLoading, error }) {
   }
 
   if (!finalData && isUninitialized) {
-    return <div>Инструкция не найдена</div>
+    return <Typography variant="h4">Инструкция не найдена</Typography>
   }
 
-  const styles = {
-    root: {
-      width: '100%',
-    },
-    formContainer: {
-      width: '100%',
-      p: {
-        xs: 2,
-        md: 3,
-      },
-    },
-  }
+  console.log('paint OneInstructionPage ')
 
   return (
     <Box sx={styles.root}>
@@ -91,6 +88,6 @@ function OneInstructionPage({ data, isLoading, error }) {
       </Grid2>
     </Box>
   )
-}
+})
 
 export default OneInstructionPage

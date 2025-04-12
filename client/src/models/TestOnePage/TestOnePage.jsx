@@ -1,6 +1,13 @@
 /* eslint-disable operator-linebreak */
-
-import React, { useMemo, useCallback, useEffect, useState } from 'react'
+import {
+  memo,
+  useMemo,
+  useCallback,
+  useEffect,
+  useState,
+  lazy,
+  Suspense,
+} from 'react'
 import {
   Box,
   Button,
@@ -11,6 +18,7 @@ import {
   Chip,
   Snackbar,
   Alert,
+  CircularProgress,
 } from '@mui/material'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
@@ -21,12 +29,13 @@ import useTestState from '@/hook/useTestState'
 import useTestResults from '@/hook/useTestResults'
 import TabsWrapper from '@/components/TabsWrapper'
 
-import { initDB, getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
-import { useGetTestByIdQuery } from '../../slices/testApi'
-import TestControls from '../../components/TestControls/TestControls'
-import QuestionView from '../../components/QuestionView/QuestionView'
-import TestResultsView from '../../components/TestResultsView/TestResultsView'
-import QuestionFeedback from '../../components/QuestionFeedback/QuestionFeedback'
+import { initDB, getTestFromDB, STORE_NAMES } from '@/service/offlineDB'
+import { useGetTestByIdQuery } from '@/slices/testApi'
+import TestControls from '@/components/TestControls'
+import LoadingIndicator from '@/components/LoadingIndicator'
+import QuestionView from '@/components/QuestionView'
+const TestResultsView = lazy(() => import('@/components/TestResultsView'))
+const QuestionFeedback = lazy(() => import('@/components/QuestionFeedback'))
 
 // Reusable components
 function OfflineIndicator() {
@@ -677,20 +686,22 @@ function TestOnePage() {
     }
 
     return (
-      <TestResultsView
-        testId={finalResults.test}
-        testTitle={finalResults.test_title || testProps.testName}
-        score={finalResults.score}
-        totalPoints={testProps.totalPoints}
-        mark={finalResults.mark}
-        answers={finalResults.user_answers}
-        questions={finalResults.questions}
-        startTime={finalResults.start_time}
-        completionTime={finalResults.completion_time}
-        duration={finalResults.test_duration}
-        onRestart={handleRestartTest}
-        isControlTest={testProps.isControlTest}
-      />
+      <Suspense fallback={<LoadingIndicator />}>
+        <TestResultsView
+          testId={finalResults.test}
+          testTitle={finalResults.test_title || testProps.testName}
+          score={finalResults.score}
+          totalPoints={testProps.totalPoints}
+          mark={finalResults.mark}
+          answers={finalResults.user_answers}
+          questions={finalResults.questions}
+          startTime={finalResults.start_time}
+          completionTime={finalResults.completion_time}
+          duration={finalResults.test_duration}
+          onRestart={handleRestartTest}
+          isControlTest={testProps.isControlTest}
+        />
+      </Suspense>
     )
   }
 
@@ -726,13 +737,15 @@ function TestOnePage() {
       />
 
       {!testProps.isControlTest && testProps.currentQuestion && (
-        <QuestionFeedback
-          showFeedback={showFeedback}
-          isCorrect={correctAnswers[testProps.currentQuestion.id] || false}
-          explanation={testProps.currentQuestion.explanation}
-          referenceLink={testProps.currentQuestion.reference_link}
-          onClose={() => updateState({ showFeedback: false })}
-        />
+        <Suspense fallback={<CircularProgress />}>
+          <QuestionFeedback
+            showFeedback={showFeedback}
+            isCorrect={correctAnswers[testProps.currentQuestion.id] || false}
+            explanation={testProps.currentQuestion.explanation}
+            referenceLink={testProps.currentQuestion.reference_link}
+            onClose={() => updateState({ showFeedback: false })}
+          />
+        </Suspense>
       )}
 
       <TestControls
@@ -764,11 +777,11 @@ function TestOnePage() {
   )
 }
 
-export default React.memo(TestOnePage)
+export default memo(TestOnePage)
 
 /** ***************************************************** */
 
-// import React, { useMemo, useCallback, useEffect, useState } from 'react'
+// import { memo, useMemo, useCallback, useEffect, useState } from 'react'
 // import {
 //   Box,
 //   Button,
@@ -776,30 +789,27 @@ export default React.memo(TestOnePage)
 //   useMediaQuery,
 //   Typography,
 //   Divider,
-//   CircularProgress,
 //   Chip,
 //   Snackbar,
 //   Alert,
 // } from '@mui/material'
-// import { Link, useParams } from 'react-router-dom'
+// import { Link, useLocation, useParams } from 'react-router-dom'
 // import { useSwipeable } from 'react-swipeable'
 // import OfflineBoltIcon from '@mui/icons-material/OfflineBolt'
 
-// // Импорт утилит и хуков
 // import { calculateMark } from '@/service/utilsFunction'
 // import useTestState from '@/hook/useTestState'
 // import useTestResults from '@/hook/useTestResults'
-// import { initDB, getTestFromDB } from '@/service/offlineDB'
-// // Импорт компонентов
 // import TabsWrapper from '@/components/TabsWrapper'
 
+// import { initDB, getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
 // import { useGetTestByIdQuery } from '../../slices/testApi'
 // import TestControls from '../../components/TestControls/TestControls'
 // import QuestionView from '../../components/QuestionView/QuestionView'
-// import TestResultsView from '../../components/TestResultsView/TestResultsView'
-// import QuestionFeedback from '../../components/QuestionFeedback/QuestionFeedback'
+// import TestResultsView from '../../components/TestResultsView'
+// import QuestionFeedback from '../../components/QuestionFeedback'
 
-// // Вынесенные компоненты
+// // Reusable components
 // function OfflineIndicator() {
 //   return (
 //     <Chip
@@ -852,30 +862,29 @@ export default React.memo(TestOnePage)
 //         </Typography>
 //         <BackButton isMobile={isMobile} />
 //       </Box>
-
 //       <Divider sx={{ my: isMobile ? 1 : 2 }} />
 //     </>
 //   )
 // }
 
 // function LoadingState() {
-//   // return <CircularProgress />
+//   return null
 // }
 
-// function ErrorState({ error, isOnline, onRetry, isLoading }) {
-//   return (
-//     <Box sx={{ p: 3, textAlign: 'center' }}>
-//       <Alert severity="error" sx={{ mb: 2 }}>
-//         {error?.message || 'Ошибка загрузки теста'}
-//       </Alert>
-//       {!isOnline && (
-//         <Button variant="contained" onClick={onRetry} disabled={isLoading}>
-//           Попробовать загрузить снова
-//         </Button>
-//       )}
-//     </Box>
-//   )
-// }
+// // function ErrorState({ error, isOnline, onRetry, isLoading }) {
+// //   return (
+// //     <Box sx={{ p: 3, textAlign: 'center' }}>
+// //       <Alert severity="error" sx={{ mb: 2 }}>
+// //         {error?.message || 'Ошибка загрузки теста'}
+// //       </Alert>
+// //       {!isOnline && (
+// //         <Button variant="contained" onClick={onRetry} disabled={isLoading}>
+// //           Попробовать загрузить снова
+// //         </Button>
+// //       )}
+// //     </Box>
+// //   )
+// // }
 
 // function NotFoundState({ isOnline }) {
 //   return (
@@ -896,36 +905,64 @@ export default React.memo(TestOnePage)
 //   )
 // }
 
-// function TestOnePage() {
-//   // Основные параметры и состояние
-//   const { id } = useParams()
-//   const theme = useTheme()
-//   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-//   const [isOnline, setIsOnline] = useState(navigator.onLine)
-//   const [syncError, setSyncError] = useState(null)
-//   const [isDBInitialized, setIsDBInitialized] = useState(false)
-//   const [offlineTest, setOfflineTest] = useState(null)
+// // // Custom hooks
+
+// const useOfflineTest = (
+//   id,
+//   isOnline,
+//   isDBInitialized,
+//   initialTestData = null
+// ) => {
+//   const [offlineTest, setOfflineTest] = useState(initialTestData)
 //   const [isOfflineLoading, setIsOfflineLoading] = useState(false)
-//   const { saveTestResults, getTestResults, syncPendingResults } =
-//     useTestResults()
+//   const [error, setError] = useState(null)
 
-//   // Для получения результатов теста
 //   useEffect(() => {
-//     const loadResults = async () => {
-//       try {
-//         const results = await getTestResults(id)
-//         // Обработка полученных результатов
-//       } catch (error) {
-//         console.error('Failed to load test results:', error)
+//     if (!isOnline && isDBInitialized && id) {
+//       const loadOfflineTest = async () => {
+//         try {
+//           setIsOfflineLoading(true)
+
+//           // Сначала проверяем переданные данные
+//           let test = offlineTest || initialTestData
+
+//           // Если данных нет, пробуем загрузить из IndexedDB
+//           if (!test) {
+//             test = await getTestFromDB(id, STORE_NAMES.TESTS_CONTENT)
+//           }
+
+//           // // Проверяем структуру теста
+//           // if (!test?.questions || !test?.name) {
+//           //   console.warn('Invalid test structure in IndexedDB:', test)
+//           //   throw new Error('INVALID_TEST_DATA')
+//           // }
+
+//           setOfflineTest(test)
+//           setError(null)
+//         } catch (e) {
+//           console.error('Offline load error:', e)
+//           setError(
+//             e.message === 'TEST_NOT_FOUND'
+//               ? 'Тест не найден в оффлайн-хранилище'
+//               : 'Неверный формат теста в оффлайн-хранилище'
+//           )
+//         } finally {
+//           setIsOfflineLoading(false)
+//         }
 //       }
-//     }
 
-//     if (id) {
-//       loadResults()
+//       loadOfflineTest()
 //     }
-//   }, [id, getTestResults])
+//   }, [id, isOnline, isDBInitialized, initialTestData, offlineTest])
 
-//   // Запрос данных теста
+//   return { offlineTest, isOfflineLoading, error }
+// }
+
+// const useTestData = (id, initialTestData) => {
+//   const [isDBInitialized, setIsDBInitialized] = useState(false)
+//   const [syncError, setSyncError] = useState(null)
+//   const [isOnline, setIsOnline] = useState(navigator.onLine)
+
 //   const {
 //     data: onlineTest,
 //     isLoading: isOnlineLoading,
@@ -934,7 +971,29 @@ export default React.memo(TestOnePage)
 //     refetch,
 //   } = useGetTestByIdQuery(id, { skip: !id || !isOnline })
 
-//   // Инициализация базы данных и обработка статуса сети
+//   // Вынесли логику отслеживания сети прямо в хук
+//   useEffect(() => {
+//     const handleOnline = () => {
+//       setIsOnline(true)
+//       refetch()
+//     }
+//     const handleOffline = () => setIsOnline(false)
+
+//     window.addEventListener('online', handleOnline)
+//     window.addEventListener('offline', handleOffline)
+
+//     return () => {
+//       window.removeEventListener('online', handleOnline)
+//       window.removeEventListener('offline', handleOffline)
+//     }
+//   }, [refetch])
+
+//   const {
+//     offlineTest,
+//     isOfflineLoading,
+//     error: offlineError,
+//   } = useOfflineTest(id, isOnline, isDBInitialized, initialTestData)
+
 //   useEffect(() => {
 //     const initializeDB = async () => {
 //       try {
@@ -945,57 +1004,45 @@ export default React.memo(TestOnePage)
 //         setSyncError('Ошибка инициализации локального хранилища')
 //       }
 //     }
-
-//     const handleStatusChange = () => {
-//       const newStatus = navigator.onLine
-//       setIsOnline(newStatus)
-//       if (newStatus) refetch()
-//     }
-
 //     initializeDB()
-//     window.addEventListener('online', handleStatusChange)
-//     window.addEventListener('offline', handleStatusChange)
+//   }, [])
 
-//     return () => {
-//       window.removeEventListener('online', handleStatusChange)
-//       window.removeEventListener('offline', handleStatusChange)
-//     }
-//   }, [refetch])
+//   return {
+//     test: isOnline ? onlineTest : offlineTest,
+//     isLoading: isOnline ? isOnlineLoading : isOfflineLoading,
+//     isError: isOnline ? isOnlineError : !!offlineError,
+//     error: isOnline ? onlineError : offlineError,
+//     syncError,
+//     setSyncError,
+//     refetch,
+//     isOnline,
+//     isDBInitialized,
+//   }
+// }
 
-//   useEffect(() => {
-//     const handleOnline = async () => {
-//       try {
-//         await syncPendingResults()
-//       } catch (e) {
-//         console.error('Sync failed:', e)
-//       }
-//     }
+// // Main component
+// function TestOnePage() {
+//   const { id } = useParams()
+//   const location = useLocation()
+//   const testOfflineData = location.state
+//   const theme = useTheme()
+//   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+//   const { saveTestResults, getTestResults, syncPendingResults } =
+//     useTestResults()
+//   // const { state: testOfflineData } = useLocation()
 
-//     window.addEventListener('online', handleOnline)
-//     return () => window.removeEventListener('online', handleOnline)
-//   }, [syncPendingResults])
+//   const {
+//     test,
+//     isLoading,
+//     isError,
+//     error,
+//     syncError,
+//     setSyncError,
+//     refetch,
+//     isOnline,
+//     isDBInitialized,
+//   } = useTestData(id, testOfflineData)
 
-//   // Загрузка оффлайн-версии теста
-//   useEffect(() => {
-//     if (!isOnline && isDBInitialized && id) {
-//       const loadOfflineTest = async () => {
-//         try {
-//           setIsOfflineLoading(true)
-//           const test = await getTestFromDB(id)
-//           if (!test) throw new Error('Тест не найден в оффлайн-хранилище')
-//           setOfflineTest(test)
-//         } catch (e) {
-//           console.error('Offline load error:', e)
-//           setSyncError(e.message)
-//         } finally {
-//           setIsOfflineLoading(false)
-//         }
-//       }
-//       loadOfflineTest()
-//     }
-//   }, [isOnline, isDBInitialized, id])
-
-//   // Состояние теста
 //   const [state, updateState] = useTestState({
 //     currentQuestionIndex: 0,
 //     answers: {},
@@ -1018,55 +1065,45 @@ export default React.memo(TestOnePage)
 //     testStartTime,
 //   } = state
 
-//   // Определение текущего теста и его свойств
-//   const test = isOnline ? onlineTest : offlineTest
-//   const isLoading = isOnline ? isOnlineLoading : isOfflineLoading
-//   const isError = isOnline ? isOnlineError : false
-//   const error = isOnline ? onlineError : null
-//   const isControlTest = test?.test_is_control
-//   const currentQuestion = test?.questions?.[currentQuestionIndex]
-//   const totalPoints = test?.total_points
-//   const passingScore = test?.passing_score
-//   // Мемоизированные значения
-//   // const totalPoints = useMemo(
-//   //   () => test?.questions?.reduce((sum, q) => sum + q.points, 0) || 0,
-//   //   [test?.questions]
-//   // )
-
-//   const unansweredQuestions = useMemo(
-//     () => test?.questions?.filter((q) => answers[q.id] === undefined) || [],
-//     [answers, test?.questions]
+//   // Memoized values
+//   const testProps = useMemo(
+//     () => ({
+//       isControlTest: test?.test_is_control || false,
+//       currentQuestion: test?.questions?.[currentQuestionIndex],
+//       totalPoints: test?.total_points || 0,
+//       passingScore: test?.passing_score || 75,
+//       questionsLength: test?.questions?.length || 0,
+//       testName: test?.name || '',
+//     }),
+//     [test, currentQuestionIndex]
 //   )
 
-//   const allQuestionsAnswered = unansweredQuestions.length === 0
-//   const isLastQuestion =
-//     currentQuestionIndex === (test?.questions?.length || 0) - 1
-//   const isAnswered = currentQuestion?.id
-//     ? correctAnswers[currentQuestion.id] !== undefined
+//   const [allQuestionsAnswered] = useMemo(() => {
+//     if (!test?.questions) return [false]
+
+//     // Проверяем, что для всех вопросов есть ответы в объекте answers
+//     const allAnswered = test.questions.every((q) => answers[q.id] !== undefined)
+//     return [allAnswered]
+//   }, [answers, test?.questions])
+
+//   const isLastQuestion = currentQuestionIndex === testProps.questionsLength - 1
+//   const isAnswered = testProps.currentQuestion?.id
+//     ? correctAnswers[testProps.currentQuestion.id] !== undefined
 //     : false
 
-//   // Обработчики событий
-//   const handleDownloadTest = useCallback(async () => {
-//     try {
-//       await refetch()
-//     } catch (err) {
-//       setSyncError(`Ошибка загрузки: ${err.message}`)
-//     }
-//   }, [refetch])
+//   // Event handlers
 
 //   const navigateQuestion = useCallback(
 //     (direction) => {
-//       if (!test?.questions) return
-
 //       const newIndex = currentQuestionIndex + direction
-//       if (newIndex >= 0 && newIndex < test.questions.length) {
+//       if (newIndex >= 0 && newIndex < testProps.questionsLength) {
 //         updateState({
 //           currentQuestionIndex: newIndex,
 //           showFeedback: false,
 //         })
 //       }
 //     },
-//     [currentQuestionIndex, test?.questions, updateState]
+//     [currentQuestionIndex, testProps.questionsLength, updateState]
 //   )
 
 //   const swipeHandlers = useSwipeable({
@@ -1076,37 +1113,48 @@ export default React.memo(TestOnePage)
 //     preventDefaultTouchmoveEvent: true,
 //   })
 
+//   const handleNextQuestion = useCallback(() => {
+//     navigateQuestion(1)
+//   }, [navigateQuestion])
+
 //   const handleAnswerChange = useCallback(
 //     (event) => {
-//       if (!currentQuestion?.id) return
+//       if (!testProps.currentQuestion?.id) return
 //       updateState({
 //         answers: {
 //           ...answers,
-//           [currentQuestion.id]: event.target.value,
+//           [testProps.currentQuestion.id]: event.target.value,
 //         },
 //       })
 //     },
-//     [answers, currentQuestion?.id, updateState]
+//     [answers, testProps.currentQuestion?.id, updateState]
 //   )
 
 //   const handleSubmit = useCallback(() => {
-//     if (!currentQuestion?.id || !answers[currentQuestion.id]) return
+//     if (
+//       !testProps.currentQuestion?.id ||
+//       !answers[testProps.currentQuestion.id]
+//     ) {
+//       return
+//     }
 
-//     const selectedAnswerId = answers[currentQuestion.id]
-//     const isCorrect = currentQuestion.answers.some(
-//       (answer) => answer.id.toString() === selectedAnswerId && answer.is_correct
+//     const isCorrect = testProps.currentQuestion.answers.some(
+//       (answer) =>
+//         answer.id.toString() === answers[testProps.currentQuestion.id] &&
+//         answer.is_correct
 //     )
 
 //     updateState({
 //       correctAnswers: {
 //         ...correctAnswers,
-//         [currentQuestion.id]: isCorrect,
+//         [testProps.currentQuestion.id]: isCorrect,
 //       },
-//       score: isCorrect ? score + 1 : score,
-//       // score: isCorrect ? score + currentQuestion.points : score,
+//       score: isCorrect ? score + testProps.currentQuestion.points : score,
 //       showFeedback: true,
 //     })
-//   }, [answers, correctAnswers, currentQuestion, score, updateState])
+
+//     // points
+//   }, [answers, correctAnswers, score, testProps.currentQuestion, updateState])
 
 //   const handleTabChange = useCallback(
 //     (_, newIndex) => {
@@ -1118,14 +1166,126 @@ export default React.memo(TestOnePage)
 //     [updateState]
 //   )
 
-//   const handleNextQuestion = useCallback(() => {
-//     navigateQuestion(1)
-//   }, [navigateQuestion])
+//   const prepareTestResults = useCallback(() => {
+//     const mark = calculateMark(score, testProps.totalPoints).toFixed(1)
+//     const completionTime = new Date()
+//     const testDuration = Math.floor((completionTime - testStartTime) / 1000)
+//     const isPassed =
+//       score >= (testProps.totalPoints * testProps.passingScore) / 100
+
+//     return {
+//       fullResults: {
+//         test: id,
+//         test_title: test?.name,
+//         is_passed: isPassed,
+//         total_points: testProps.totalPoints,
+//         mark,
+//         start_time: testStartTime.toISOString(),
+//         completion_time: completionTime.toISOString(),
+//         test_duration: testDuration,
+//         questions:
+//           test?.questions?.map((question) => ({
+//             id: question.id,
+//             name: question.name,
+//             points: question.points,
+//             answers: question.answers.map((answer) => ({
+//               id: answer.id,
+//               name: answer.name,
+//               is_correct: answer.is_correct,
+//             })),
+//             explanation: question.explanation,
+//           })) || [],
+//         user_answers:
+//           test?.questions?.map((question) => ({
+//             id: question.id,
+//             selected_id: answers[question.id] || null,
+//             is_correct: correctAnswers[question.id] || false,
+//             points: correctAnswers[question.id] ? question.points : 0,
+//           })) || [],
+//       },
+//       serverResults: {
+//         test: id,
+//         is_passed: isPassed,
+//         mark,
+//         score,
+//         total_points: testProps.totalPoints,
+//         start_time: testStartTime.toISOString(),
+//         completion_time: completionTime.toISOString(),
+//         test_duration: testDuration,
+//         user_answers:
+//           test?.questions?.map((question) => ({
+//             id: question.id,
+//             selected_id: answers[question.id] || null,
+//             is_correct: correctAnswers[question.id] || false,
+//           })) || [],
+//       },
+//     }
+//   }, [
+//     answers,
+//     correctAnswers,
+//     id,
+//     score,
+//     test,
+//     testProps.passingScore,
+//     testProps.totalPoints,
+//     testStartTime,
+//   ])
+
+//   // useEffect(() => {
+//   //   const loadTestData = async () => {
+//   //     try {
+//   //       setIsLoading(true)
+//   //       setError(null)
+
+//   //       if (isOnline) {
+//   //         // Загрузка из API
+//   //         const { data } = await getTestById(id)
+//   //         if (!data) throw new Error('Тест не найден')
+//   //         setTestData(data)
+//   //       } else {
+//   //         // Загрузка из IndexedDB
+//   //         const offlineTest = await getOfflineTest(id)
+//   //         setTestData(offlineTest)
+
+//   //         // Если тест есть, но это базовая версия
+//   //         if (!offlineTest.content) {
+//   //           setWarning(
+//   //             'Доступна только базовая версия теста. Для полной версии подключитесь к интернету.'
+//   //           )
+//   //         }
+//   //       }
+//   //     } catch (e) {
+//   //       if (e.message === 'TEST_NOT_FOUND') {
+//   //         setError(
+//   //           <span>
+//   //             Тест не доступен оффлайн.
+//   //             <Button
+//   //               color="primary"
+//   //               onClick={() => setShowDownloadDialog(true)}
+//   //               sx={{ ml: 1 }}
+//   //             >
+//   //               Скачать
+//   //             </Button>{' '}
+//   //             при следующем подключении
+//   //           </span>
+//   //         )
+//   //       } else {
+//   //         setError(e.message)
+//   //       }
+//   //     } finally {
+//   //       setIsLoading(false)
+//   //     }
+//   //   }
+
+//   //   loadTestData()
+//   // }, [id, isOnline, getTestById])
+
+//   // Диалог для напоминания скачать тест
+//   // const [showDownloadDialog, setShowDownloadDialog] = useState(false)
 
 //   const handleCompleteTest = useCallback(async () => {
 //     if (!test?.questions || !id || !test?.name) return
 
-//     // Проверка на неотвеченные вопросы
 //     if (!allQuestionsAnswered) {
 //       const firstUnansweredIndex = test.questions.findIndex(
 //         (q) => answers[q.id] === undefined
@@ -1137,91 +1297,25 @@ export default React.memo(TestOnePage)
 //       return
 //     }
 
-//     const mark = calculateMark(score, totalPoints).toFixed(1)
-//     const completionTime = new Date()
-//     const testDuration = Math.floor((completionTime - testStartTime) / 1000)
-
-//     /*
-//             fields = (
-//             'id',
-//             'is_passed',
-//             'mark',
-//             'score',
-//             'total_points',
-//             'start_time',
-//             'completion_time',
-//             'test_duration',
-//         )
-//     */
-//     const isPassed = score >= (totalPoints * passingScore) / 100
-
-//     // Полные данные для локального хранения
-//     const fullResults = {
-//       test: id,
-//       test_title: test.name,
-//       is_passed: isPassed,
-//       // total_score: score,
-//       total_points: totalPoints,
-//       mark,
-//       start_time: testStartTime.toISOString(),
-//       completion_time: completionTime.toISOString(),
-//       test_duration: testDuration,
-//       questions: test.questions.map((question) => ({
-//         id: question.id,
-//         name: question.name,
-//         points: question.points,
-//         answers: question.answers.map((answer) => ({
-//           id: answer.id,
-//           name: answer.name,
-//           is_correct: answer.is_correct,
-//         })),
-//         explanation: question.explanation,
-//       })),
-//       user_answers: test.questions.map((question) => ({
-//         id: question.id,
-//         selected_id: answers[question.id] || null,
-//         is_correct: correctAnswers[question.id] || false,
-//         points: correctAnswers[question.id] ? question.points : 0,
-//       })),
-//     }
-
-//     // Упрощенные данные для сервера
-//     const serverResults = {
-//       test: id,
-//       is_passed: isPassed,
-//       // total_score: score,
-//       mark,
-//       score,
-//       total_points: totalPoints,
-//       start_time: testStartTime.toISOString(),
-//       completion_time: completionTime.toISOString(),
-//       test_duration: testDuration,
-//       user_answers: test.questions.map((question) => ({
-//         id: question.id,
-//         selected_id: answers[question.id] || null,
-//         is_correct: correctAnswers[question.id] || false,
-//       })),
-//     }
+//     const { fullResults, serverResults } = prepareTestResults()
 
 //     try {
 //       const savedResults = await saveTestResults(id, fullResults, serverResults)
-
 //       updateState({
 //         completed: true,
 //         finalResults: {
 //           ...savedResults,
 //           test_title: test.name,
-//           totalPoints,
+//           totalPoints: testProps.totalPoints,
 //         },
 //       })
-//     } catch (error) {
-//       console.error('Save results error:', error)
-//       // В случае ошибки все равно показываем результаты
+//     } catch (err) {
+//       console.error('Save results error:', err)
 //       updateState({
 //         completed: true,
 //         finalResults: {
 //           ...fullResults,
-//           totalPoints,
+//           totalPoints: testProps.totalPoints,
 //         },
 //       })
 //       setSyncError(
@@ -1231,20 +1325,18 @@ export default React.memo(TestOnePage)
 //       )
 //     }
 //   }, [
-//     isOnline,
-//     test,
-//     id,
-//     answers,
-//     correctAnswers,
-//     score,
-//     totalPoints,
-//     testStartTime,
 //     allQuestionsAnswered,
-//     updateState,
+//     answers,
+//     id,
+//     isOnline,
+//     prepareTestResults,
 //     saveTestResults,
+//     setSyncError,
+//     test,
+//     testProps.totalPoints,
+//     updateState,
 //   ])
 
-//   // В компоненте TestOnePage
 //   useEffect(() => {
 //     const checkResults = async () => {
 //       if (completed && !finalResults) {
@@ -1264,6 +1356,20 @@ export default React.memo(TestOnePage)
 //     checkResults()
 //   }, [completed, finalResults, id, getTestResults, updateState])
 
+//   // Sync when online
+//   useEffect(() => {
+//     const handleOnline = async () => {
+//       try {
+//         await syncPendingResults()
+//       } catch (e) {
+//         console.error('Sync failed:', e)
+//       }
+//     }
+
+//     window.addEventListener('online', handleOnline)
+//     return () => window.removeEventListener('online', handleOnline)
+//   }, [syncPendingResults])
+
 //   const handleRestartTest = useCallback(() => {
 //     updateState({
 //       currentQuestionIndex: 0,
@@ -1278,7 +1384,6 @@ export default React.memo(TestOnePage)
 //     refetch()
 //   }, [refetch, updateState])
 
-//   // Подготовка вкладок с вопросами
 //   const questionTabs = useMemo(
 //     () =>
 //       test?.questions?.map((question, index) => ({
@@ -1287,10 +1392,7 @@ export default React.memo(TestOnePage)
 //           <Box
 //             sx={{
 //               p: isMobile ? 1 : 2,
-//               '& *': {
-//                 maxWidth: '100%',
-//                 wordBreak: 'break-word',
-//               },
+//               '& *': { maxWidth: '100%', wordBreak: 'break-word' },
 //             }}
 //           >
 //             <QuestionView
@@ -1300,7 +1402,7 @@ export default React.memo(TestOnePage)
 //               disabled={correctAnswers[question.id] !== undefined}
 //               onChange={handleAnswerChange}
 //               isMobile={isMobile}
-//               isControlTest={isControlTest}
+//               isControlTest={testProps.isControlTest}
 //             />
 //           </Box>
 //         ),
@@ -1312,40 +1414,55 @@ export default React.memo(TestOnePage)
 //       handleAnswerChange,
 //       showFeedback,
 //       isMobile,
-//       isControlTest,
 //       test?.questions,
+//       testProps.isControlTest,
 //     ]
 //   )
 
-//   // Рендер состояний
+//   // Render states
 //   if (!isDBInitialized || isLoading) return <LoadingState />
+//   // if (isError)
+//   //   return (
+//   //     <ErrorState
+//   //       error={error}
+//   //       isOnline={isOnline}
+//   //       onRetry={handleDownloadTest}
+//   //       isLoading={isLoading}
+//   //     />
+//   //   )
+
 //   if (isError) {
 //     return (
-//       <ErrorState
-//         error={error}
-//         isOnline={isOnline}
-//         onRetry={handleDownloadTest}
-//         isLoading={isLoading}
-//       />
+//       <Box sx={{ p: 3, textAlign: 'center' }}>
+//         <Alert severity="error" sx={{ mb: 2 }}>
+//           {error?.message || 'Ошибка загрузки теста'}
+//         </Alert>
+//         {isOnline ? (
+//           <Button variant="contained" onClick={refetch}>
+//             Повторить попытку
+//           </Button>
+//         ) : (
+//           <Typography variant="body1">
+//             Подключитесь к интернету для загрузки теста
+//           </Typography>
+//         )}
+//       </Box>
 //     )
 //   }
+
 //   if (!test) return <NotFoundState isOnline={isOnline} />
+
 //   if (completed && finalResults) {
-//     // Добавляем проверку на наличие необходимых данных
 //     if (!finalResults.questions || !finalResults.user_answers) {
-//       return (
-//         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-//           {/* <CircularProgress /> */}
-//         </Box>
-//       )
+//       return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }} />
 //     }
 
 //     return (
 //       <TestResultsView
 //         testId={finalResults.test}
-//         testTitle={finalResults.test_title || test?.name}
-//         score={finalResults.total_score}
-//         totalPoints={totalPoints}
+//         testTitle={finalResults.test_title || testProps.testName}
+//         score={finalResults.score}
+//         totalPoints={testProps.totalPoints}
 //         mark={finalResults.mark}
 //         answers={finalResults.user_answers}
 //         questions={finalResults.questions}
@@ -1353,12 +1470,11 @@ export default React.memo(TestOnePage)
 //         completionTime={finalResults.completion_time}
 //         duration={finalResults.test_duration}
 //         onRestart={handleRestartTest}
-//         isControlTest={isControlTest}
+//         isControlTest={testProps.isControlTest}
 //       />
 //     )
 //   }
 
-//   // Основной рендер
 //   return (
 //     <Box
 //       sx={{
@@ -1371,9 +1487,9 @@ export default React.memo(TestOnePage)
 //     >
 //       {!isOnline && <OfflineIndicator />}
 //       <TestHeader
-//         testName={test.name}
+//         testName={testProps.testName}
 //         currentQuestionIndex={currentQuestionIndex}
-//         questionsLength={test.questions.length}
+//         questionsLength={testProps.questionsLength}
 //         isMobile={isMobile}
 //       />
 
@@ -1387,15 +1503,15 @@ export default React.memo(TestOnePage)
 //         correctAnswers={test.questions.map(
 //           (q) => correctAnswers[q.id] || false
 //         )}
-//         isControlTest={isControlTest}
+//         isControlTest={testProps.isControlTest}
 //       />
 
-//       {!isControlTest && currentQuestion && (
+//       {!testProps.isControlTest && testProps.currentQuestion && (
 //         <QuestionFeedback
 //           showFeedback={showFeedback}
-//           isCorrect={correctAnswers[currentQuestion.id] || false}
-//           explanation={currentQuestion.explanation}
-//           referenceLink={currentQuestion.reference_link}
+//           isCorrect={correctAnswers[testProps.currentQuestion.id] || false}
+//           explanation={testProps.currentQuestion.explanation}
+//           referenceLink={testProps.currentQuestion.reference_link}
 //           onClose={() => updateState({ showFeedback: false })}
 //         />
 //       )}
@@ -1405,16 +1521,17 @@ export default React.memo(TestOnePage)
 //         onComplete={handleCompleteTest}
 //         onNextQuestion={handleNextQuestion}
 //         hasAnswer={
-//           currentQuestion?.id
-//             ? answers[currentQuestion.id] !== undefined
-//             : false
+//           !!(
+//             testProps.currentQuestion?.id &&
+//             answers[testProps.currentQuestion.id]
+//           )
 //         }
 //         showFeedback={showFeedback}
 //         isAnswered={isAnswered}
 //         isLastQuestion={isLastQuestion}
 //         allQuestionsAnswered={allQuestionsAnswered}
 //         isMobile={isMobile}
-//         isControlTest={isControlTest}
+//         isControlTest={testProps.isControlTest}
 //       />
 
 //       <Snackbar
@@ -1428,7 +1545,4 @@ export default React.memo(TestOnePage)
 //   )
 // }
 
-// export default React.memo(TestOnePage)
-
-/** ***************************************************************** */
-/** ***************************************************************** */
+// export default memo(TestOnePage)

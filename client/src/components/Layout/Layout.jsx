@@ -1,14 +1,15 @@
 import { Outlet } from 'react-router-dom'
 import { Box, Fab } from '@mui/material'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
-import MenuBox from '../MenuBox'
-import { ScrollTop } from '../Scroll/Scroll'
-import FontSizeControls from '../FontSizeControls' // Импортируем компонент
+import MenuBox from '@/components/MenuBox'
+import LoadingIndicator from '@/components/LoadingIndicator'
+import ScrollTop from '@/components/Scroll'
+import FontSizeControls from '@/components/FontSizeControls'
 
 function Layout() {
-  const [fontSize, setFontSize] = useState(1) // Состояние для размера шрифта
+  const [fontSize, setFontSize] = useState(1) 
 
   const styles = {
     root: {
@@ -26,7 +27,7 @@ function Layout() {
       padding: '3rem 0',
       maxWidth: 1200,
       margin: '0 auto',
-      '& h1': { fontSize: `${2.5 * fontSize}rem` }, // Масштабируем заголовки
+      '& h1': { fontSize: `${2.5 * fontSize}rem` }, 
       '& h2': { fontSize: `${2 * fontSize}rem` },
       '& h3': { fontSize: `${1.75 * fontSize}rem` },
       '& p, & li': { fontSize: `${1.1 * fontSize}rem` },
@@ -37,13 +38,14 @@ function Layout() {
     <Box sx={styles.root}>
       <div id="back-to-top-anchor" />
 
-      {/* Добавляем компонент управления шрифтом */}
       <FontSizeControls fontSize={fontSize} setFontSize={setFontSize} />
 
       <Box sx={styles.container}>
         <MenuBox />
         <Box component="main" sx={styles.mainContent}>
-          <Outlet />
+          <Suspense fallback={<LoadingIndicator />}>
+            <Outlet />
+          </Suspense>
         </Box>
       </Box>
 

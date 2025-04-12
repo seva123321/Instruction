@@ -434,7 +434,14 @@ class Instruction(models.Model):
         related_name='instruction',
         verbose_name='Согласие на инструктаж',
         blank=True,
+    )
+    position = models.ForeignKey(
+        "Position",
+        on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        verbose_name="Должность",
+        related_name='instructions',
     )
 
     class Meta:
@@ -480,6 +487,14 @@ class Tests(models.Model):
             MinValueValidator(MIN_LENGTH_PASSING_SCORE),
             MaxValueValidator(MAX_LENGTH_PASSING_SCORE),
         ],
+    )
+    position = models.ForeignKey(
+        "Position",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Должность",
+        related_name='tests',
     )
 
     class Meta:

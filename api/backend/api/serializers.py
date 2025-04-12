@@ -1,3 +1,5 @@
+import random
+
 from django.conf import settings
 import numpy as np
 from rest_framework import serializers
@@ -246,20 +248,24 @@ class InstructionAgreementSerializer(serializers.ModelSerializer):
 class InstructionSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Instruction."""
 
-    instruction_agreement = InstructionAgreementSerializer(
-        many=True, read_only=True
-    )
+    instruction_agreement = serializers.SerializerMethodField()  # Изменяем на метод
     type_of_instruction = TypeOfInstructionSerializer(read_only=True)
 
     class Meta:
         model = Instruction
         fields = (
-            'id',
-            'type_of_instruction',
-            'name',
-            'text',
-            'instruction_agreement',
+            "id",
+            "type_of_instruction",
+            "name",
+            "text",
+            "instruction_agreement",
         )
+
+    def get_instruction_agreement(self, obj):
+        """Возвращает соглашения в случайном порядке."""
+        agreements = list(obj.instruction_agreement.all())
+        random.shuffle(agreements)
+        return InstructionAgreementSerializer(agreements, many=True).data
 
 
 class InstructionListSerializer(serializers.ModelSerializer):

@@ -118,11 +118,16 @@ function ProfilePage() {
 
   if (isLoading) {
     return (
-      <Fade in>
-        <Typography>
-          <CircularProgress size={50} />
-        </Typography>
-      </Fade>
+      <Box
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
     )
   }
   if (profileError) {
@@ -296,6 +301,7 @@ function ProfilePage() {
                   gap: 1,
                 }}
               >
+                {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
                 <PersonIcon color="primary" /> Персональная информация
               </Typography>
 
@@ -371,6 +377,7 @@ function ProfilePage() {
                   mt: 2,
                 }}
               >
+                {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
                 <PhoneIcon color="primary" /> Контактная информация
               </Typography>
 
@@ -507,6 +514,7 @@ function ProfilePage() {
                   mt: 2,
                 }}
               >
+                {/* eslint-disable-next-line react/jsx-one-expression-per-line */}
                 <WorkIcon color="primary" /> Дополнительная информация
               </Typography>
 

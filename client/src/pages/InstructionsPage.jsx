@@ -34,7 +34,20 @@ function InstructionsPage() {
     skip: !id, // Пропускаем запрос если нет ID
   })
 
-  if (isLoading) return <CircularProgress size={50} />
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    )
+  }
   if (error) {
     return <div>Ошибка в загрузке Инструкции</div>
   }
@@ -71,72 +84,3 @@ function InstructionsPage() {
 }
 
 export default InstructionsPage
-
-// import { useState } from 'react'
-// import { useNavigate, useLocation, useParams } from 'react-router-dom'
-// import { useGetInstructionsQuery } from '../slices/instructionApi'
-// import OneInstructionPage from '@/components/OneInstructionPage/OneInstructionPage'
-// import TabsWrapper from '@/components/TabsWrapper'
-// import { instructionsData } from '../service/constValues'
-// import { getCsrfToken } from '@/utils/cookies'
-
-// function InstructionsPage() {
-//   const { data, isLoading, error, refetch } = useGetInstructionsQuery(
-//     undefined,
-//     {
-//       // Дополнительные опции запроса
-//       refetchOnMountOrArgChange: true,
-//     }
-//   )
-//   const { id } = useParams()
-//   const navigate = useNavigate()
-//   const location = useLocation()
-//   const [instruction, setInstruction] = useState(null)
-
-//   // Используем данные из API или fallback
-//   const instructions = data
-
-//   if (isLoading) return <div>Loading...</div>
-//   if (error) {
-//     console.error('Error loading instructions:', error)
-//     return <div>Error loading instructions</div>
-//   }
-//   if (id) {
-//     const csrfToken = getCsrfToken()
-//     fetch(`/api/instructions/${id}/`, {
-//       method: 'GET',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'X-CSRFToken': csrfToken,
-//       },
-//     })
-//       .then((res) => res.json())
-//       .then((data) => {
-//         setInstruction(data)
-//         console.log(data)
-//       })
-//       .catch((err) => console.log('err > ', err))
-//   }
-
-//   const tabs =
-//     instructions?.results?.length > 1
-//       ? instructions.results.map((instruction) => ({
-//           label: instruction.name,
-//           to: `/instructions/${instruction.id}`,
-//         }))
-//       : null
-
-//   const dataRended =
-//     instructions?.first_instruction && !id
-//       ? instructions?.first_instruction
-//       : instruction
-
-//   return (
-//     <div>
-//       {tabs && <TabsWrapper centered tabs={tabs} useRouter />}
-//       <OneInstructionPage data={dataRended} />
-//     </div>
-//   )
-// }
-
-// export default InstructionsPage

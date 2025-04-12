@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 from drf_spectacular.utils import extend_schema
 import numpy as np
 from rest_framework import status, viewsets
@@ -338,6 +338,12 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
             return InstructionListSerializer
         return InstructionSerializer
 
+    def get_queryset(self):
+        user_position = self.request.user.position
+        return Instruction.objects.filter(
+            models.Q(position=user_position) | models.Q(position__isnull=True)
+        )
+
 
 @extend_schema(tags=['Tests'], description='Получение тестов.')
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
@@ -355,6 +361,15 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
             return TestListSerializer
         return TestSerializer
 
+    def get_queryset(self):
+        user_position = self.request.user.position
+        return Tests.objects.filter(
+            models.Q(position=user_position) | models.Q(position__isnull=True)
+        ).prefetch_related(
+            'questions',
+            'questions__answers',
+            'questions__reference_link'
+        )
 
 @extend_schema(
     tags=['TestResult'],
@@ -402,6 +417,10 @@ class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('-date',)
 
 
+@extend_schema(
+    tags=['InstructionResult'],
+    description='Сохранение результатов прохождения инструктажа пользователя.',
+)
 class InstructionResultView(APIView):
     """API для сохранения результатов прохождения инструктажа."""
 
@@ -428,7 +447,10 @@ class InstructionResultView(APIView):
                 {'error': str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
 
-
+@extend_schema(
+    tags=['Notification'],
+    description='Получение, чтение уведомлений.',
+)
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = (IsAuthenticated,)

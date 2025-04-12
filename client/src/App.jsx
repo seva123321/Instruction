@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
-import KnowBasePage from '@/pages/KnowBasePage'
 import KnowBasePageDocs from '@/pages/KnowBaseDocsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import TestingPage from '@/pages/TestingPage'
@@ -64,7 +63,7 @@ function App() {
             path="knowladge/audios"
             element={
               <RequireAuth>
-                <KnowBasePage />
+                <KnowBasePageAudios />
               </RequireAuth>
             }
           /> */}

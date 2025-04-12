@@ -1,4 +1,5 @@
 from datetime import timedelta
+from random import choice
 
 import asyncio
 from celery import shared_task
@@ -36,9 +37,11 @@ def send_instruction_reminders():
                 asyncio.set_event_loop(loop)
 
                 message = (
-                    f"⚠️ *Напоминание*: через *15 минут* начинается инструктаж для смены {schedule.shift.name}!\n"
+                    f"🎮 Внимание ⚠️, {schedule.shift.name}! Новая миссия доступна! 🏗️\n"
+                    f"⏱ Через 15 минут начинается: \n"
+                    f"🔧 Инструктаж по {schedule.instruction.name if schedule.instruction else 'Не указан'}\n"
                     f"*Время начала*: {schedule.shift.start_time.strftime('%H:%M')}\n"
-                    f"*Инструктаж*: {schedule.instruction.name if schedule.instruction else 'Не указан'}"
+                    f"💥 Награда за выполнение: +50 XP"
                 )
                 try:
                     asyncio.run(_send_instruction_reminders(message, schedule.user.telegram_chat_id))
@@ -58,10 +61,18 @@ async def _send_instruction_reminders(message, telegram_chat_id):
     try:
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 
+        stickers = (
+            "CAACAgIAAxkBAAEL7VNmBv1XZQABdUcBxR8y4m4V7hNKeT8AAhUAA8A2TxMX7hkCEj2SfTQE",
+            "CAACAgIAAxkBAAEL7VVmBv1gAAE8jJxHxJkAAbQHwTXFgS0sAAIeAAPANk8Tv8n_BktA7Ow0BA",
+            "CAACAgIAAxkBAAEL7VdmBv1j0Vj4HxVhqBkAAXJkAAH4LQACJAADwDZPE6Jv0tRkXwAB7DQE",
+        )
+
+        await bot.send_sticker(
+            chat_id=telegram_chat_id, sticker=choice(stickers)
+        )
+
         await bot.send_message(
-            chat_id=telegram_chat_id,
-            text=message,
-            parse_mode="Markdown"
+            chat_id=telegram_chat_id, text=message, parse_mode="Markdown"
         )
     except Exception as e:
         logger.error(e)

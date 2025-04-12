@@ -24,14 +24,42 @@ from .models import (
     NormativeLegislation,
     Shift,
     DutySchedule,
+    Rank,
+    UserBadge,
+    Badge,
+    Position,
 )
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'role')
+    list_display = ('email', 'first_name', 'last_name', 'role', 'experience_points', 'current_rank')
     search_fields = ('email', 'first_name', 'last_name')
     list_filter = ('role',)
+
+
+@admin.register(Badge)
+class BadgeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'required_count', 'position')
+    search_fields = ('name', 'description')
+    list_filter = ('position',)
+
+@admin.register(UserBadge)
+class UserBadgeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'badge', 'awarded_at')
+    search_fields = ('user__email', 'badge__name')
+    list_filter = ('awarded_at',)
+
+@admin.register(Rank)
+class RankAdmin(admin.ModelAdmin):
+    list_display = ('name', 'required_points', 'position')
+    search_fields = ('name',)
+    list_filter = ("position",)
+
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon')
+    search_fields = ('name',)
 
 
 @admin.register(TypeOfInstruction)

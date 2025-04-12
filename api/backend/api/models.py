@@ -1,4 +1,3 @@
-import asyncio
 from asgiref.sync import sync_to_async, async_to_sync
 from django.db import transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -130,6 +129,14 @@ class User(AbstractUser):
     telegram_chat_id = models.CharField(
         'Telegram Chat ID', max_length=255, blank=True, null=True
     )
+    experience_points = models.IntegerField('Очки опыта', default=0)
+    current_rank = models.ForeignKey(
+        'Rank',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Текущее звание'
+    )
 
     objects = UserManager()
 
@@ -143,9 +150,111 @@ class User(AbstractUser):
         return f'{self.last_name} {self.first_name}'
 
     def save(self, *args, **kwargs):
+        # Нормализация номера телефона
         if self.mobile_phone:
             self.mobile_phone = normalize_phone_number(self.mobile_phone)
+
+        # Флаг для проверки изменений
+        update_ranks_and_badges = False
+        if self.pk:
+            original = User.objects.get(pk=self.pk)
+            if (self.experience_points != original.experience_points or
+                self.position != original.position):
+                update_ranks_and_badges = True
+        else:
+            update_ranks_and_badges = True
+
+        # Первое сохранение
         super().save(*args, **kwargs)
+
+        # Обновление рангов и значков при изменении
+        if update_ranks_and_badges:
+            self._update_rank()
+            self._assign_badges()
+
+    def _update_rank(self):
+        """Обновление звания пользователя"""
+        new_rank = Rank.objects.filter(
+            models.Q(position=self.position) | models.Q(position__isnull=True),
+            required_points__lte=self.experience_points
+        ).order_by('-required_points').first()
+
+        if new_rank != self.current_rank:
+            self.current_rank = new_rank
+            self.save(update_fields=['current_rank'])
+
+    def _assign_badges(self):
+        """Присвоение новых значков"""
+        existing_badges_ids = self.badges.values_list("badge_id", flat=True)
+
+        eligible_badges = Badge.objects.filter(
+            models.Q(position=self.position) | models.Q(position__isnull=True),
+            required_count__lte=self.experience_points,
+        ).exclude(id__in=existing_badges_ids)
+
+        for badge in eligible_badges:
+            UserBadge.objects.get_or_create(user=self, badge=badge)
+
+
+class Badge(models.Model):
+    """Модель значков сотрудников."""
+
+    name = models.CharField("Название", max_length=100)
+    description = models.TextField("Описание")
+    icon = models.ImageField("Иконка", upload_to="badges/", blank=True)
+    required_count = models.IntegerField("Требуемое количество очков", default=1)
+    position = models.ForeignKey(
+        "Position",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Должность",
+    )
+
+    class Meta:
+        verbose_name = 'Значок'
+        verbose_name_plural = 'Значки'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта."""
+        return self.name
+
+
+class UserBadge(models.Model):
+    """Модель присвоения значков сотрудникам."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="badges")
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    awarded_at = models.DateTimeField("Дата получения", auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Значок пользователя'
+        verbose_name_plural = 'Значки пользователей'
+
+    def __str__(self):
+        return f'Значок пользователя: {str(self.badge)}'
+
+
+class Rank(models.Model):
+    """Модель званий сотрудников."""
+
+    name = models.CharField("Название", max_length=50)
+    required_points = models.IntegerField("Требуемые очки")
+    icon = models.ImageField("Иконка", upload_to="ranks/", blank=True)
+    position = models.ForeignKey(
+        "Position",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Должность",
+    )
+
+    class Meta:
+        verbose_name = 'Звание'
+        verbose_name_plural = 'Звания'
+
+    def __str__(self):
+        return self.name
 
 
 class Position(models.Model):
@@ -154,6 +263,12 @@ class Position(models.Model):
     name = models.CharField(
         'Название',
         max_length=MAX_LENGTH_POSITION,
+    )
+    icon = models.ImageField(
+        'Иконка',
+        upload_to='positions/',
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -166,6 +281,8 @@ class Position(models.Model):
 
 
 class Notification(models.Model):
+    """Модель уведомлений сотрудников."""
+
     class NotificationType(models.TextChoices):
         TEST = 'test', 'Результат теста'
         INSTRUCTION = 'instruction', 'Результат инструктажа'
@@ -243,30 +360,35 @@ class Notification(models.Model):
                 self.save()
 
     def _generate_message(self):
-        """Генерирует текст уведомления с Markdown-разметкой"""
+        emojis = {
+            "test": "📚",
+            "instruction": "🛠️",
+            "achievement": "🏆",
+            "reminder": "⏰",
+        }
+
         if self.test_result:
-            status = (
-                "✅ Прошел" if self.test_result.is_passed else "❌ Не прошел"
-            )
+            status_emoji = "✅" if self.test_result.is_passed else "❌"
             return (
-                f"*Тест*: {self.test_result.test.name}\n"
-                f"*Сотрудник*: *{self.employee}*\n"
-                f"*Статус*: {status}\n"
-                f"*Дата*: {self.test_result.completion_time.strftime('%d.%m.%Y %H:%M')}"
+                f"{emojis['test']} *Новый результат теста!*\n"
+                f"🎮 Уровень: {self.employee.current_rank.name if self.employee.current_rank else 'Новичок'}\n"
+                f"📊 Очки: +{self.test_result.score * 10} XP\n"
+                f"🧑💻 Сотрудник: {self.employee}\n"
+                f"📝 Тест: {self.test_result.test.name}\n"
+                f"🏅 Статус: {status_emoji} {'Пройден' if self.test_result.is_passed else 'Не пройден'}\n"
+                f"⏱ Время: {self.test_result.completion_time.strftime('%d.%m.%Y %H:%M')}"
             )
         elif self.instruction_result:
-            status = (
-                "✅ Прошел"
-                if self.instruction_result.result
-                else "❌ Не прошел"
-            )
+            status_emoji = "✅" if self.instruction_result.result else "❌"
             return (
-                f"*Инструктаж*: {self.instruction_result.instruction.name}\n"
-                f"*Сотрудник*: *{self.employee}*\n"
-                f"*Статус*: {status}\n"
-                f"*Дата*: {self.instruction_result.date.strftime('%d.%m.%Y %H:%M')}"
+                f"{emojis['instruction']} *Результат инструктажа!*\n"
+                f"🎮 Уровень: {self.employee.current_rank.name if self.employee.current_rank else 'Новичок'}\n"
+                f"📊 Очки: +50 XP\n"
+                f"👷 Сотрудник: {self.employee}\n"
+                f"📋 Инструктаж: {self.instruction_result.instruction.name}\n"
+                f"🏅 Статус: {status_emoji} {'Пройден' if self.instruction_result.result else 'Не пройден'}\n"
+                f"⏱ Дата: {self.instruction_result.date.strftime('%d.%m.%Y %H:%M')}"
             )
-        return "Новое уведомление"
 
 
 class TypeOfInstruction(models.Model):
@@ -333,6 +455,10 @@ class InstructionAgreement(models.Model):
     class Meta:
         verbose_name = 'Согласие на инструктаж'
         verbose_name_plural = 'Согласия на инструктаж'
+
+    def __str__(self):
+        """Возвращает строковое представление объекта инструктажа."""
+        return self.text
 
 
 class Tests(models.Model):
@@ -520,6 +646,14 @@ class TestResult(models.Model):
             # Отправляем уведомление в Телеграмм
             notification.send_notification()
 
+    def save(self, *args, **kwargs):
+        if self.is_passed and not self.pk:  # Только при первом успешном прохождении
+            base_xp = self.score * 10
+            time_bonus = max(0, 100 - self.test_duration//10)  # Бонус за скорость
+            self.user.experience_points += base_xp + time_bonus
+            self.user.save()
+        super().save(*args, **kwargs)
+
 
 class UserAnswer(models.Model):
     """Модель ответов пользователя на вопросы теста."""
@@ -601,6 +735,12 @@ class InstructionResult(models.Model):
             # Отправляем уведомление в Телеграмм
             notification.send_notification()
 
+    def save(self, *args, **kwargs):
+        if self.result and not self.pk:  # Только при первом успешном прохождении
+            self.user.experience_points += 50
+            self.user.save()
+        super().save(*args, **kwargs)
+
 
 class InstructionAgreementResult(models.Model):
     """Модель для хранения результатов согласий инструктажа."""
@@ -617,6 +757,10 @@ class InstructionAgreementResult(models.Model):
     class Meta:
         verbose_name = 'Результат согласия инструктажа'
         verbose_name_plural = 'Результаты согласий инструктажа'
+
+    def __str__(self):
+        return f"{self.agreement_type} - {'Согласен' if self.agreed else 'Не согласен'}"
+
 
 
 class Video(models.Model):
@@ -682,7 +826,8 @@ class NormativeLegislation(models.Model):
 
 
 class Shift(models.Model):
-    """Модель смены"""
+    """Модель рабочих смен с временными интервалами."""
+
     name = models.CharField('Название смены', max_length=50)
     start_time = models.TimeField('Время начала')
     end_time = models.TimeField('Время окончания')
@@ -696,7 +841,8 @@ class Shift(models.Model):
 
 
 class DutySchedule(models.Model):
-    """График дежурств сотрудников"""
+    """Модель графика дежурств сотрудников."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

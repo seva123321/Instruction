@@ -26,11 +26,12 @@ from api.models import (
     NormativeLegislation,
     InstructionAgreementResult,
     Notification,
-    Shift,
-    DutySchedule
+    Badge,
+    Rank
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
+
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -56,10 +57,14 @@ class UserSerializer(serializers.ModelSerializer):
             "birthday",
             "position",
             "role",
+            "experience_points",
+            "current_rank",
         )
         extra_kwargs = {
-            "email": {"read_only": True, "required": False},
+            "email": {"read_only": True},
             "role": {"read_only": True},
+            "experience_points": {"read_only": True},
+            "current_rank": {"read_only": True},
             "position": {"read_only": True},
             "mobile_phone": {"required": False},
             "first_name": {"required": False},
@@ -67,6 +72,35 @@ class UserSerializer(serializers.ModelSerializer):
             "middle_name": {"required": False},
             "birthday": {"required": False},
         }
+
+
+class BadgeSerializer(serializers.ModelSerializer):
+    """Сериализатор для значков пользователя."""
+
+    class Meta:
+        model = Badge
+        fields = ("id", "name", "description", "required_count", "icon")
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Сериализатор для расширенного профиля пользователя."""
+
+    current_rank = serializers.StringRelatedField()
+    badges = serializers.SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
+            "badges",
+        )
+        extra_kwargs = {**UserSerializer.Meta.extra_kwargs}
+
+    def get_badges(self, obj):
+        """Получаем список значков пользователя через промежуточную модель."""
+        return BadgeSerializer(
+            Badge.objects.filter(userbadge__user=obj),
+            many=True,
+            context=self.context
+        ).data
 
 
 class SignUpSerializer(serializers.Serializer):

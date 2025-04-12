@@ -1,5 +1,3 @@
-from datetime import timezone
-
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
@@ -26,7 +24,7 @@ from api.serializers import (
     AdminUserSerializer,
     InstructionSerializer,
     InstructionListSerializer,
-    UserSerializer,
+    UserProfileSerializer,
     TestSerializer,
     TestListSerializer,
     SignUpSerializer,
@@ -55,10 +53,20 @@ class UserViewSet(ModelViewSet):
     search_fields = ('last_name',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
+    def get_queryset(self):
+        """Оптимизация запросов к БД."""
+        queryset = super().get_queryset()
+        if self.action == 'profile':
+            return queryset.prefetch_related(
+                'badges__badge',
+                'current_rank'
+            )
+        return queryset
+
     def get_serializer_class(self):
         """Определяем сериализатор в зависимости от действия."""
         if self.action == 'profile':
-            return UserSerializer
+            return UserProfileSerializer  # Меняем на новый сериализатор
         return super().get_serializer_class()
 
     @action(

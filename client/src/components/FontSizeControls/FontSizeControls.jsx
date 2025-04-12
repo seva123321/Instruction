@@ -1,25 +1,84 @@
-import { IconButton, Stack, Tooltip, Box, Slide } from '@mui/material'
+import {
+  IconButton,
+  Stack,
+  Tooltip,
+  Box,
+  Slide,
+  useScrollTrigger,
+} from '@mui/material'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import FormatSizeIcon from '@mui/icons-material/FormatSize'
-import { useScrollTrigger } from '@mui/material'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
-const FontSizeControls = ({ fontSize, setFontSize }) => {
+function FontSizeControls({ fontSize, setFontSize }) {
+  const [visible, setVisible] = useState(false)
+  const timerRef = useRef(null)
+  const lastScrollTimeRef = useRef(0)
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 100,
   })
 
+  const startHideTimer = useCallback(() => {
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      setVisible(false)
+    }, 3000)
+  }, [])
+
+  const showControls = useCallback(() => {
+    setVisible(true)
+    startHideTimer()
+  }, [startHideTimer])
+
+  useEffect(() => {
+    const now = Date.now()
+    if (trigger && now - lastScrollTimeRef.current > 500) {
+      showControls()
+      lastScrollTimeRef.current = now
+    }
+  }, [trigger, showControls])
+
+  useEffect(() => {
+    // Применяем размер шрифта ко всем элементам
+    document.documentElement.style.fontSize = `${fontSize * 100}%`
+
+    // Создаем новый объект стиля для полей ввода
+    const inputStyle = {
+      fontSize: `${fontSize}rem`,
+    }
+
+    // Применяем стили к полям ввода без мутации параметров
+    const inputs = document.querySelectorAll('input, textarea, select')
+    inputs.forEach((input) => {
+      Object.assign(input.style, inputStyle)
+    })
+
+    return () => {
+      document.documentElement.style.fontSize = ''
+      const resetStyle = { fontSize: '' }
+      inputs.forEach((input) => {
+        Object.assign(input.style, resetStyle)
+      })
+    }
+  }, [fontSize])
+
   const handleIncreaseFont = () => {
-    setFontSize((prev) => Math.min(prev + 0.1, 1.5))
+    const newSize = Math.min(fontSize + 0.1, 1.5)
+    setFontSize(newSize)
+    showControls()
   }
 
   const handleDecreaseFont = () => {
-    setFontSize((prev) => Math.max(prev - 0.1, 0.8))
+    const newSize = Math.max(fontSize - 0.1, 0.8)
+    setFontSize(newSize)
+    showControls()
   }
 
   const handleResetFont = () => {
     setFontSize(1)
+    showControls()
   }
 
   const styles = {
@@ -46,17 +105,14 @@ const FontSizeControls = ({ fontSize, setFontSize }) => {
       alignSelf: 'center',
     },
     tooltipWrapper: {
-      display: 'inline-flex', // Важно для правильного позиционирования
+      display: 'inline-flex',
     },
   }
 
-  // Функция для создания обертки Tooltip с правильной обработкой disabled состояния
   const renderTooltipButton = (title, onClick, disabled, ariaLabel, icon) => (
     <Box component="span" sx={styles.tooltipWrapper}>
       <Tooltip title={disabled ? '' : title}>
         <span>
-          {' '}
-          {/* Обертка span для disabled кнопки */}
           <IconButton
             onClick={onClick}
             color="primary"
@@ -72,8 +128,12 @@ const FontSizeControls = ({ fontSize, setFontSize }) => {
   )
 
   return (
-    <Slide direction="up" in={trigger} mountOnEnter unmountOnExit>
-      <Box sx={styles.controlsContainer}>
+    <Slide direction="up" in={visible} mountOnEnter unmountOnExit>
+      <Box
+        sx={styles.controlsContainer}
+        onMouseEnter={() => clearTimeout(timerRef.current)}
+        onMouseLeave={() => startHideTimer()}
+      >
         <Stack direction="column" spacing={1} alignItems="center">
           {renderTooltipButton(
             'Уменьшить шрифт',
@@ -83,7 +143,7 @@ const FontSizeControls = ({ fontSize, setFontSize }) => {
             <ZoomOutIcon fontSize="small" />
           )}
 
-          <Box sx={styles.indicator}>{Math.round(fontSize * 100)}%</Box>
+          <Box sx={styles.indicator}>{`${Math.round(fontSize * 100)}%`}</Box>
 
           {renderTooltipButton(
             'Увеличить шрифт',

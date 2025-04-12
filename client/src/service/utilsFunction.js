@@ -27,7 +27,7 @@ export const isPhoneNumber = (value) =>
   /^\+?\d{1,3}[- ]?\d{3}[- ]?\d{3}[- ]?\d{2}[- ]?\d{2}$/.test(value)
 
 export const calculateMark = (score, totalPoints) => {
-  if (totalPoints <= 0) return 1 // Prevent division by zero
+  if (totalPoints <= 0) return 1
 
   const percentage = (score / totalPoints) * 100
   const calculatedMark = Math.min(
@@ -35,7 +35,6 @@ export const calculateMark = (score, totalPoints) => {
     Math.floor(percentage / 10) + (percentage % 10 >= 5 ? 1 : 0)
   )
 
-  // Ensure the mark is at least 1
   return Math.max(1, calculatedMark)
 }
 export const getYouTubeId = (url) => {
@@ -56,4 +55,28 @@ export const getTestEnding = (count) => {
     return 'а'
   }
   return 'ов'
+}
+
+// Функция для глубокого сравнения объектов тестов
+export const areTestsEqual = (test1, test2) => {
+  if (!test1 || !test2) return false
+  const keys1 = Object.keys(test1)
+  const keys2 = Object.keys(test2)
+
+  if (keys1.length !== keys2.length) return false
+
+  return keys1.every((key) => {
+    // Исключаем поля, которые могут изменяться без существенных изменений
+    if (key === 'updated_at' || key === 'created_at') return true
+
+    // Сравниваем примитивы и массивы
+    if (Array.isArray(test1[key]) && Array.isArray(test2[key])) {
+      return (
+        test1[key].length === test2[key].length &&
+        test1[key].every((val, i) => val === test2[key][i])
+      )
+    }
+
+    return test1[key] === test2[key]
+  })
 }

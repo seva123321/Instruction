@@ -136,7 +136,7 @@ CELERY_BEAT_SCHEDULE = {
 LOGIN_URL = 'two_factor:login'
 
 # TODO: Change before production
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN'
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

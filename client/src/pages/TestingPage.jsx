@@ -270,20 +270,15 @@ function TestingPage() {
     [getTestById]
   )
 
-  const handleDeleteTest = useCallback(
-    async (testId) => {
-      try {
-        await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
-        const updatedTests = await getTestsFromDB()
-        updateState({ tests: await mergeTestsWithResults(updatedTests) })
-        return true
-      } catch {
-        updateState({ error: 'Не удалось удалить тест' })
-        return false
-      }
-    },
-    [mergeTestsWithResults]
-  )
+  const handleDeleteTest = useCallback(async (testId) => {
+    try {
+      await deleteTestFromDB(testId, STORE_NAMES.TESTS_CONTENT)
+      return true
+    } catch {
+      updateState({ error: 'Не удалось удалить тест' })
+      return false
+    }
+  }, [])
 
   const tabs = useMemo(() => {
     const renderTestList = (filterFn) => (

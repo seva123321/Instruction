@@ -34,8 +34,10 @@ import TestControls from '@/components/TestControls'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import QuestionView from '@/components/QuestionView'
 
-const TestResultsView = lazy(() => import('@/components/TestResultsView'))
-const QuestionFeedback = lazy(() => import('@/components/QuestionFeedback'))
+import TestResultsView from '@/components/TestResultsView'
+import QuestionFeedback from '@/components/QuestionFeedback'
+// const TestResultsView = lazy(() => import('@/components/TestResultsView'))
+// const QuestionFeedback = lazy(() => import('@/components/QuestionFeedback'))
 
 // Reusable components
 function OfflineIndicator() {
@@ -371,12 +373,15 @@ function TestOnePage() {
         answer.id.toString() === answers[testProps.currentQuestion.id] &&
         answer.is_correct
     )
+    console.log('poinst > ', testProps.currentQuestion.points)
+    console.log('score > ', score)
 
     updateState({
       correctAnswers: {
         ...correctAnswers,
         [testProps.currentQuestion.id]: isCorrect,
       },
+
       score: isCorrect ? score + testProps.currentQuestion.points : score,
       showFeedback: true,
     })
@@ -408,6 +413,7 @@ function TestOnePage() {
         is_passed: isPassed,
         total_points: testProps.totalPoints,
         mark,
+        score,
         start_time: testStartTime.toISOString(),
         completion_time: completionTime.toISOString(),
         test_duration: testDuration,
@@ -684,24 +690,25 @@ function TestOnePage() {
     if (!finalResults.questions || !finalResults.user_answers) {
       return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }} />
     }
-
+    console.log('finalResults > ', finalResults);
+    
     return (
-      <Suspense fallback={<LoadingIndicator />}>
-        <TestResultsView
-          testId={finalResults.test}
-          testTitle={finalResults.test_title || testProps.testName}
-          score={finalResults.score}
-          totalPoints={testProps.totalPoints}
-          mark={finalResults.mark}
-          answers={finalResults.user_answers}
-          questions={finalResults.questions}
-          startTime={finalResults.start_time}
-          completionTime={finalResults.completion_time}
-          duration={finalResults.test_duration}
-          onRestart={handleRestartTest}
-          isControlTest={testProps.isControlTest}
-        />
-      </Suspense>
+      // <Suspense fallback={<LoadingIndicator />}>
+      <TestResultsView
+        testId={finalResults.test}
+        testTitle={finalResults.test_title || testProps.testName}
+        score={finalResults.score}
+        totalPoints={testProps.totalPoints}
+        mark={finalResults.mark}
+        answers={finalResults.user_answers}
+        questions={finalResults.questions}
+        startTime={finalResults.start_time}
+        completionTime={finalResults.completion_time}
+        duration={finalResults.test_duration}
+        onRestart={handleRestartTest}
+        isControlTest={testProps.isControlTest}
+      />
+      // </Suspense>
     )
   }
 
@@ -737,15 +744,15 @@ function TestOnePage() {
       />
 
       {!testProps.isControlTest && testProps.currentQuestion && (
-        <Suspense fallback={<CircularProgress />}>
-          <QuestionFeedback
-            showFeedback={showFeedback}
-            isCorrect={correctAnswers[testProps.currentQuestion.id] || false}
-            explanation={testProps.currentQuestion.explanation}
-            referenceLink={testProps.currentQuestion.reference_link}
-            onClose={() => updateState({ showFeedback: false })}
-          />
-        </Suspense>
+        // <Suspense fallback={<CircularProgress />}>
+        <QuestionFeedback
+          showFeedback={showFeedback}
+          isCorrect={correctAnswers[testProps.currentQuestion.id] || false}
+          explanation={testProps.currentQuestion.explanation}
+          referenceLink={testProps.currentQuestion.reference_link}
+          onClose={() => updateState({ showFeedback: false })}
+        />
+        // </Suspense>
       )}
 
       <TestControls

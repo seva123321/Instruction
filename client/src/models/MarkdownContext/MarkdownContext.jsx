@@ -9,8 +9,8 @@ import {
   Link as MuiLink,
   Container,
   IconButton,
-  Drawer,
   useTheme,
+  SwipeableDrawer,
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
@@ -261,6 +261,8 @@ const MarkdownContext = memo(({ markdown, header }) => {
   const updateTimeoutRef = useRef(null)
   const lastHeadingRef = useRef(null)
 
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
   const markdownComponents = useMemo(
     () => createMarkdownComponents(theme),
     [theme]
@@ -269,6 +271,16 @@ const MarkdownContext = memo(({ markdown, header }) => {
   const handleDrawerToggle = () => {
     dispatch(toggleMobileOpen())
   }
+
+  // Обработчик закрытия по свайпу
+  const handleDrawerClose = useCallback(() => {
+    dispatch(toggleMobileOpen(false))
+  }, [dispatch])
+
+  // Обработчик открытия по свайпу
+  const handleDrawerOpen = useCallback(() => {
+    dispatch(toggleMobileOpen(true))
+  }, [dispatch])
 
   const scrollToHeading = (id) => {
     if (updateTimeoutRef.current) {
@@ -379,8 +391,8 @@ const MarkdownContext = memo(({ markdown, header }) => {
     )
 
     // eslint-disable-next-line prettier/prettier
-    const currentRefs = headings.map((heading) =>
-      document.getElementById(heading.id)
+    const currentRefs = headings.map(
+      (heading) => document.getElementById(heading.id)
       // eslint-disable-next-line function-paren-newline
     )
     currentRefs.forEach((heading) => heading && observer.observe(heading))
@@ -422,6 +434,7 @@ const MarkdownContext = memo(({ markdown, header }) => {
         overflowY: 'auto',
         bgcolor: 'background.paper',
         boxShadow: 1,
+        mt: 3,
         p: 2,
         display: {
           xs: 'none',
@@ -442,6 +455,19 @@ const MarkdownContext = memo(({ markdown, header }) => {
         height: '100%',
         bgcolor: 'background.paper',
         p: 2,
+        ...(isIOS && {
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }),
+      },
+      drawerPaper: {
+        overflowY: 'auto',
+        '&::-webkit-scrollbar': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: theme.palette.action.hover,
+          borderRadius: '3px',
+        },
       },
       link: (level, isActive) => ({
         textAlign: 'left',
@@ -470,7 +496,7 @@ const MarkdownContext = memo(({ markdown, header }) => {
         },
       },
     }),
-    [theme]
+    [theme, isIOS]
   )
 
   return (
@@ -503,16 +529,28 @@ const MarkdownContext = memo(({ markdown, header }) => {
         {mobileOpen ? <CloseIcon /> : <MenuIcon />}
       </IconButton>
 
-      <Drawer
+      <SwipeableDrawer
         variant="temporary"
         open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
+        onClose={handleDrawerClose}
+        onOpen={handleDrawerOpen}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile
+        }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': styles.sidebarMobile,
+          '& .MuiDrawer-paper': {
+            ...styles.sidebarMobile,
+            ...styles.drawerPaper,
+          },
+        }}
+        slotProps={{
+          sx: styles.drawerPaper,
         }}
         anchor="right"
+        disableBackdropTransition={!isIOS}
+        disableDiscovery={isIOS}
+        swipeAreaWidth={20}
       >
         <SidebarContent
           headings={headings}
@@ -520,7 +558,7 @@ const MarkdownContext = memo(({ markdown, header }) => {
           scrollToHeading={scrollToHeading}
           styles={styles}
         />
-      </Drawer>
+      </SwipeableDrawer>
     </Box>
   )
 })

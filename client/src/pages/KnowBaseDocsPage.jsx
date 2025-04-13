@@ -50,9 +50,9 @@ function KnowBasePageDocs() {
         lineHeight: 1.3,
       },
       description: {
-        mb: 3,
+        // mb: 3,
         color: theme.palette.text.secondary,
-        lineHeight: 1.6,
+        lineHeight: 1.0,
         flexGrow: 1,
         overflow: 'hidden',
         textOverflow: 'ellipsis',

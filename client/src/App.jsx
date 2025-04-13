@@ -7,9 +7,12 @@ import LoadingIndicator from '@/components/LoadingIndicator'
 import { AuthProvider } from './hoc/AuthProvider'
 import RequireAuth from './hoc/RequireAuth'
 
+import TestingPage from '@/pages/TestingPage'
+import TestOnePage from '@/models/TestOnePage'
+
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
-const TestingPage = lazy(() => import('@/pages/TestingPage'))
-const TestOnePage = lazy(() => import('@/models/TestOnePage'))
+// const TestingPage = lazy(() => import('@/pages/TestingPage'))
+// const TestOnePage = lazy(() => import('@/models/TestOnePage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
 const KnowBaseVideosPage = lazy(() => import('@/pages/KnowBaseVideosPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))

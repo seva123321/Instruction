@@ -17,12 +17,11 @@ import {
 } from '@mui/material'
 import { Search, YouTube, VideoFile } from '@mui/icons-material'
 
+
+import { useGetKnowladgeVideosQuery } from '@/slices/knowladgeApi'
 import KnowBaseHeader from '@/components/KnowBaseHeader'
+import UniversalVideoPlayer from '@/components/VideoPlayer'
 
-import { useGetKnowladgeVideosQuery } from '../slices/knowladgeApi'
-import UniversalVideoPlayer from '../components/VideoPlayer/VideoPlayer'
-
-// Вынесенный компонент карточки видео для лучшей производительности
 const VideoCard = memo(({ video, isMobile, theme }) => {
   const videoSource = video.type === 'youtube' ? 'YouTube' : 'Наш сервер'
   const chipColor = video.type === 'youtube' ? 'error' : 'info'
@@ -91,7 +90,6 @@ const VideoCard = memo(({ video, isMobile, theme }) => {
   )
 })
 
-// Компонент для отображения состояния "Нет результатов"
 const NoResults = memo(({ theme }) => (
   <Box
     sx={{
@@ -120,10 +118,8 @@ function KnowBaseVideosPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState('all')
 
-  // Получаем данные с сервера
   const { data: videos = [], isError, isLoading } = useGetKnowladgeVideosQuery()
 
-  // Фильтрация видео с мемоизацией
   const filteredVideos = useMemo(
     () =>
       videos.filter((video) => {
@@ -140,7 +136,6 @@ function KnowBaseVideosPage() {
     if (newFilter !== null) setFilter(newFilter)
   }
 
-  // Стили для поискового поля
   const searchFieldStyles = useMemo(
     () => ({
       maxWidth: isMobile ? '100%' : '400px',

@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, lazy, Suspense } from 'react'
-import { CircularProgress, FormHelperText } from '@mui/material'
+import { useState, useRef, useEffect } from 'react'
+import { FormHelperText } from '@mui/material'
 import {
   CameraAlt as CameraAltIcon,
   PersonAddOutlined as PersonAddOutlinedIcon,
@@ -7,8 +7,7 @@ import {
 
 import Confirm from '@/components/Confirm'
 
-const FaceRecognition = lazy(() => import('@/components/FaceRecognition'))
-// import FaceRecognition from '@/components/FaceRecognition'
+import FaceRecognition from '@/components/FaceRecognition'
 
 function Recognition({
   onFaceDescriptor,
@@ -57,19 +56,17 @@ function Recognition({
       )}
 
       {showFaceRecognition && (
-        <Suspense fallback={<CircularProgress />}>
-          <FaceRecognition
-            ref={faceRecognitionRef}
-            onClose={() => setShowFaceRecognition(false)}
-            onFaceDescriptor={(data) => {
-              onFaceDescriptor(data)
-            }}
-            onCameraError={(error) => {
-              setCameraError(error.message)
-              onCameraError(error)
-            }}
-          />
-        </Suspense>
+        <FaceRecognition
+          ref={faceRecognitionRef}
+          onClose={() => setShowFaceRecognition(false)}
+          onFaceDescriptor={(data) => {
+            onFaceDescriptor(data)
+          }}
+          onCameraError={(error) => {
+            setCameraError(error.message)
+            onCameraError(error)
+          }}
+        />
       )}
     </>
   )

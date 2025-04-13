@@ -31,6 +31,7 @@ import CalendarDay from '@/components/CalendarDay'
 import Legend from '@/components/CalendarLegend'
 import { getTestsFromDB } from '@/service/offlineDB'
 import { useLazyGetTestsQuery } from '@/slices/testApi'
+import { useGetResultInstructionsQuery } from '@/slices/instructionApi'
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const MIN_CALENDAR_WIDTH = 700
@@ -47,6 +48,7 @@ function CalendarResults() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [getTests] = useLazyGetTestsQuery()
+  const { data: instructionsResults } = useGetResultInstructionsQuery()
 
   // Загрузка данных
   useEffect(() => {
@@ -65,19 +67,39 @@ function CalendarResults() {
               duration: result.test_duration,
               isPassed: result.is_passed,
               testId: test.id,
+              type: 'test',
             })) || []
       )
+
+    const processInstructionsResults = (instructions) =>
+      instructions?.map((instruction) => ({
+        id: instruction.id,
+        date: parseISO(instruction.date),
+        instructionName: instruction.instruction,
+        isPassed: instruction.result,
+        type: 'instruction',
+      })) || []
 
     const fetchFromServer = async () => {
       try {
         const serverTests = await getTests()
+        const allEvents = []
+
         if (serverTests?.length) {
-          return processTestResults(serverTests)
+          allEvents.push(...processTestResults(serverTests))
         }
-        setError('Нет данных о тестах')
+
+        if (instructionsResults?.length) {
+          allEvents.push(...processInstructionsResults(instructionsResults))
+        }
+
+        if (allEvents.length) {
+          return allEvents
+        }
+
+        setError('Нет данных о тестах и инструктажах')
       } catch (serverError) {
-        console.error('Ошибка при загрузке с сервера:', serverError)
-        setError('Не удалось загрузить результаты тестов')
+        setError('Не удалось загрузить результаты')
       }
       return null
     }
@@ -86,8 +108,18 @@ function CalendarResults() {
       try {
         // Пытаемся получить данные из локальной БД в первую очередь
         const localTests = await getTestsFromDB()
+        const allEvents = []
+
         if (localTests?.length) {
-          setEvents(processTestResults(localTests))
+          allEvents.push(...processTestResults(localTests))
+        }
+
+        if (instructionsResults?.length) {
+          allEvents.push(...processInstructionsResults(instructionsResults))
+        }
+
+        if (allEvents.length) {
+          setEvents(allEvents)
           setLoading(false)
           return
         }
@@ -104,7 +136,7 @@ function CalendarResults() {
     }
 
     fetchTestResults()
-  }, [getTests])
+  }, [getTests, instructionsResults])
 
   // Обработчики навигации
   const handlePrevMonth = useCallback(

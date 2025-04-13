@@ -44,6 +44,14 @@ class AdminUserSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
+class RankSerializer(serializers.ModelSerializer):
+    icon = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = Rank
+        fields = ('id', 'name', 'icon')
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для данных пользователя (профиль)."""
 
@@ -67,7 +75,6 @@ class UserSerializer(serializers.ModelSerializer):
             "role": {"read_only": True},
             "experience_points": {"read_only": True},
             "current_rank": {"read_only": True},
-            "position": {"read_only": True},
             "mobile_phone": {"required": False},
             "first_name": {"required": False},
             "last_name": {"required": False},
@@ -87,8 +94,9 @@ class BadgeSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для расширенного профиля пользователя."""
 
-    current_rank = serializers.StringRelatedField()
+    current_rank = serializers.SerializerMethodField()
     badges = serializers.SerializerMethodField()
+    position = serializers.StringRelatedField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + (
@@ -103,6 +111,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
             many=True,
             context=self.context
         ).data
+
+    def get_current_rank(self, obj):
+        if obj.current_rank:
+            return RankSerializer(obj.current_rank).data
+
+        default_rank = {"name": "Подмастерье", "icon": None}
+
+        if obj.position and obj.position.icon:
+            default_rank["icon"] = self.context["request"].build_absolute_uri(
+                obj.position.icon.url
+            )
+        else:
+            default_rank["icon"] = self.context["request"].build_absolute_uri(
+                settings.DEFAULT_POSITION_ICON_URL
+            )
+
+        return default_rank
 
 
 class SignUpSerializer(serializers.Serializer):

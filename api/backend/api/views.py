@@ -66,7 +66,7 @@ class UserViewSet(ModelViewSet):
     def get_serializer_class(self):
         """Определяем сериализатор в зависимости от действия."""
         if self.action == 'profile':
-            return UserProfileSerializer  # Меняем на новый сериализатор
+            return UserProfileSerializer
         return super().get_serializer_class()
 
     @action(

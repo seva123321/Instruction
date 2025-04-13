@@ -3,14 +3,16 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'some_key')
 
-DEBUG = os.getenv('DEBUG', 'false').lower()
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
 
 AUTH_USER_MODEL = 'api.User'
 TEST_QUESTIONS_LIMIT = 10
@@ -197,3 +199,5 @@ UNFOLD = {
     "SITE_HEADER": "Панель администратора",
     "DASHBOARD_CALLBACK": "api.admin.dashboard_callback",
 }
+
+DEFAULT_POSITION_ICON_URL = '/static/media/default.png'

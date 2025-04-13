@@ -1,4 +1,5 @@
 import { useState, useEffect, memo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ListItem,
   Typography,
@@ -12,7 +13,6 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material'
-import { Link, useNavigate } from 'react-router-dom'
 import {
   School as SchoolIcon,
   Assignment as AssignmentIcon,
@@ -22,8 +22,7 @@ import {
 } from '@mui/icons-material'
 
 import ColoredBadge from '@/components/ColoredBadge'
-
-import { getTestFromDB, STORE_NAMES } from '../../service/offlineDB'
+import { getTestFromDB, STORE_NAMES } from '@/service/offlineDB'
 
 const TestItem = memo(
   ({
@@ -43,10 +42,6 @@ const TestItem = memo(
     const hasPassed = test?.is_passed || false
     const testDate = test?.date
     const testHighestMark = test?.mark
-    // const lastTest = test.test_results.toSorted((obj1, obj2) => obj1 - obj2)[0]
-    // const lastMark = lastTest?.mark
-    // const lastTimeCompletion = lastTest?.completion_time
-    // console.log('lastMark > ', lastMark);
 
     // Проверка скачанного состояния
     useEffect(() => {
@@ -66,7 +61,6 @@ const TestItem = memo(
         }
       }
 
-      // Проверяем только если онлайн или при монтировании
       if (isOnline) {
         setTimeout(() => {
           checkDownloadStatus()
@@ -111,7 +105,6 @@ const TestItem = memo(
       let testExists
       if (!isOnline) {
         try {
-          // Проверяем наличие теста в обоих хранилищах
           testExists = await getTestFromDB(test.id, STORE_NAMES.TESTS_CONTENT)
 
           if (!testExists) {
@@ -347,7 +340,5 @@ const TestItem = memo(
     )
   }
 )
-
-TestItem.displayName = 'TestItem'
 
 export default TestItem

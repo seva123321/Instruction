@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import {
   Typography,
   Box,
@@ -37,4 +38,4 @@ function KnowBaseHeader({ title }) {
   )
 }
 
-export default KnowBaseHeader
+export default memo(KnowBaseHeader)

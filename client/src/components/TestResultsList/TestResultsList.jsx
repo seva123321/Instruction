@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import { memo } from 'react'
 import { Box, Card, CardContent, Typography, Chip, Avatar } from '@mui/material'
 import { CheckCircle, Event, Cancel } from '@mui/icons-material'
 import { format, isSameMonth } from 'date-fns'

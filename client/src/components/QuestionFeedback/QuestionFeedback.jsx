@@ -1,4 +1,4 @@
-import React from 'react'
+import { memo } from 'react'
 import {
   Alert,
   Collapse,
@@ -89,4 +89,4 @@ function QuestionFeedback({
   )
 }
 
-export default React.memo(QuestionFeedback)
+export default memo(QuestionFeedback)

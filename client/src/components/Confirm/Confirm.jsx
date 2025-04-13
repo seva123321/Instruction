@@ -35,7 +35,7 @@ export default function AlertDialog({
 
   const handleAllowAccess = async () => {
     try {
-      await onAllowAccess() // Вызываем переданную функцию
+      await onAllowAccess()
       setOpen(false)
       setErrorMessage('')
     } catch (error) {

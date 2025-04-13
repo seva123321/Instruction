@@ -44,14 +44,6 @@ class AdminUserSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
-class RankSerializer(serializers.ModelSerializer):
-    icon = serializers.ImageField(read_only=True)
-
-    class Meta:
-        model = Rank
-        fields = ('id', 'name', 'icon')
-
-
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для данных пользователя (профиль)."""
 
@@ -91,6 +83,14 @@ class BadgeSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "description", "required_count", "icon")
 
 
+class RankSerializer(serializers.ModelSerializer):
+    """Сериализатор для званий пользователя."""
+
+    class Meta:
+        model = Rank
+        fields = ('id', 'name', 'icon')
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для расширенного профиля пользователя."""
 
@@ -114,7 +114,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def get_current_rank(self, obj):
         if obj.current_rank:
-            return RankSerializer(obj.current_rank).data
+            return RankSerializer(obj.current_rank, context=self.context).data
 
         default_rank = {"name": "Подмастерье", "icon": None}
 

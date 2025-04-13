@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   IconButton,
   Stack,
@@ -6,10 +7,11 @@ import {
   Slide,
   useScrollTrigger,
 } from '@mui/material'
-import ZoomInIcon from '@mui/icons-material/ZoomIn'
-import ZoomOutIcon from '@mui/icons-material/ZoomOut'
-import FormatSizeIcon from '@mui/icons-material/FormatSize'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import {
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  FormatSize as FormatSizeIcon,
+} from '@mui/icons-material'
 
 function FontSizeControls({ fontSize, setFontSize }) {
   const [visible, setVisible] = useState(false)
@@ -44,12 +46,10 @@ function FontSizeControls({ fontSize, setFontSize }) {
     // Применяем размер шрифта ко всем элементам
     document.documentElement.style.fontSize = `${fontSize * 100}%`
 
-    // Создаем новый объект стиля для полей ввода
     const inputStyle = {
       fontSize: `${fontSize}rem`,
     }
 
-    // Применяем стили к полям ввода без мутации параметров
     const inputs = document.querySelectorAll('input, textarea, select')
     inputs.forEach((input) => {
       Object.assign(input.style, inputStyle)

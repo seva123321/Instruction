@@ -6,7 +6,6 @@ import {
 } from '@mui/icons-material'
 
 import Confirm from '@/components/Confirm'
-
 import FaceRecognition from '@/components/FaceRecognition'
 
 function Recognition({

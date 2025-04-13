@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import {
   FormGroup,
   FormControlLabel,
@@ -8,9 +9,8 @@ import {
   Divider,
   Alert,
 } from '@mui/material'
-import { useForm, useWatch } from 'react-hook-form'
-import PropTypes from 'prop-types'
 import LinkedCameraIcon from '@mui/icons-material/LinkedCamera'
+import PropTypes from 'prop-types'
 
 import Recognition from '@/models/Recognition'
 import CheckboxList from '@/components/CheckboxList'
@@ -45,7 +45,6 @@ function CheckboxFields({ agreements = [], id }) {
     setFaceDescriptor(null)
   }, [defaultValues, setValue])
 
-  // Отдельно отслеживаем нужные чекбоксы
   const complianceValue = useWatch({
     control,
     name: 'compliance',
@@ -74,7 +73,6 @@ function CheckboxFields({ agreements = [], id }) {
         // Получаем текущие значения формы
         const formValues = getValues()
 
-        // Формируем данные для отправки
         const submissionData = {
           instruction_id: id,
           instruction_agreement: Object.entries(formValues).map(
@@ -87,7 +85,6 @@ function CheckboxFields({ agreements = [], id }) {
 
         await postInstructionResults(submissionData).unwrap()
 
-        // Сброс формы после успешной отправки
         handleReset()
       } catch (error) {
         setErrorMessage({
@@ -115,7 +112,7 @@ function CheckboxFields({ agreements = [], id }) {
 
   const handleFaceDescriptor = async (data) => {
     setFaceDescriptor(data)
-    await submitFormData(data) // Отправляем данные сразу после распознавания
+    await submitFormData(data) 
   }
 
   const styles = {

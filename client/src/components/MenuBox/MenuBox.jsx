@@ -24,7 +24,6 @@ import {
   MenuOpen as MenuOpenIcon,
   FactCheck as FactCheckIcon,
   EmojiEvents as EmojiEventsIcon,
-  // Headphones as HeadphonesIcon,
   Logout as LogoutIcon,
   Login as LoginIcon,
   SmartDisplay as SmartDisplayIcon,
@@ -35,8 +34,7 @@ import {
 import { styled, useTheme } from '@mui/material/styles'
 
 import useAuth from '@/hook/useAuth'
-
-import CustomLink from '../CustomLink/CustomLink'
+import CustomLink from '@/components/CustomLink'
 
 const drawerWidth = 240
 
@@ -264,24 +262,7 @@ export default function MenuBox() {
                 primary="Документы"
               />
             </ListItemButtonSubMenu>
-            {/* @TODO add audio */}
-            {/* <ListItemButtonSubMenu
-              open={isDrawerOpen}
-              component={CustomLink}
-              to="/knowladge/audios"
-              onClick={handleMobileItemClick}
-            >
-              <ListItemIcon open={isDrawerOpen}>
-                <Tooltip title="Аудио" placement="right">
-                  <HeadphonesIcon />
-                </Tooltip>
-              </ListItemIcon>
-              <ListItemText
-                open={isDrawerOpen}
-                ismobile={isMobile.toString()}
-                primary="Аудио"
-              />
-            </ListItemButtonSubMenu> */}
+
             <ListItemButtonSubMenu
               open={isDrawerOpen}
               component={CustomLink}

@@ -14,12 +14,9 @@ html {
 }
 
 body {
-  /* width: 100vw; */
   height: 100vh;
   background-color: #f1fcff;
   font-family: 'Roboto', 'TT Lakes Compressed', sans-serif;
-  /* color: #1b1c21; */
-  /* font-family: 'Open Sans'; */
 }
 
 :root {

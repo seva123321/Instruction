@@ -3,10 +3,10 @@ import { memo, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { Box, Grid2, Typography } from '@mui/material'
 
-import LoadingIndicator from '@/components/LoadingIndicator'
-import CheckboxFields from '@/models/CheckboxFields'
-import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
 import MarkdownContext from '@/models/MarkdownContext'
+import CheckboxFields from '@/models/CheckboxFields'
+import LoadingIndicator from '@/components/LoadingIndicator'
+import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
 
 const OneInstructionPage = memo(({ data, isLoading, error }) => {
   const { id } = useParams()
@@ -18,7 +18,6 @@ const OneInstructionPage = memo(({ data, isLoading, error }) => {
   } = useGetInstructionByIdQuery(id, {
     skip: !id || !!data,
   })
-  // console.log('OneInstructionPage render');
 
   const finalData = data || responseData
   const finalIsLoading = isLoading || (isQueryLoading && !data)

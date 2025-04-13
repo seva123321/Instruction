@@ -91,28 +91,3 @@ export const checkDatabasesReady = async () => {
     return false
   }
 }
-// export const initializeApplicationDatabases = async () => {
-//   try {
-//     // Инициализация TestsOfflineDB
-//     await initDB()
-
-//     // Инициализация TestResultsDB
-//     const resultsDB = await openDB('TestResultsDB', 1, {
-//       upgrade(db) {
-//         if (!db.objectStoreNames.contains('results')) {
-//           const store = db.createObjectStore('results', { keyPath: 'id' })
-//           store.createIndex('by_test', 'test', { unique: false })
-//         }
-//         if (!db.objectStoreNames.contains('pendingResults')) {
-//           db.createObjectStore('pendingResults', { keyPath: 'id' })
-//         }
-//       },
-//     })
-//     resultsDB.close()
-
-//     return true
-//   } catch (e) {
-//     console.error('Database initialization error:', e)
-//     throw new Error('Failed to initialize application databases')
-//   }
-// }

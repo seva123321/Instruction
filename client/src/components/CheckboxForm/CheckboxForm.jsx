@@ -1,6 +1,6 @@
-import { FormControlLabel, Checkbox, Typography } from '@mui/material'
-import { useWatch } from 'react-hook-form'
 import { memo } from 'react'
+import { useWatch } from 'react-hook-form'
+import { FormControlLabel, Checkbox, Typography } from '@mui/material'
 
 const MemoizedCheckbox = memo(({ name, register, control, label }) => {
   const checked = useWatch({
@@ -19,7 +19,5 @@ const MemoizedCheckbox = memo(({ name, register, control, label }) => {
     />
   )
 })
-
-MemoizedCheckbox.displayName = 'MemoizedCheckbox'
 
 export default MemoizedCheckbox

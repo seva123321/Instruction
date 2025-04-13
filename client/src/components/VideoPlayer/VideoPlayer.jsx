@@ -1,5 +1,5 @@
 /* eslint-disable operator-linebreak */
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Box,
   Button,
@@ -85,12 +85,12 @@ function UniversalVideoPlayer({
 
   const handleLoad = () => {
     setLoading(false)
-    setError(null) // Сброс ошибки при успешной загрузке
+    setError(null)
   }
 
   const handleError = () => {
     setLoading(false)
-    setError('Не удалось загрузить видео с YouTube.') // Установка ошибки при неудаче
+    setError('Не удалось загрузить видео с YouTube.')
   }
 
   useEffect(() => {
@@ -131,15 +131,6 @@ function UniversalVideoPlayer({
         setIsMuted(video.muted)
       }
 
-      const handleError = () => {
-        console.log('не загрузилось')
-
-        setLoading(false)
-        setError(
-          `Ошибка загрузки видео: ${video.error?.message || 'Unknown error'}`
-        )
-      }
-
       // Подписываемся на события
       const events = {
         loadedmetadata: handleLoadedMetadata,
@@ -148,8 +139,6 @@ function UniversalVideoPlayer({
         pause: handlePause,
         volumechange: handleVolumeChange,
         error: handleError,
-        // canplay: () => console.log('Video can play'),
-        // waiting: () => console.log('Video waiting'),
       }
 
       Object.entries(events).forEach(([event, handler]) => {

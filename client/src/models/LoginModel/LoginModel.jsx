@@ -67,9 +67,8 @@ function LoginModel() {
   }
 
   const handleFaceDescriptor = async (data) => {
-    setFaceDescriptor(data) // Сохраняем дескриптор
+    setFaceDescriptor(data) 
 
-    // Пытаемся войти сразу при получении дескриптора
     try {
       const success = await signIn({ face_descriptor: data })
 
@@ -82,7 +81,7 @@ function LoginModel() {
         text: 'Не удалось войти по лицу. Попробуйте пароль',
         type: 'error',
       })
-      setFaceDescriptor(null) // Сбрасываем дескриптор при ошибке
+      setFaceDescriptor(null) 
     }
   }
 

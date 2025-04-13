@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { memo, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Grid2, CircularProgress, Typography } from '@mui/material'
+import { Box, Grid2, Typography } from '@mui/material'
 
 import LoadingIndicator from '@/components/LoadingIndicator'
 import CheckboxFields from '@/models/CheckboxFields'
@@ -9,20 +9,17 @@ import { useGetInstructionByIdQuery } from '@/slices/instructionApi'
 import MarkdownContext from '@/models/MarkdownContext'
 
 const OneInstructionPage = memo(({ data, isLoading, error }) => {
-  // Если данные переданы через props (из first_instruction), используем их
-  // Иначе делаем запрос по ID
   const { id } = useParams()
   const {
     data: responseData,
     isLoading: isQueryLoading,
     error: queryError,
     isUninitialized,
-    // isError,
   } = useGetInstructionByIdQuery(id, {
-    skip: !id || !!data, // Пропускаем если есть данные или нет ID
+    skip: !id || !!data,
   })
+  // console.log('OneInstructionPage render');
 
-  // Определяем какие данные использовать
   const finalData = data || responseData
   const finalIsLoading = isLoading || (isQueryLoading && !data)
   const finalError = error || queryError
@@ -59,7 +56,6 @@ const OneInstructionPage = memo(({ data, isLoading, error }) => {
     return <LoadingIndicator />
   }
 
-  // Обработка ошибок
   if (finalError) {
     return (
       <div>
@@ -72,8 +68,6 @@ const OneInstructionPage = memo(({ data, isLoading, error }) => {
   if (!finalData && isUninitialized) {
     return <Typography variant="h4">Инструкция не найдена</Typography>
   }
-
-  console.log('paint OneInstructionPage ')
 
   return (
     <Box sx={styles.root}>

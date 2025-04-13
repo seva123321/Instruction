@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   FormGroup,
   FormControlLabel,

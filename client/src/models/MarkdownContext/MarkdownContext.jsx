@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
+import { useRef, useEffect, memo, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -14,6 +14,14 @@ import {
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import { useDispatch, useSelector } from 'react-redux'
+
+import {
+  setHeadings,
+  setCurrentHeading,
+  toggleMobileOpen,
+} from '@/slices/markdownSlice'
+
 import './Markdown.css'
 
 // Генератор уникальных ID для заголовков
@@ -26,7 +34,7 @@ const generateHeadingId = (text) =>
     .replace(/-+/g, '-')
     .slice(0, 50)
 
-const createMarkdownComponents = (theme) => ({
+const createMarkdownComponents = () => ({
   h1: ({ children, ...props }) => (
     <Typography
       variant="h4"
@@ -200,8 +208,192 @@ const createMarkdownComponents = (theme) => ({
   ),
 })
 
-const useStyles = (theme) =>
-  useMemo(
+const SidebarContent = memo(
+  ({ headings, currentHeading, scrollToHeading, styles }) => (
+    <>
+      <Typography textAlign="center" variant="h6" mt={2} mb={2}>
+        Содержание
+      </Typography>
+      <List>
+        {headings.map((heading) => (
+          <ListItem
+            key={`${heading.id}-${heading.position}`}
+            id={`sidebar-item-${heading.id}`}
+            disablePadding
+            dense
+          >
+            <MuiLink
+              href={`#${heading.id}`}
+              sx={{
+                ...styles.link(heading.level, currentHeading === heading.id),
+                lineHeight: 1.6,
+                flexGrow: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: '-webkit-box',
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: 'vertical',
+                transition: 'background-color 0.3s ease', // Добавляем плавный переход
+              }}
+              onClick={(e) => {
+                e.preventDefault()
+                scrollToHeading(heading.id)
+              }}
+            >
+              {heading.text}
+            </MuiLink>
+          </ListItem>
+        ))}
+      </List>
+    </>
+  )
+)
+
+const MarkdownContext = memo(({ markdown, header }) => {
+  const theme = useTheme()
+  const dispatch = useDispatch()
+  const { headings, currentHeading, mobileOpen } = useSelector(
+    (state) => state.markdown
+  )
+  const headingRefs = useRef({})
+  const sidebarRef = useRef(null)
+  const location = useLocation()
+  const updateTimeoutRef = useRef(null)
+  const lastHeadingRef = useRef(null)
+
+  const markdownComponents = useMemo(
+    () => createMarkdownComponents(theme),
+    [theme]
+  )
+
+  const handleDrawerToggle = () => {
+    dispatch(toggleMobileOpen())
+  }
+
+  const scrollToHeading = (id) => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+      window.history.replaceState(null, null, `#${id}`)
+      dispatch(setCurrentHeading(id))
+      lastHeadingRef.current = id
+    }
+  }
+
+  const updateCurrentHeading = useCallback(
+    (id) => {
+      if (id !== lastHeadingRef.current) {
+        if (updateTimeoutRef.current) {
+          clearTimeout(updateTimeoutRef.current)
+        }
+
+        updateTimeoutRef.current = setTimeout(() => {
+          lastHeadingRef.current = id
+          dispatch(setCurrentHeading(id))
+        }, 300)
+      }
+    },
+    [dispatch]
+  )
+
+  useEffect(
+    () => () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.slice(1)
+      const element = document.getElementById(id)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+        dispatch(setCurrentHeading(id))
+        lastHeadingRef.current = id
+      }
+    }
+  }, [location, dispatch])
+
+  useEffect(() => {
+    const headingRegex = /^(#{1,3})\s+(.*)$/gm
+    const matches = [...markdown.matchAll(headingRegex)]
+
+    if (matches.length > 0) {
+      const extractedHeadings = matches.map((match) => {
+        // eslint-disable-next-line no-unused-vars
+        const [_, hashes, text] = match
+        return {
+          level: hashes.length,
+          text,
+          id: generateHeadingId(text),
+          position: match.index,
+        }
+      })
+
+      const uniqueHeadings = extractedHeadings.filter(
+        (heading, index, self) =>
+          index === self.findIndex((h) => h.id === heading.id)
+      )
+
+      dispatch(setHeadings(uniqueHeadings))
+    } else {
+      dispatch(setHeadings([]))
+    }
+  }, [markdown, dispatch])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            updateCurrentHeading(entry.target.id)
+
+            const activeItem = document.getElementById(
+              `sidebar-item-${entry.target.id}`
+            )
+
+            if (activeItem && sidebarRef.current) {
+              const { offsetTop: itemTop, offsetHeight: itemHeight } =
+                activeItem
+              const { offsetHeight: sidebarHeight } = sidebarRef.current
+
+              sidebarRef.current.scrollTo({
+                top: itemTop - sidebarHeight / 2 + itemHeight / 2,
+                behavior: 'smooth',
+              })
+            }
+          }
+        })
+      },
+      { rootMargin: '0px 0px -60% 0px', threshold: 0.5 }
+    )
+
+    // eslint-disable-next-line prettier/prettier
+    const currentRefs = headings.map((heading) =>
+      document.getElementById(heading.id)
+      // eslint-disable-next-line function-paren-newline
+    )
+    currentRefs.forEach((heading) => heading && observer.observe(heading))
+    headingRefs.current = currentRefs
+
+    return () => {
+      headingRefs.current.forEach(
+        (heading) => heading && observer.unobserve(heading)
+      )
+    }
+  }, [headings, updateCurrentHeading])
+
+  const styles = useMemo(
     () => ({
       root: {
         display: 'flex',
@@ -280,191 +472,6 @@ const useStyles = (theme) =>
     }),
     [theme]
   )
-
-const SidebarContent = memo(
-  ({ headings, currentHeading, scrollToHeading, styles }) => {
-    return (
-      <>
-        <Typography textAlign="center" variant="h6" mt={2} mb={2}>
-          Содержание
-        </Typography>
-        <List>
-          {headings.map((heading) => (
-            <ListItem
-              key={`${heading.id}-${heading.position}`}
-              id={`sidebar-item-${heading.id}`}
-              disablePadding
-              dense
-            >
-              <MuiLink
-                href={`#${heading.id}`}
-                sx={{
-                  ...styles.link(heading.level, currentHeading === heading.id),
-                  lineHeight: 1.6,
-                  flexGrow: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 4,
-                  WebkitBoxOrient: 'vertical',
-                  transition: 'background-color 0.3s ease', // Добавляем плавный переход
-                }}
-                onClick={(e) => {
-                  e.preventDefault()
-                  scrollToHeading(heading.id)
-                }}
-              >
-                {heading.text}
-              </MuiLink>
-            </ListItem>
-          ))}
-        </List>
-      </>
-    )
-  }
-)
-
-const MarkdownContext = memo(({ markdown, header }) => {
-  const theme = useTheme()
-  const styles = useStyles(theme)
-  const [headings, setHeadings] = useState([])
-  const [currentHeading, setCurrentHeading] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const headingRefs = useRef({})
-  const sidebarRef = useRef(null)
-  const location = useLocation()
-  const updateTimeoutRef = useRef(null) // Таймер для задержки обновления
-  const lastHeadingRef = useRef(null) // Последний активный заголовок
-
-  const markdownComponents = useMemo(
-    () => createMarkdownComponents(theme),
-    [theme]
-  )
-
-  const handleDrawerToggle = useCallback(() => {
-    setMobileOpen((prev) => !prev)
-  }, [])
-
-  const scrollToHeading = useCallback((id) => {
-    // Очищаем предыдущий таймер при клике
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current)
-    }
-
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-      window.history.replaceState(null, null, `#${id}`)
-      setCurrentHeading(id) // Мгновенное обновление при клике
-      lastHeadingRef.current = id
-    }
-  }, [])
-
-  // Оптимизированное обновление текущего заголовка с задержкой
-  const updateCurrentHeading = useCallback((id) => {
-    if (id !== lastHeadingRef.current) {
-      // Очищаем предыдущий таймер
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current)
-      }
-
-      // Устанавливаем новый таймер с задержкой 300мс
-      updateTimeoutRef.current = setTimeout(() => {
-        lastHeadingRef.current = id
-        setCurrentHeading(id)
-      }, 300)
-    }
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      // Очищаем таймер при размонтировании
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.slice(1)
-      const element = document.getElementById(id)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-        setCurrentHeading(id)
-        lastHeadingRef.current = id
-      }
-    }
-  }, [location])
-
-  useEffect(() => {
-    const headingRegex = /^(#{1,3})\s+(.*)$/gm
-    const matches = [...markdown.matchAll(headingRegex)]
-
-    if (matches.length > 0) {
-      const extractedHeadings = matches.map((match) => {
-        const [_, hashes, text] = match
-        return {
-          level: hashes.length,
-          text,
-          id: generateHeadingId(text),
-          position: match.index,
-        }
-      })
-
-      const uniqueHeadings = extractedHeadings.filter(
-        (heading, index, self) =>
-          index === self.findIndex((h) => h.id === heading.id)
-      )
-
-      setHeadings(uniqueHeadings)
-    } else {
-      setHeadings([])
-    }
-  }, [markdown])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            updateCurrentHeading(entry.target.id)
-
-            const activeItem = document.getElementById(
-              `sidebar-item-${entry.target.id}`
-            )
-
-            if (activeItem && sidebarRef.current) {
-              const { offsetTop: itemTop, offsetHeight: itemHeight } =
-                activeItem
-              const { offsetHeight: sidebarHeight } = sidebarRef.current
-
-              sidebarRef.current.scrollTo({
-                top: itemTop - sidebarHeight / 2 + itemHeight / 2,
-                behavior: 'smooth',
-              })
-            }
-          }
-        })
-      },
-      { rootMargin: '0px 0px -60% 0px', threshold: 0.5 }
-    )
-
-    const currentRefs = headings.map((heading) =>
-      document.getElementById(heading.id)
-    )
-    currentRefs.forEach((heading) => heading && observer.observe(heading))
-    headingRefs.current = currentRefs
-
-    return () => {
-      headingRefs.current.forEach(
-        (heading) => heading && observer.unobserve(heading)
-      )
-    }
-  }, [headings, updateCurrentHeading])
 
   return (
     <Box sx={styles.root}>

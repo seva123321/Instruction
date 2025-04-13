@@ -17,6 +17,8 @@ const SuccessPage = lazy(() => import('@/pages/SuccessPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
+const CalendarResults = lazy(() => import('@/models/CalendarResults'))
+const RatingPage = lazy(() => import('@/pages/RatingPage'))
 
 function App() {
   return (
@@ -96,14 +98,35 @@ function App() {
               </RequireAuth>
             }
           />
+          {/* Маршруты для SuccessPage с вложенными табами */}
           <Route
-            path="mysuccess"
+            path="success"
             element={
               <RequireAuth>
-                <SuccessPage />
+                <Suspense fallback={<LoadingIndicator />}>
+                  <SuccessPage />
+                </Suspense>
               </RequireAuth>
             }
-          />
+          >
+            <Route index element={<Navigate to="calendar" replace />} />
+            <Route
+              path="calendar"
+              element={
+                <Suspense fallback={<LoadingIndicator />}>
+                  <CalendarResults />
+                </Suspense>
+              }
+            />
+            <Route
+              path="rating"
+              element={
+                <Suspense fallback={<LoadingIndicator />}>
+                  <RatingPage />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
         <Route path="/admin/*" element={<AdminRedirect />} />
         <Route path="*" element={<NotFoundPage />} />

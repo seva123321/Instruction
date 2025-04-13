@@ -71,6 +71,9 @@ const userApi = createApi({
         }
       },
     }),
+    getRating: build.query({
+      query: () => 'rating/',
+    }),
   }),
 })
 
@@ -81,6 +84,7 @@ export const {
   useLogoutMutation,
   useGetProfileQuery,
   usePatchProfileMutation,
+  useGetRatingQuery,
 } = userApi
 
 export default userApi

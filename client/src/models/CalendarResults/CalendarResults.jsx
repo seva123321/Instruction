@@ -10,8 +10,11 @@ import {
   Divider,
   Grid,
   Grid2,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material'
-import { ChevronLeft, ChevronRight } from '@mui/icons-material'
+import { ChevronLeft, ChevronRight, ExpandMore } from '@mui/icons-material'
 import {
   format,
   parseISO,
@@ -31,6 +34,7 @@ import CalendarDay from '@/components/CalendarDay'
 import Legend from '@/components/CalendarLegend'
 import { getTestsFromDB } from '@/service/offlineDB'
 import { useLazyGetTestsQuery } from '@/slices/testApi'
+import { useGetResultInstructionsQuery } from '@/slices/instructionApi'
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const MIN_CALENDAR_WIDTH = 700
@@ -47,6 +51,8 @@ function CalendarResults() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [getTests] = useLazyGetTestsQuery()
+  const [expanded, setExpanded] = useState(false)
+  const { data: instructionsResults } = useGetResultInstructionsQuery()
 
   // Загрузка данных
   useEffect(() => {
@@ -65,19 +71,39 @@ function CalendarResults() {
               duration: result.test_duration,
               isPassed: result.is_passed,
               testId: test.id,
+              type: 'test',
             })) || []
       )
+
+    const processInstructionsResults = (instructions) =>
+      instructions?.map((instruction) => ({
+        id: instruction.id,
+        date: parseISO(instruction.date),
+        instructionName: instruction.instruction,
+        isPassed: instruction.result,
+        type: 'instruction',
+      })) || []
 
     const fetchFromServer = async () => {
       try {
         const serverTests = await getTests()
+        const allEvents = []
+
         if (serverTests?.length) {
-          return processTestResults(serverTests)
+          allEvents.push(...processTestResults(serverTests))
         }
-        setError('Нет данных о тестах')
+
+        if (instructionsResults?.length) {
+          allEvents.push(...processInstructionsResults(instructionsResults))
+        }
+
+        if (allEvents.length) {
+          return allEvents
+        }
+
+        setError('Нет данных о тестах и инструктажах')
       } catch (serverError) {
-        console.error('Ошибка при загрузке с сервера:', serverError)
-        setError('Не удалось загрузить результаты тестов')
+        setError('Не удалось загрузить результаты')
       }
       return null
     }
@@ -86,8 +112,18 @@ function CalendarResults() {
       try {
         // Пытаемся получить данные из локальной БД в первую очередь
         const localTests = await getTestsFromDB()
+        const allEvents = []
+
         if (localTests?.length) {
-          setEvents(processTestResults(localTests))
+          allEvents.push(...processTestResults(localTests))
+        }
+
+        if (instructionsResults?.length) {
+          allEvents.push(...processInstructionsResults(instructionsResults))
+        }
+
+        if (allEvents.length) {
+          setEvents(allEvents)
           setLoading(false)
           return
         }
@@ -104,7 +140,11 @@ function CalendarResults() {
     }
 
     fetchTestResults()
-  }, [getTests])
+  }, [getTests, instructionsResults])
+
+  const handleAccordionChange = () => {
+    setExpanded(!expanded)
+  }
 
   // Обработчики навигации
   const handlePrevMonth = useCallback(
@@ -233,17 +273,34 @@ function CalendarResults() {
 
       <Divider sx={{ my: 3 }} />
 
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-        {`Результаты за ${format(currentDate, 'LLLL yyyy', { locale: ru })}`}
-      </Typography>
-
-      <MemoizedTestResultsList
-        events={events}
-        currentDate={currentDate}
-        theme={theme}
-      />
-
-      <Legend theme={theme} />
+      <Accordion expanded={expanded} onChange={handleAccordionChange}>
+        <AccordionSummary
+          expandIcon={<ExpandMore />}
+          aria-controls="results-content"
+          id="results-header"
+          sx={{
+            '& .MuiAccordionSummary-content': {
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            },
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            {`Результаты за ${format(currentDate, 'LLLL yyyy', { locale: ru })}`}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {expanded ? 'Скрыть' : 'Показать'}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <MemoizedTestResultsList
+            events={events}
+            currentDate={currentDate}
+            theme={theme}
+          />
+          <Legend theme={theme} />
+        </AccordionDetails>
+      </Accordion>
     </Paper>
   )
 }

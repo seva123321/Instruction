@@ -20,7 +20,6 @@ import { initializeApplicationDatabases } from '@/service/databaseService'
 import TabsWrapper from '@/components/TabsWrapper'
 import KnowBaseHeader from '@/components/KnowBaseHeader'
 import TestItem from '@/components/TestItem'
-
 import { areTestsEqual } from '@/service/utilsFunction'
 import {
   getTestsFromDB,

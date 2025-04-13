@@ -42,7 +42,6 @@ function InstructionsPage() {
     skip: !id,
   })
 
-
   useEffect(() => {
     if (fetchedInstructions) {
       dispatch(setInstructions(fetchedInstructions))

@@ -1,4 +1,5 @@
 /* eslint-disable operator-linebreak */
+/* eslint-disable react/jsx-one-expression-per-line */
 
 import { useEffect, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
@@ -957,7 +958,7 @@ function ProfilePage() {
                         onChange={handlePhoneChange}
                         error={!!errors.mobile_phone}
                         helperText={errors.mobile_phone?.message}
-                        InputProps={{
+                        slotProps={{
                           startAdornment: (
                             <InputAdornment position="start">
                               <PhoneIcon
@@ -1024,8 +1025,10 @@ function ProfilePage() {
                   <Controller
                     name="birthday"
                     control={control}
-                    render={({ field }) =>
-                      renderBirthdayPicker(field, isDesktop)
+                    // eslint-disable-next-line prettier/prettier
+                    render={
+                      ({ field }) => renderBirthdayPicker(field, isDesktop)
+                      // eslint-disable-next-line react/jsx-curly-newline
                     }
                   />
                 </Box>

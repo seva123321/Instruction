@@ -305,7 +305,7 @@ export default function MenuBox() {
 
         <ListItemButton
           component={CustomLink}
-          to="/mysuccess"
+          to="/success"
           open={isDrawerOpen}
           onClick={handleMobileItemClick}
         >

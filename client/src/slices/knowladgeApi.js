@@ -7,7 +7,7 @@ const knowladgeApi = createApi({
   reducerPath: 'knowladgeApi',
   baseQuery: fetchBaseQuery({
     baseUrl: `${API_CONFIG.PROXY_PREFIX}/knowladge/`,
-    credentials: 'include', 
+    credentials: 'include',
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
 

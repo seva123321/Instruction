@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Tooltip,
-  Avatar,
   useMediaQuery,
   IconButton,
   Paper,
@@ -11,10 +10,8 @@ import {
 } from '@mui/material'
 import { format, isSameMonth, isSameDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
-import { Close } from '@mui/icons-material'
-
-import { getTestEnding } from '@/service/utilsFunction'
-import TestResultsTooltip from '@/components/TestResultsTooltip'
+import { Close, School, Quiz } from '@mui/icons-material'
+import TestResultsTooltip from '../TestResultsTooltip/TestResultsTooltip'
 
 function CalendarDay({
   day,
@@ -28,6 +25,8 @@ function CalendarDay({
   const isMobile = useMediaQuery('(max-width:600px)')
   const dayEvents = getEventsForDay(day)
   const hasEvents = dayEvents.length > 0
+  const hasTests = dayEvents.some((e) => e.type === 'test')
+  const hasInstructions = dayEvents.some((e) => e.type === 'instruction')
   const isCurrentMonth = isSameMonth(day, currentDate)
   const isToday = isSameDay(day, new Date())
 
@@ -68,59 +67,48 @@ function CalendarDay({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [open, isMobile])
-  const opacityMap = {
-    true: 0.5, //
-    false: isCurrentMonth ? 1 : 0.6,
-  }
 
   const dayStyles = {
     container: {
-      height: '100%',
-      minHeight: 80,
+      height: isMobile ? 64 : 80,
+      minHeight: isMobile ? 64 : 80,
       border: '1px solid',
       borderColor: theme.palette.divider,
-      p: 0.5,
+      p: isMobile ? 0.2 : 0.5,
       bgcolor: isToday ? theme.palette.action.selected : 'background.paper',
-      opacity: opacityMap[isOtherMonth],
+      opacity: isOtherMonth ? 0.5 : isCurrentMonth ? 1 : 0.6,
       position: 'relative',
       '&:hover': { bgcolor: theme.palette.action.hover },
       display: 'flex',
       flexDirection: 'column',
       cursor: hasEvents ? 'pointer' : 'default',
+      overflow: 'hidden',
     },
     dayNumber: {
       textAlign: 'right',
       color: isToday ? theme.palette.primary.main : 'text.secondary',
       fontWeight: isToday ? 'bold' : 'normal',
+      fontSize: isMobile ? '0.75rem' : '0.875rem',
+      lineHeight: 1,
+      mb: isMobile ? 0.5 : 1,
     },
-    eventsContainer: {
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      mt: 0.5,
-    },
-    tooltipContent: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
+    eventBadge: {
       width: '100%',
-      position: 'absolute',
+      position: 'relative',
+      top: '-20px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 2,
     },
-    avatar: {
-      width: 28,
-      height: 28,
-      bgcolor: theme.palette.primary.main,
-      color: theme.palette.primary.contrastText,
-      fontSize: '0.8rem',
-      mb: 0.5,
+    eventIcon: {
+      fontSize: isMobile ? '0.75rem' : '0.875rem',
     },
-    eventText: {
-      textAlign: 'center',
-      color: theme.palette.primary.main,
-      fontWeight: 'medium',
+    eventCount: {
+      fontSize: isMobile ? '0.625rem' : '0.75rem',
+      fontWeight: 'bold',
+      color: theme.palette.text.primary,
     },
     mobileTooltip: {
       position: 'fixed',
@@ -128,9 +116,9 @@ function CalendarDay({
       bgcolor: 'background.paper',
       boxShadow: 6,
       borderRadius: 2,
-      width: '90vw',
-      maxWidth: 400,
-      maxHeight: '80vh',
+      width: '95vw',
+      maxWidth: 450,
+      maxHeight: '85vh',
       overflow: 'auto',
       top: '50%',
       left: '50%',
@@ -139,8 +127,8 @@ function CalendarDay({
     },
     closeButton: {
       position: 'absolute',
-      top: 8,
-      right: 8,
+      top: 4,
+      right: 4,
       color: theme.palette.text.secondary,
     },
     header: {
@@ -164,36 +152,47 @@ function CalendarDay({
       </Typography>
 
       {hasEvents && (
-        <Box sx={dayStyles.eventsContainer}>
-          <Box sx={dayStyles.tooltipContent}>
-            <Avatar sx={dayStyles.avatar}>{dayEvents.length}</Avatar>
-            <Typography variant="caption" sx={dayStyles.eventText}>
-              {`тест${getTestEnding(dayEvents.length)}`}
-            </Typography>
-          </Box>
+        <Box sx={dayStyles.eventBadge}>
+          {hasTests && (
+            <Box display="flex" alignItems="center" mr={1}>
+              <Quiz color="primary" sx={dayStyles.eventIcon} />
+              <Typography variant="caption" sx={dayStyles.eventCount}>
+                {dayEvents.filter((e) => e.type === 'test').length}
+              </Typography>
+            </Box>
+          )}
+          {hasInstructions && (
+            <Box display="flex" alignItems="center">
+              <School color="secondary" sx={dayStyles.eventIcon} />
+              <Typography variant="caption" sx={dayStyles.eventCount}>
+                {dayEvents.filter((e) => e.type === 'instruction').length}
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
 
-      {isMobile ? (
-        open && (
-          <Paper sx={dayStyles.mobileTooltip}>
-            <Box sx={dayStyles.header}>
-              <Typography variant="h6" color="primary">
-                {format(day, 'd MMMM yyyy', { locale: ru })}
-              </Typography>
-              <IconButton
-                onClick={handleClose}
-                sx={dayStyles.closeButton}
-                aria-label="Закрыть"
-              >
-                <Close />
-              </IconButton>
-            </Box>
-            <Divider sx={{ mb: 2 }} />
-            <TestResultsTooltip dayEvents={dayEvents} />
-          </Paper>
-        )
-      ) : (
+      {isMobile && open && (
+        <Paper sx={dayStyles.mobileTooltip}>
+          <Box sx={dayStyles.header}>
+            <Typography variant="h6" color="primary">
+              {format(day, 'd MMMM yyyy', { locale: ru })}
+            </Typography>
+            <IconButton
+              onClick={handleClose}
+              sx={dayStyles.closeButton}
+              aria-label="Закрыть"
+              size="small"
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          <TestResultsTooltip dayEvents={dayEvents} />
+        </Paper>
+      )}
+
+      {!isMobile && (
         <Tooltip
           open={open}
           title={

@@ -71,6 +71,7 @@ function UniversalVideoPlayer({
     setVideoType(getVideoType(type))
   }, [type])
 
+  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (videoType === 'youtube') {
       const timerId = setTimeout(() => {

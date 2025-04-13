@@ -23,6 +23,7 @@ const instructionApi = createApi({
       query: () => 'instructions/',
       providesTags: ['Instruction'],
     }),
+
     getInstructionById: build.query({
       query: (id) => {
         if (!id) {
@@ -31,6 +32,9 @@ const instructionApi = createApi({
         return `instructions/${id}/`
       },
       transformErrorResponse: (response) => response.data,
+    }),
+    getResultInstructions: build.query({
+      query: () => 'instruction_results/',
     }),
     postInstructionResults: build.mutation({
       query: (body) => ({
@@ -45,6 +49,7 @@ const instructionApi = createApi({
 export const {
   useGetInstructionsQuery,
   useGetInstructionByIdQuery,
+  useGetResultInstructionsQuery,
   usePostInstructionResultsMutation,
 } = instructionApi
 

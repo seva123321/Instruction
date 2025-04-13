@@ -67,7 +67,7 @@ function LoginModel() {
   }
 
   const handleFaceDescriptor = async (data) => {
-    setFaceDescriptor(data) 
+    setFaceDescriptor(data)
 
     try {
       const success = await signIn({ face_descriptor: data })
@@ -81,7 +81,7 @@ function LoginModel() {
         text: 'Не удалось войти по лицу. Попробуйте пароль',
         type: 'error',
       })
-      setFaceDescriptor(null) 
+      setFaceDescriptor(null)
     }
   }
 

@@ -30,7 +30,7 @@ const TestResultsList = memo(({ events, currentDate, theme }) => {
   return (
     <Box sx={{ mt: 2 }}>
       {monthEvents?.map((event) => (
-        <TestResultCard key={event.id} event={event} theme={theme} />
+        <TestResultCard key={event.date} event={event} theme={theme} />
       ))}
     </Box>
   )

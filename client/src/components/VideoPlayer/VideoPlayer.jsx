@@ -72,6 +72,28 @@ function UniversalVideoPlayer({
   }, [type])
 
   useEffect(() => {
+    if (videoType === 'youtube') {
+      const timerId = setTimeout(() => {
+        setLoading(false)
+        setError(
+          'Ошибка загрузки видео. Включите VPN. Проверьте подключение к Интернету.'
+        )
+      }, 8000)
+      return () => clearTimeout(timerId)
+    }
+  }, [loading, videoType])
+
+  const handleLoad = () => {
+    setLoading(false)
+    setError(null) // Сброс ошибки при успешной загрузке
+  }
+
+  const handleError = () => {
+    setLoading(false)
+    setError('Не удалось загрузить видео с YouTube.') // Установка ошибки при неудаче
+  }
+
+  useEffect(() => {
     if (!open) return
 
     // Используем таймаут для гарантии, что ref прикреплен к DOM
@@ -110,6 +132,8 @@ function UniversalVideoPlayer({
       }
 
       const handleError = () => {
+        console.log('не загрузилось')
+
         setLoading(false)
         setError(
           `Ошибка загрузки видео: ${video.error?.message || 'Unknown error'}`
@@ -307,8 +331,8 @@ function UniversalVideoPlayer({
           sandbox="allow-same-origin allow-scripts allow-popups allow-presentation"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          onLoad={() => setLoading(false)}
-          onError={() => setError('Не удалось загрузить видео с YouTube')}
+          onLoad={handleLoad}
+          onError={handleError}
           style={{
             border: 'none',
             display: loading ? 'none' : 'block',

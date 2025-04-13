@@ -313,55 +313,67 @@ function ProfilePage() {
                       <CardContent
                         sx={{ display: 'flex', alignItems: 'center', gap: 3 }}
                       >
-                        {profileData?.icon ? (
-                          // {profileData?.icon ? (
-                          /* @TODO {profileData?.current_rank.icon ? ( */
-                          <Box
-                            sx={{
-                              width: 80,
-                              height: 80,
+                        <Box
+                          sx={{
+                            position: 'relative',
+                            width: isMobile ? 100 : 120,
+                            height: isMobile ? 100 : 120,
+                            flexShrink: 0,
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              inset: -5,
                               borderRadius: '50%',
-                              background: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              boxShadow: `0 4px 20px 0 ${alpha(theme.palette.secondary.main, 0.2)}`,
-                            }}
-                          >
+                              background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                              zIndex: -1,
+                              opacity: 0.7,
+                              filter: 'blur(8px)',
+                            },
+                          }}
+                        >
+                          {profileData?.current_rank?.icon ? (
                             <Box
                               component="img"
-                              src={profileData.icon}
-                              // src={profileData.current_rank.icon} @TODO
-                              alt="Rank icon"
+                              // src={`http://localhost:8000${profileData.current_rank.icon}`}
+                              src={profileData.current_rank.icon}
+                              alt={profileData.current_rank.name}
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                              }}
                               sx={{
-                                width: 60,
-                                height: 60,
+                                width: '100%',
+                                height: '100%',
                                 objectFit: 'contain',
+                                borderRadius: '50%',
+                                border: `3px solid ${alpha(theme.palette.common.white, 0.8)}`,
+                                boxShadow: theme.shadows[4],
+                                transition: 'transform 0.3s',
+                                '&:hover': {
+                                  transform: 'scale(1.05) rotate(5deg)',
+                                },
                               }}
                             />
-                          </Box>
-                        ) : (
-                          <Box
-                            sx={{
-                              width: 80,
-                              height: 80,
-                              borderRadius: '50%',
-                              background: `linear-gradient(135deg, ${theme.palette.grey[300]} 0%, ${theme.palette.grey[500]} 100%)`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <RankIcon
+                          ) : (
+                            <Box
                               sx={{
-                                fontSize: 40,
-                                color: theme.palette.common.white,
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '50%',
+                                background: `linear-gradient(135deg, ${theme.palette.grey[300]} 0%, ${theme.palette.grey[500]} 100%)`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                               }}
-                            />
-                          </Box>
-                        )}
+                            >
+                              <RankIcon
+                                sx={{
+                                  fontSize: isMobile ? 48 : 56,
+                                  color: theme.palette.common.white,
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </Box>
 
                         <Box>
                           <Typography
@@ -381,8 +393,7 @@ function ProfilePage() {
                               display: 'inline-block',
                             }}
                           >
-                            {profileData?.current_rank || 'Нет ранга'}
-                            {/* @TODO {profileData?.current_rank.name || 'Нет ранга'} */}
+                            {profileData?.current_rank.name || 'Нет ранга'}
                           </Typography>
                           <Typography
                             variant="body2"

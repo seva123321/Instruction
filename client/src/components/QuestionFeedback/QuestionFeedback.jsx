@@ -55,22 +55,24 @@ function QuestionFeedback({
             dangerouslySetInnerHTML={{ __html: explanation }}
           />
 
-          {referenceLink?.length > 0 && (
+          {(referenceLink[0]?.source !== '' ||
+            referenceLink[0]?.title !== '') && (
             <>
               <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
                 Ссылки для изучения:
               </Typography>
+
               <List dense sx={{ py: 0 }}>
                 {referenceLink.map((link) => (
                   <ListItem
-                    key={link.source} // @TODO url
+                    key={link.source}
                     sx={{
                       py: 0.5,
                       px: 0,
                     }}
                   >
                     <a
-                      href={link.source} // @TODO url
+                      href={link.source}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

@@ -1,14 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit'
 
-import userReducer from './userSlice'
 import userApi from './userApi'
 import instructionApi from './instructionApi'
 import testApi from './testApi'
 import knowladgeApi from './knowladgeApi'
+import checkBoxReducer from './checkboxSlice'
+import instructionsReducer from './instructionsSlice'
+import markdownReducer from './markdownSlice'
 
 export default configureStore({
   reducer: {
-    user: userReducer,
+    checkbox: checkBoxReducer,
+    instructions: instructionsReducer,
+    markdown: markdownReducer,
     [userApi.reducerPath]: userApi.reducer,
     [instructionApi.reducerPath]: instructionApi.reducer,
     [testApi.reducerPath]: testApi.reducer,

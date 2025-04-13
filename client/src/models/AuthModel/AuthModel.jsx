@@ -52,7 +52,7 @@ function AuthModel() {
     const result = await auth(userData)
 
     if (result.status && !/^2/.test(String(result.status))) {
-      setErrorsServer(result.data.errors)
+      setErrorsServer(result.data)
     } else {
       reset()
       navigate(fromPage, { replace: true, state: result.data })

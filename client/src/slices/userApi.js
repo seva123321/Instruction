@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import API_CONFIG from '../config'
@@ -17,7 +18,7 @@ const userApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['Profile'], // Объявляем тип тега
+  tagTypes: ['Profile'],
   endpoints: (build) => ({
     login: build.mutation({
       query: (body) => ({
@@ -48,7 +49,7 @@ const userApi = createApi({
     }),
     getProfile: build.query({
       query: () => 'users/profile/',
-      providesTags: ['Profile'], // Указываем, что этот запрос предоставляет данные с тегом 'Profile'
+      providesTags: ['Profile'],
     }),
     patchProfile: build.mutation({
       query: (body) => ({
@@ -56,8 +57,7 @@ const userApi = createApi({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: ['Profile'], // Указываем, что эта мутация делает недействительными данные с тегом 'Profile'
-      // Дополнительно можно добавить автоматическое обновление кеша
+      invalidatesTags: ['Profile'],
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled
@@ -67,7 +67,7 @@ const userApi = createApi({
             })
           )
         } catch (error) {
-          console.error('Error updating cache:', error)
+          throw new Error('Error updating cache:', error)
         }
       },
     }),

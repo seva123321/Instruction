@@ -24,7 +24,7 @@ import {
   MenuOpen as MenuOpenIcon,
   FactCheck as FactCheckIcon,
   EmojiEvents as EmojiEventsIcon,
-  Headphones as HeadphonesIcon,
+  // Headphones as HeadphonesIcon,
   Logout as LogoutIcon,
   Login as LoginIcon,
   SmartDisplay as SmartDisplayIcon,
@@ -155,7 +155,7 @@ export default function MenuBox() {
           alignItems: 'center',
           p: 1,
           gap: 1,
-          minHeight: 48, // Фиксированная высота для стабильного отображения
+          minHeight: 48,
         }}
       >
         {isDrawerOpen && (
@@ -165,12 +165,15 @@ export default function MenuBox() {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              maxWidth: 'calc(100% - 48px)', // Оставляем место для кнопки
+              maxWidth: 'calc(100% - 48px)',
               fontWeight: 500,
             }}
-            title={`Привет, ${user?.first_name}`} // Подсказка с полным именем
+            title={`Привет, ${user?.first_name}`}
           >
-            {`Привет, ${user?.first_name}`}
+            <Box component="span">{'Привет, '}</Box>
+            <Box component="span" color="primary.main">
+              {user?.first_name}
+            </Box>
           </Typography>
         )}
         <Tooltip
@@ -261,7 +264,8 @@ export default function MenuBox() {
                 primary="Документы"
               />
             </ListItemButtonSubMenu>
-            <ListItemButtonSubMenu
+            {/* @TODO add audio */}
+            {/* <ListItemButtonSubMenu
               open={isDrawerOpen}
               component={CustomLink}
               to="/knowladge/audios"
@@ -277,7 +281,7 @@ export default function MenuBox() {
                 ismobile={isMobile.toString()}
                 primary="Аудио"
               />
-            </ListItemButtonSubMenu>
+            </ListItemButtonSubMenu> */}
             <ListItemButtonSubMenu
               open={isDrawerOpen}
               component={CustomLink}
@@ -325,14 +329,14 @@ export default function MenuBox() {
           onClick={handleMobileItemClick}
         >
           <ListItemIcon open={isDrawerOpen}>
-            <Tooltip title="Мои успехи" placement="right">
+            <Tooltip title="Мои достижения" placement="right">
               <EmojiEventsIcon />
             </Tooltip>
           </ListItemIcon>
           <ListItemText
             open={isDrawerOpen}
             ismobile={isMobile.toString()}
-            primary="Мои успехи"
+            primary="Мои достижения"
           />
         </ListItemButton>
       </List>

@@ -1,24 +1,34 @@
 /* eslint-disable indent */
 /* eslint-disable operator-linebreak */
+
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '@mui/material/styles'
 import { Box, CircularProgress } from '@mui/material'
+import { useSelector, useDispatch } from 'react-redux'
 
 import OneInstructionPage from '@/models/OneInstructionPage'
 import TabsWrapper from '@/components/TabsWrapper'
-
 import {
   useGetInstructionsQuery,
   useGetInstructionByIdQuery,
-} from '../slices/instructionApi'
+} from '@/slices/instructionApi'
+import {
+  setInstructions,
+  setSingleInstruction,
+} from '@/slices/instructionsSlice'
 
 function InstructionsPage() {
   const { id } = useParams()
   const theme = useTheme()
+  const dispatch = useDispatch()
+  const { instructions, singleInstruction } = useSelector(
+    (state) => state.instructions
+  )
 
   // Запрос для получения списка инструкций
   const {
-    data: instructions,
+    data: fetchedInstructions,
     isLoading,
     error,
   } = useGetInstructionsQuery(undefined, {
@@ -27,19 +37,27 @@ function InstructionsPage() {
 
   // Запрос для получения конкретной инструкции по ID
   const {
-    data: singleInstruction,
+    data: fetchedSingleInstruction,
     isFetching: isSingleLoading,
     error: singleError,
   } = useGetInstructionByIdQuery(id, {
-    skip: !id, // Пропускаем запрос если нет ID
+    skip: !id,
   })
 
-  if (isLoading) return <CircularProgress size={50} />
-  if (error) {
-    return <div>Ошибка в загрузке Инструкции</div>
-  }
+  // console.log('InstructionsPage render')
 
-  // Определяем какие данные передавать в компонент
+  useEffect(() => {
+    if (fetchedInstructions) {
+      dispatch(setInstructions(fetchedInstructions))
+    }
+  }, [fetchedInstructions, dispatch])
+
+  useEffect(() => {
+    if (fetchedSingleInstruction) {
+      dispatch(setSingleInstruction(fetchedSingleInstruction))
+    }
+  }, [fetchedSingleInstruction, dispatch])
+
   const instructionToRender = id
     ? singleInstruction
     : instructions?.first_instruction
@@ -52,6 +70,25 @@ function InstructionsPage() {
         }))
       : null
 
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    )
+  }
+
+  if (error) {
+    return <div>Ошибка в загрузке Инструкции</div>
+  }
+
   return (
     <Box
       sx={{
@@ -63,7 +100,7 @@ function InstructionsPage() {
       {tabs && <TabsWrapper tabs={tabs} centered useRouter />}
       <OneInstructionPage
         data={instructionToRender}
-        isLoading={isSingleLoading && !!id} // Показываем загрузку только при запросе по ID
+        isLoading={isSingleLoading && !!id}
         error={singleError}
       />
     </Box>
@@ -71,52 +108,64 @@ function InstructionsPage() {
 }
 
 export default InstructionsPage
+// import { useParams } from 'react-router-dom'
+// import { useTheme } from '@mui/material/styles'
+// import { Box, CircularProgress } from '@mui/material'
 
-// import { useState } from 'react'
-// import { useNavigate, useLocation, useParams } from 'react-router-dom'
-// import { useGetInstructionsQuery } from '../slices/instructionApi'
-// import OneInstructionPage from '@/components/OneInstructionPage/OneInstructionPage'
+// import OneInstructionPage from '@/models/OneInstructionPage'
 // import TabsWrapper from '@/components/TabsWrapper'
-// import { instructionsData } from '../service/constValues'
-// import { getCsrfToken } from '@/utils/cookies'
+
+// import {
+//   useGetInstructionsQuery,
+//   useGetInstructionByIdQuery,
+// } from '../slices/instructionApi'
 
 // function InstructionsPage() {
-//   const { data, isLoading, error, refetch } = useGetInstructionsQuery(
-//     undefined,
-//     {
-//       // Дополнительные опции запроса
-//       refetchOnMountOrArgChange: true,
-//     }
-//   )
 //   const { id } = useParams()
-//   const navigate = useNavigate()
-//   const location = useLocation()
-//   const [instruction, setInstruction] = useState(null)
+//   const theme = useTheme()
 
-//   // Используем данные из API или fallback
-//   const instructions = data
+//   console.log('paint InstructionsPage ');
 
-//   if (isLoading) return <div>Loading...</div>
+//   // Запрос для получения списка инструкций
+//   const {
+//     data: instructions,
+//     isLoading,
+//     error,
+//   } = useGetInstructionsQuery(undefined, {
+//     refetchOnMountOrArgChange: true,
+//   })
+
+//   // Запрос для получения конкретной инструкции по ID
+//   const {
+//     data: singleInstruction,
+//     isFetching: isSingleLoading,
+//     error: singleError,
+//   } = useGetInstructionByIdQuery(id, {
+//     skip: !id, // Пропускаем запрос если нет ID
+//   })
+
+//   if (isLoading) {
+//     return (
+//       <Box
+//         sx={{
+//           height: '100vh',
+//           display: 'flex',
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//         }}
+//       >
+//         <CircularProgress size={60} />
+//       </Box>
+//     )
+//   }
 //   if (error) {
-//     console.error('Error loading instructions:', error)
-//     return <div>Error loading instructions</div>
+//     return <div>Ошибка в загрузке Инструкции</div>
 //   }
-//   if (id) {
-//     const csrfToken = getCsrfToken()
-//     fetch(`/api/instructions/${id}/`, {
-//       method: 'GET',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'X-CSRFToken': csrfToken,
-//       },
-//     })
-//       .then((res) => res.json())
-//       .then((data) => {
-//         setInstruction(data)
-//         console.log(data)
-//       })
-//       .catch((err) => console.log('err > ', err))
-//   }
+
+//   // Определяем какие данные передавать в компонент
+//   const instructionToRender = id
+//     ? singleInstruction
+//     : instructions?.first_instruction
 
 //   const tabs =
 //     instructions?.results?.length > 1
@@ -126,16 +175,21 @@ export default InstructionsPage
 //         }))
 //       : null
 
-//   const dataRended =
-//     instructions?.first_instruction && !id
-//       ? instructions?.first_instruction
-//       : instruction
-
 //   return (
-//     <div>
-//       {tabs && <TabsWrapper centered tabs={tabs} useRouter />}
-//       <OneInstructionPage data={dataRended} />
-//     </div>
+//     <Box
+//       sx={{
+//         [theme.breakpoints.down('sm')]: {
+//           mt: 3,
+//         },
+//       }}
+//     >
+//       {tabs && <TabsWrapper tabs={tabs} centered useRouter />}
+//       <OneInstructionPage
+//         data={instructionToRender}
+//         isLoading={isSingleLoading && !!id} // Показываем загрузку только при запросе по ID
+//         error={singleError}
+//       />
+//     </Box>
 //   )
 // }
 

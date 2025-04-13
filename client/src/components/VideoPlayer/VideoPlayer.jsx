@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Box,
@@ -18,15 +19,18 @@ import {
   VolumeOff,
   Fullscreen,
   FullscreenExit,
+  PlayArrow,
 } from '@mui/icons-material'
 
-const getVideoType = (url) => {
-  if (!url) return 'unknown'
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube'
-  return 'server'
+import { getTestEnding } from '@/service/utilsFunction'
+
+const getVideoType = (type) => {
+  if (!type) return 'unknown'
+  return type.toLowerCase()
 }
 
 const getYouTubeId = (url) => {
+  if (!url) return null
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
   const match = url.match(regExp)
   return match && match[2].length === 11 ? match[2] : null
@@ -39,7 +43,9 @@ const formatTime = (seconds) => {
 }
 
 function UniversalVideoPlayer({
+  type,
   url,
+  file,
   title = 'Видео',
   duration = '',
   views = '',
@@ -50,70 +56,166 @@ function UniversalVideoPlayer({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [videoType, setVideoType] = useState('unknown')
+  const [videoType, setVideoType] = useState(getVideoType(type))
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isMuted, setIsMuted] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
   const [durationSec, setDurationSec] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [error, setError] = useState(null)
   const videoRef = useRef(null)
   const playerRef = useRef(null)
+  const controlsTimeoutRef = useRef(null)
 
   useEffect(() => {
-    setVideoType(getVideoType(url))
-  }, [url])
+    setVideoType(getVideoType(type))
+  }, [type])
 
   useEffect(() => {
-    if (open && videoType === 'server' && videoRef.current) {
-      const video = videoRef.current
-      const updateTime = () => setCurrentTime(video.currentTime)
-      const updateDuration = () => setDurationSec(video.duration)
+    if (!open) return
 
-      video.addEventListener('timeupdate', updateTime)
-      video.addEventListener('durationchange', updateDuration)
-
-      return () => {
-        video.removeEventListener('timeupdate', updateTime)
-        video.removeEventListener('durationchange', updateDuration)
+    // Используем таймаут для гарантии, что ref прикреплен к DOM
+    const initTimer = setTimeout(() => {
+      if (!videoRef.current) {
+        return
       }
-    }
-    return () => {}
-  }, [open, videoType])
+
+      const video = videoRef.current
+
+      // Обработчики событий
+      const handleLoadedMetadata = () => {
+        if (!Number.isNaN(video.duration) && video.duration !== Infinity) {
+          setDurationSec(video.duration)
+        }
+        setLoading(false)
+        setError(null)
+      }
+
+      const handleTimeUpdate = () => {
+        if (!Number.isNaN(video.currentTime)) {
+          setCurrentTime(video.currentTime)
+        }
+      }
+
+      const handlePlay = () => {
+        setIsPlaying(true)
+      }
+
+      const handlePause = () => {
+        setIsPlaying(false)
+      }
+
+      const handleVolumeChange = () => {
+        setIsMuted(video.muted)
+      }
+
+      const handleError = () => {
+        setLoading(false)
+        setError(
+          `Ошибка загрузки видео: ${video.error?.message || 'Unknown error'}`
+        )
+      }
+
+      // Подписываемся на события
+      const events = {
+        loadedmetadata: handleLoadedMetadata,
+        timeupdate: handleTimeUpdate,
+        play: handlePlay,
+        pause: handlePause,
+        volumechange: handleVolumeChange,
+        error: handleError,
+        // canplay: () => console.log('Video can play'),
+        // waiting: () => console.log('Video waiting'),
+      }
+
+      Object.entries(events).forEach(([event, handler]) => {
+        video.addEventListener(event, handler)
+      })
+
+      // Проверка текущего состояния
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        handleLoadedMetadata()
+      }
+
+      // Автовоспроизведение
+      if (autoPlay && video.paused) {
+        video
+          .play()
+          .then(() => console.log('Autoplay succeeded'))
+          .catch(() => {
+            setIsPlaying(false)
+            setError('Автовоспроизведение заблокировано. Нажмите Play')
+          })
+      }
+
+      // Функция очистки
+      // eslint-disable-next-line consistent-return
+      return () => {
+        Object.entries(events).forEach(([event, handler]) => {
+          video.removeEventListener(event, handler)
+        })
+
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current)
+        }
+      }
+    }, 50)
+
+    // eslint-disable-next-line consistent-return
+    return () => clearTimeout(initTimer)
+  }, [open, autoPlay])
 
   const handleOpen = () => {
     setOpen(true)
     setLoading(true)
     setIsPlaying(autoPlay)
+    setCurrentTime(0)
+    setError(null)
   }
 
   const handleClose = () => {
+    if (videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
     setOpen(false)
     setIsPlaying(false)
   }
 
   const togglePlay = () => {
+    if (!videoRef.current) return
+
     if (videoRef.current.paused) {
-      videoRef.current.play()
+      videoRef.current
+        .play()
+        .then(setIsPlaying(true))
+        .catch(() => {
+          setError('Не удалось воспроизвести видео. Попробуйте ещё раз.')
+        })
     } else {
       videoRef.current.pause()
+      setIsPlaying(false)
     }
-    setIsPlaying(!isPlaying)
   }
 
   const toggleMute = () => {
-    videoRef.current.muted = !isMuted
-    setIsMuted(!isMuted)
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted
+      setIsMuted(!isMuted)
+    }
   }
 
   const handleTimeChange = (e, newValue) => {
-    videoRef.current.currentTime = newValue
-    setCurrentTime(newValue)
+    if (videoRef.current) {
+      videoRef.current.currentTime = newValue
+      setCurrentTime(newValue)
+    }
   }
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      playerRef.current.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`)
+      playerRef.current?.requestFullscreen?.().catch((err) => {
+        console.error(`Fullscreen error: ${err.message}`)
       })
       setIsFullscreen(true)
     } else {
@@ -139,6 +241,8 @@ function UniversalVideoPlayer({
 
     if (videoType === 'youtube') {
       const videoId = getYouTubeId(url)
+      if (!videoId) return null
+
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
       return (
         <img
@@ -161,7 +265,7 @@ function UniversalVideoPlayer({
         sx={{
           width: '100%',
           height: '100%',
-          // display: 'flex',
+          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: theme.palette.grey[300],
@@ -175,8 +279,25 @@ function UniversalVideoPlayer({
   const renderVideoPlayer = () => {
     if (videoType === 'youtube') {
       const videoId = getYouTubeId(url)
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${autoPlay ? 1 : 0}&rel=0`
+      if (!videoId) {
+        return (
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.palette.grey[900],
+              color: theme.palette.common.white,
+            }}
+          >
+            <Typography variant="h6">Неверная ссылка на YouTube</Typography>
+          </Box>
+        )
+      }
 
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${autoPlay ? 1 : 0}&rel=0`
       return (
         <iframe
           width="100%"
@@ -187,6 +308,7 @@ function UniversalVideoPlayer({
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           onLoad={() => setLoading(false)}
+          onError={() => setError('Не удалось загрузить видео с YouTube')}
           style={{
             border: 'none',
             display: loading ? 'none' : 'block',
@@ -195,89 +317,210 @@ function UniversalVideoPlayer({
       )
     }
 
-    return (
-      <>
-        <video
-          ref={videoRef}
-          controls={false}
-          autoPlay={autoPlay}
-          muted={isMuted}
-          loop
-          poster={thumbnail}
-          preload="metadata"
-          playsInline
-          onCanPlay={() => {
-            setLoading(false)
-            setDurationSec(videoRef.current.duration)
-          }}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-          onClick={togglePlay}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            display: loading ? 'none' : 'block',
-            cursor: 'pointer',
-          }}
-        >
-          <source src={url} type="video/mp4" />
-          <source src="video.webm" type="video/webm" />
-          <track
-            kind="captions"
-            src="subtitles.vtt"
-            srcLang="ru"
-            label="Русские субтитры"
-            default
-          />
-          Ваш браузер не поддерживает видео.
-        </video>
-
-        {/* Кастомные контролы только для серверных видео */}
+    if (videoType === 'server' && file) {
+      return (
         <Box
           sx={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            p: 2,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-            color: 'white',
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#000',
+            overflow: 'hidden',
+            '& video': {
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              outline: 'none',
+            },
+            '&:hover .video-controls': {
+              opacity: 1,
+            },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={togglePlay} color="inherit">
-              {isPlaying ? <Pause /> : <PlayCircle />}
-            </IconButton>
-            <IconButton onClick={toggleMute} color="inherit">
-              {isMuted ? <VolumeOff /> : <VolumeUp />}
-            </IconButton>
-            <Typography variant="body2" sx={{ minWidth: '50px' }}>
-              {formatTime(currentTime)}
-            </Typography>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video
+            ref={videoRef}
+            controls={false}
+            autoPlay={autoPlay}
+            muted={isMuted}
+            loop={false}
+            onClick={togglePlay}
+            style={{ cursor: 'pointer' }}
+            aria-label="Видео контент"
+          >
+            <source
+              src={file}
+              type={`video/${file.split('.').pop().toLowerCase()}`}
+            />
+            Ваш браузер не поддерживает видео.
+          </video>
+
+          {/* Кастомные контролы */}
+          <Box
+            className="video-controls"
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              p: 2,
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+              color: 'white',
+              zIndex: 1,
+              opacity: { xs: 1, md: isPlaying ? 0 : 1 },
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            {/* Прогресс-бар */}
             <Slider
               value={currentTime}
-              max={durationSec || 100}
+              min={0}
+              max={durationSec || 1}
               onChange={handleTimeChange}
               sx={{
-                flexGrow: 1,
-                color: 'white',
+                position: 'absolute',
+                top: -10,
+                left: 0,
+                right: 0,
+                color: 'primary.main',
+                height: 4,
                 '& .MuiSlider-thumb': {
                   width: 12,
                   height: 12,
+                  transition: '0.2s ease',
+                  '&:hover': {
+                    width: 16,
+                    height: 16,
+                  },
+                },
+                '& .MuiSlider-rail': {
+                  opacity: 0.5,
                 },
               }}
             />
-            <Typography variant="body2" sx={{ minWidth: '50px' }}>
-              {formatTime(durationSec)}
+
+            {/* Основные контролы */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                mt: 1,
+              }}
+            >
+              <IconButton
+                onClick={togglePlay}
+                color="inherit"
+                sx={{
+                  p: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                {isPlaying ? (
+                  <Pause fontSize="medium" />
+                ) : (
+                  <PlayArrow fontSize="medium" />
+                )}
+              </IconButton>
+
+              <IconButton
+                onClick={toggleMute}
+                color="inherit"
+                sx={{
+                  p: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                {isMuted ? (
+                  <VolumeOff fontSize="small" />
+                ) : (
+                  <VolumeUp fontSize="small" />
+                )}
+              </IconButton>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: 'monospace',
+                  minWidth: '50px',
+                }}
+              >
+                {`${formatTime(currentTime)} / ${formatTime(durationSec)}`}
+              </Typography>
+
+              <Box sx={{ flexGrow: 1 }} />
+
+              <IconButton
+                onClick={toggleFullscreen}
+                color="inherit"
+                sx={{
+                  p: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                {isFullscreen ? (
+                  <FullscreenExit fontSize="small" />
+                ) : (
+                  <Fullscreen fontSize="small" />
+                )}
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* Заголовок видео */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              p: 2,
+              background:
+                'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)',
+              color: 'white',
+              zIndex: 1,
+              opacity: { xs: 1, md: isPlaying ? 0 : 1 },
+              transition: 'opacity 0.3s ease',
+            }}
+          >
+            <Typography variant="h6" noWrap>
+              {title}
             </Typography>
-            <IconButton onClick={toggleFullscreen} color="inherit">
-              {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
-            </IconButton>
+            {views && (
+              <Typography variant="caption">
+                {`${views} ${`просмотр${getTestEnding(views)}`}`}
+              </Typography>
+            )}
           </Box>
         </Box>
-      </>
+      )
+    }
+
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.palette.grey[900],
+          color: theme.palette.common.white,
+        }}
+      >
+        <Typography variant="h6">
+          {videoType === 'server'
+            ? 'Видеофайл не найден'
+            : 'Неизвестный тип видео'}
+        </Typography>
+      </Box>
     )
   }
 
@@ -395,9 +638,44 @@ function UniversalVideoPlayer({
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: 'rgba(0,0,0,0.7)',
+                zIndex: 2,
               }}
             >
               <CircularProgress color="secondary" />
+            </Box>
+          )}
+
+          {error && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                zIndex: 2,
+                color: 'white',
+                p: 2,
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="h6" color="error" sx={{ mb: 2 }}>
+                {error}
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setError(null)
+                  setLoading(true)
+                }}
+              >
+                Попробовать снова
+              </Button>
             </Box>
           )}
 
@@ -407,7 +685,7 @@ function UniversalVideoPlayer({
               position: 'absolute',
               top: 8,
               right: 8,
-              zIndex: 1,
+              zIndex: 3,
               color: 'white',
               background: 'rgba(0,0,0,0.5)',
               '&:hover': {
@@ -419,26 +697,6 @@ function UniversalVideoPlayer({
           </IconButton>
 
           {renderVideoPlayer()}
-
-          {videoType !== 'youtube' && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                p: 2,
-                background:
-                  'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-                color: 'white',
-              }}
-            >
-              <Typography variant="h6">{title}</Typography>
-              {views && (
-                <Typography variant="body2">{`${views} просмотров`}</Typography>
-              )}
-            </Box>
-          )}
         </Box>
       </Modal>
     </>

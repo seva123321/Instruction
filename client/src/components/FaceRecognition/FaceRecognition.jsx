@@ -358,3 +358,331 @@ const FaceRecognition = forwardRef(
 )
 
 export default FaceRecognition
+
+// /* eslint-disable operator-linebreak */
+// import {
+//   useEffect,
+//   useRef,
+//   useState,
+//   useCallback,
+//   useImperativeHandle,
+//   forwardRef,
+// } from 'react'
+// import * as faceapi from 'face-api.js'
+// import { Typography, Container, CircularProgress, Box } from '@mui/material'
+// import VideoContainer from '../VideoContainer/VideoContainer'
+// import MessageAlert from '../MessageAlert/MessageAlert'
+
+// const FaceRecognition = forwardRef(
+//   ({ onClose, referenceDescriptor, onFaceDescriptor, onCameraError }, ref) => {
+//     const videoRef = useRef(null)
+//     const animationFrameRef = useRef(null)
+//     const [isLoadedModel, setIsLoadedModel] = useState(false)
+//     const [isProcessing, setIsProcessing] = useState(false)
+//     const [message, setMessage] = useState({ text: '', type: '' })
+//     const [comparisonResult, setComparisonResult] = useState(null)
+//     const [cameraPermissionGranted, setCameraPermissionGranted] =
+//       useState(false)
+//     const [cameraSupported, setCameraSupported] = useState(true)
+//     const descriptorsRef = useRef([])
+//     const modelsLoadedRef = useRef(false)
+//     const isMountedRef = useRef(false) // Флаг монтирования компонента
+
+//     // Проверка поддержки камеры
+//     const checkCameraSupport = useCallback(async () => {
+//       try {
+//         const devices = await navigator.mediaDevices.enumerateDevices()
+//         const hasCamera = devices.some((device) => device.kind === 'videoinput')
+//         setCameraSupported(hasCamera)
+//         if (!hasCamera) {
+//           setMessage({
+//             text: 'Ваше устройство не поддерживает камеру.',
+//             type: 'warning',
+//           })
+//         }
+//       } catch (error) {
+//         setCameraSupported(false)
+//         setMessage({
+//           text: 'Не удалось проверить поддержку камеры.',
+//           type: 'error',
+//         })
+//       }
+//     }, [])
+
+//     const loadModels = useCallback(async () => {
+//       if (modelsLoadedRef.current) return
+
+//       try {
+//         const MODEL_URL = '/modelFaceApi'
+//         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+//         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+//         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+//         if (isMountedRef.current) {
+//           setIsLoadedModel(true)
+//           modelsLoadedRef.current = true
+//         }
+//       } catch (error) {
+//         throw new Error('Ошибка при загрузке моделей.')
+//       }
+//     }, [])
+
+//     const startVideo = useCallback(async () => {
+//       try {
+//         const stream = await navigator.mediaDevices.getUserMedia({
+//           video: {
+//             width: { ideal: 640 },
+//             height: { ideal: 480 },
+//             facingMode: 'user',
+//           },
+//         })
+//         if (isMountedRef.current) {
+//           videoRef.current.srcObject = stream
+//           setCameraPermissionGranted(true)
+//           setMessage({ text: '', type: '' })
+//         }
+//       } catch (error) {
+//         if (isMountedRef.current) {
+//           if (error.name === 'NotAllowedError') {
+//             setCameraPermissionGranted(false)
+//             const errorMessage =
+//               'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
+//             setMessage({ text: errorMessage, type: 'warning' })
+//             onCameraError(new Error(errorMessage))
+//             onClose()
+//           } else {
+//             setMessage({
+//               text: 'Произошла ошибка при доступе к камере.',
+//               type: 'error',
+//             })
+//           }
+//         }
+//         throw error
+//       }
+//     }, [onClose, onCameraError])
+
+//     const stopVideo = useCallback(() => {
+//       if (videoRef.current?.srcObject) {
+//         const stream = videoRef.current.srcObject
+//         const tracks = stream.getTracks()
+//         tracks.forEach((track) => track.stop())
+//         videoRef.current.srcObject = null
+//       }
+//     }, [])
+
+//     const compareDescriptors = useCallback(
+//       (descriptor1, descriptor2, threshold = 0.6) => {
+//         if (!descriptor1 || !descriptor2) return null
+//         const distance = faceapi.euclideanDistance(descriptor1, descriptor2)
+//         return distance < threshold
+//           ? 'Это один и тот же человек!'
+//           : 'Это разные люди!'
+//       },
+//       []
+//     )
+
+//     const averageDescriptors = useCallback((descriptors) => {
+//       if (!descriptors?.length) return null
+//       const descriptorLength = descriptors[0].length
+//       const averagedDescriptor = new Array(descriptorLength).fill(0)
+
+//       descriptors.forEach((descriptor) => {
+//         if (descriptor?.length === descriptorLength) {
+//           descriptor.forEach((value, index) => {
+//             averagedDescriptor[index] += value
+//           })
+//         }
+//       })
+
+//       return averagedDescriptor.map((value) => value / descriptors.length)
+//     }, [])
+
+//     const handleVideoPlay = useCallback(async () => {
+//       if (!isMountedRef.current) return
+
+//       const video = videoRef.current
+//       if (!video || video.videoWidth === 0 || video.videoHeight === 0) return
+
+//       setIsProcessing(true)
+
+//       const processFrame = async () => {
+//         if (!isMountedRef.current) return
+
+//         try {
+//           const detections = await faceapi
+//             .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+//             .withFaceLandmarks()
+//             .withFaceDescriptors()
+
+//           let closestFace = null
+//           let maxArea = 0
+
+//           detections.forEach((detection) => {
+//             const { box } = detection.detection
+//             const area = box.width * box.height
+//             if (area > maxArea) {
+//               maxArea = area
+//               closestFace = detection
+//             }
+//           })
+
+//           if (closestFace) {
+//             descriptorsRef.current.push(closestFace.descriptor)
+
+//             if (descriptorsRef.current.length >= 5) {
+//               stopVideo()
+//               setIsProcessing(false)
+
+//               const averagedDescriptor = averageDescriptors(
+//                 descriptorsRef.current
+//               )
+//               onFaceDescriptor(averagedDescriptor)
+
+//               if (referenceDescriptor) {
+//                 setComparisonResult(
+//                   compareDescriptors(averagedDescriptor, referenceDescriptor)
+//                 )
+//               }
+
+//               setMessage({ text: 'Лицо распознано!', type: 'success' })
+//               setTimeout(() => onClose(), 1000)
+//               return
+//             }
+//           }
+
+//           if (isMountedRef.current) {
+//             animationFrameRef.current = requestAnimationFrame(processFrame)
+//           }
+//         } catch (error) {
+//           if (isMountedRef.current) {
+//             setMessage({
+//               text: 'Произошла ошибка при обработке видео.',
+//               type: 'error',
+//             })
+//             stopVideo()
+//             setIsProcessing(false)
+//             onClose()
+//           }
+//         }
+//       }
+
+//       animationFrameRef.current = requestAnimationFrame(processFrame)
+//     }, [
+//       stopVideo,
+//       onClose,
+//       averageDescriptors,
+//       onFaceDescriptor,
+//       referenceDescriptor,
+//       compareDescriptors,
+//     ])
+
+//     const startRecognition = useCallback(async () => {
+//       if (!isMountedRef.current) return
+
+//       try {
+//         descriptorsRef.current = []
+//         await checkCameraSupport()
+//         if (!cameraSupported)
+//           throw new Error('Камера не поддерживается устройством.')
+//         await loadModels()
+//         await startVideo()
+//       } catch (error) {
+//         if (isMountedRef.current) {
+//           setMessage({
+//             text:
+//               error.message || 'Произошла ошибка при запуске распознавания.',
+//             type: 'error',
+//           })
+//         }
+//         throw error
+//       }
+//     }, [loadModels, cameraSupported, checkCameraSupport, startVideo])
+
+//     useImperativeHandle(ref, () => ({ startRecognition }))
+
+//     useEffect(() => {
+//       isMountedRef.current = true
+//       return () => {
+//         isMountedRef.current = false
+//         stopVideo()
+//         if (animationFrameRef.current) {
+//           cancelAnimationFrame(animationFrameRef.current)
+//         }
+//       }
+//     }, [stopVideo])
+
+//     useEffect(() => {
+//       if (!cameraPermissionGranted || !isMountedRef.current) return
+
+//       const video = videoRef.current
+//       if (!video) return
+
+//       video.addEventListener('play', handleVideoPlay)
+//       return () => video.removeEventListener('play', handleVideoPlay)
+//     }, [cameraPermissionGranted, handleVideoPlay])
+
+//     return (
+//       <Box
+//         sx={{
+//           position: 'fixed',
+//           top: 0,
+//           left: 0,
+//           right: 0,
+//           bottom: 0,
+//           display: 'flex',
+//           flexDirection: 'column',
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//           color: 'white',
+//           zIndex: 2000,
+//           backgroundColor: 'rgba(65, 101, 207, 0.77)',
+//         }}
+//       >
+//         {!isLoadedModel && (
+//           <Container
+//             sx={{
+//               height: '100vh',
+//               width: '100%',
+//               display: 'flex',
+//               flexDirection: 'column',
+//               alignItems: 'center',
+//               justifyContent: 'center',
+//             }}
+//           >
+//             <CircularProgress sx={{ color: 'white' }} size={60} />
+//             <Typography variant="h6" sx={{ mt: 2 }}>
+//               Загрузка моделей...
+//             </Typography>
+//           </Container>
+//         )}
+
+//         {cameraPermissionGranted && message.text && (
+//           <MessageAlert message={message} />
+//         )}
+
+//         {isProcessing && (
+//           <Box sx={{ width: '100%', mt: 2 }}>
+//             <CircularProgress
+//               sx={{ color: 'white', display: 'block', m: '0 auto' }}
+//             />
+//             <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
+//               Распознавание образа...
+//             </Typography>
+//           </Box>
+//         )}
+
+//         {comparisonResult && (
+//           <Box>
+//             <Typography variant="h6" sx={{ mb: 1 }}>
+//               Результат сравнения:
+//             </Typography>
+//             <Typography variant="body1">{comparisonResult}</Typography>
+//           </Box>
+//         )}
+
+//         <VideoContainer videoRef={videoRef} />
+//       </Box>
+//     )
+//   }
+// )
+
+// export default FaceRecognition

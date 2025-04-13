@@ -1,3 +1,4 @@
+import { useState, useMemo, useCallback } from 'react'
 import {
   FormGroup,
   FormControlLabel,
@@ -7,7 +8,6 @@ import {
   Divider,
   Alert,
 } from '@mui/material'
-import { useState, useMemo, useCallback } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import PropTypes from 'prop-types'
 import LinkedCameraIcon from '@mui/icons-material/LinkedCamera'
@@ -85,7 +85,6 @@ function CheckboxFields({ agreements = [], id }) {
           face_descriptor: descriptor || faceDescriptor,
         }
 
-        console.log('Form data:', submissionData)
         await postInstructionResults(submissionData).unwrap()
 
         // Сброс формы после успешной отправки

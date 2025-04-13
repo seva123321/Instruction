@@ -9,7 +9,6 @@ import {
   IconButton,
   Divider,
   Grid,
-  Grid2,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -169,12 +168,9 @@ function CalendarResults() {
     const monthEnd = endOfMonth(currentDate)
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    // Получаем первый день текущего месяца и его день недели (0-воскресенье, 1-понедельник и т.д.)
     const startDayOfWeek = getDay(monthStart)
-    // Вычисляем сколько дней предыдущего месяца нужно показать
     const daysFromPrevMonth = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1
 
-    // Получаем даты предыдущего месяца
     const prevMonthDays = []
     if (daysFromPrevMonth > 0) {
       const prevMonthEnd = addDays(monthStart, -1)
@@ -184,12 +180,10 @@ function CalendarResults() {
       )
     }
 
-    // Вычисляем сколько дней следующего месяца нужно показать
     const totalCells = prevMonthDays.length + daysInMonth.length
     const remainingCells = 7 - (totalCells % 7)
     const daysFromNextMonth = remainingCells === 7 ? 0 : remainingCells
 
-    // Получаем даты следующего месяца
     const nextMonthDays = []
     if (daysFromNextMonth > 0) {
       const nextMonthStart = addDays(monthEnd, 1)
@@ -199,10 +193,7 @@ function CalendarResults() {
       )
     }
 
-    // Объединяем все дни
     const allDays = [...prevMonthDays, ...daysInMonth, ...nextMonthDays]
-
-    // Разбиваем на недели
     const weeks = []
     for (let i = 0; i < allDays.length; i += 7) {
       weeks.push(allDays.slice(i, i + 7))
@@ -211,33 +202,35 @@ function CalendarResults() {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {/* Заголовок с днями недели */}
-        <Grid2 container spacing={0} columns={7} sx={{ mb: 1 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            mb: 1,
+            textAlign: 'center',
+          }}
+        >
           {WEEK_DAYS.map((day) => (
-            <Grid2 size={{ xs: 1 }} key={day}>
-              <Typography
-                variant="body2"
-                align="center"
-                sx={{ fontWeight: 'bold' }}
-              >
-                {day}
-              </Typography>
-            </Grid2>
+            <Typography key={day} variant="body2" sx={{ fontWeight: 'bold' }}>
+              {day}
+            </Typography>
           ))}
-        </Grid2>
+        </Box>
 
         {/* Ячейки календаря */}
         {weeks.map((oneWeek, weekIndex) => (
-          <Grid
-            container
-            spacing={0}
-            columns={7}
-            key={oneWeek[weekIndex]}
-            sx={{ flex: 1 }}
+          <Box
+            key={weekIndex}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              flex: 1,
+            }}
           >
             {oneWeek.map((day) => {
               const isCurrentMonth = isSameMonth(day, currentDate)
               return (
-                <Grid item xs={1} key={day.toString()}>
+                <Box key={day.toString()}>
                   <MemoizedCalendarDay
                     day={day}
                     currentDate={currentDate}
@@ -245,10 +238,10 @@ function CalendarResults() {
                     theme={theme}
                     isOtherMonth={!isCurrentMonth}
                   />
-                </Grid>
+                </Box>
               )
             })}
-          </Grid>
+          </Box>
         ))}
       </Box>
     )

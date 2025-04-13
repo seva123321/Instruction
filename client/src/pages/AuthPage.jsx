@@ -1,4 +1,4 @@
-import { Box, Grid2, Typography } from '@mui/material'
+import { Box, Grid, Typography } from '@mui/material'
 
 import enterpriseDawn2 from '@/assets/img/enterpriseDawn2.jpg'
 import AuthPage from '@/models/AuthModel'
@@ -6,8 +6,8 @@ import AuthPage from '@/models/AuthModel'
 export default function RegistrationPage() {
   return (
     <Box sx={{ height: '100vh' }}>
-      <Grid2 container spacing={2} sx={{ height: '100vh' }}>
-        <Grid2
+      <Grid container spacing={2} sx={{ height: '100vh' }}>
+        <Grid
           size={{
             xs: 12,
             sm: 6,
@@ -51,8 +51,8 @@ export default function RegistrationPage() {
               Это страница регистрации. Пожалуйста, заполните форму.
             </p>
           </Box>
-        </Grid2>
-        <Grid2
+        </Grid>
+        <Grid
           size={{
             xs: 12,
             sm: 6,
@@ -70,8 +70,8 @@ export default function RegistrationPage() {
           >
             <AuthPage />
           </Box>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   )
 }

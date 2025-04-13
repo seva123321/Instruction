@@ -5,7 +5,7 @@ import {
   Paper,
   useTheme,
   useMediaQuery,
-  Grid2,
+  Grid,
   Divider,
   SvgIcon,
 } from '@mui/material'
@@ -123,9 +123,9 @@ function OfflinePage() {
           Чем можно заняться в оффлайн-режиме:
         </Typography>
 
-        <Grid2 container spacing={3} justifyContent="center">
+        <Grid container spacing={3} justifyContent="center">
           {offlineActivities.map((activity) => (
-            <Grid2 size={{ xs: 12, sm: 6 }} key={activity.title}>
+            <Grid size={{ xs: 12, sm: 6 }} key={activity.title}>
               <Paper
                 elevation={0}
                 sx={{
@@ -147,9 +147,9 @@ function OfflinePage() {
                   {activity.description}
                 </Typography>
               </Paper>
-            </Grid2>
+            </Grid>
           ))}
-        </Grid2>
+        </Grid>
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
           <CloudOffIcon color="disabled" />

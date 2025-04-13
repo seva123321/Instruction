@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { memo, useState, useMemo } from 'react'
 import {
-  Grid2,
+  Grid,
   Container,
   Typography,
   useTheme,
@@ -246,17 +246,17 @@ function KnowBaseVideosPage() {
 
       {/* Список видео */}
       {filteredVideos.length > 0 ? (
-        <Grid2 container spacing={isMobile ? 2 : 4} justifyContent="center">
+        <Grid container spacing={isMobile ? 2 : 4} justifyContent="center">
           {filteredVideos.map((video) => (
-            <Grid2
+            <Grid
               key={video.id}
               size={{ xs: 12, sm: 12, md: 6 }}
               sx={{ height: 360, minWidth: 320, maxWidth: 400 }}
             >
               <VideoCard video={video} isMobile={isMobile} theme={theme} />
-            </Grid2>
+            </Grid>
           ))}
-        </Grid2>
+        </Grid>
       ) : (
         <NoResults theme={theme} />
       )}

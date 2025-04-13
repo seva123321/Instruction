@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Typography, Paper, Grid2, Avatar } from '@mui/material'
+import { Box, Typography, Paper, Grid, Avatar } from '@mui/material'
 
 function CalendarLegend({ theme }) {
   return (
@@ -7,14 +7,14 @@ function CalendarLegend({ theme }) {
       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
         Легенда оценок:
       </Typography>
-      <Grid2 container spacing={1}>
+      <Grid container spacing={1}>
         {[
           { range: '8-10', color: 'success' },
           { range: '6-7', color: 'primary' },
           { range: '4-5', color: 'warning' },
           { range: '1-3', color: 'error' },
         ].map((item) => (
-          <Grid2 size={{ xs: 6, sm: 3 }} key={item.color}>
+          <Grid size={{ xs: 6, sm: 3 }} key={item.color}>
             <Box display="flex" alignItems="center">
               <Avatar
                 sx={{
@@ -30,9 +30,9 @@ function CalendarLegend({ theme }) {
               </Avatar>
               <Typography variant="body2">{item.range}</Typography>
             </Box>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
     </Paper>
   )
 }

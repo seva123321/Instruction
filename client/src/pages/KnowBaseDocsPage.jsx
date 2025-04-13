@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react'
 import {
   Card,
-  Grid2,
+  Grid,
   CardContent,
   Typography,
   Container,
@@ -123,9 +123,9 @@ function KnowBasePageDocs() {
     <Container sx={{ p: 0 }} maxWidth="lg">
       <KnowBaseHeader title="Нормативно-правовые документы" />
 
-      <Grid2 container spacing={4} justifyContent="center">
+      <Grid container spacing={4} justifyContent="center">
         {documents.map((document) => (
-          <Grid2 key={document.id} size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
+          <Grid key={document.id} size={{ xs: 12, sm: 6, md: 6, lg: 6 }}>
             <Card sx={styles.card}>
               <CardContent
                 sx={{
@@ -169,9 +169,9 @@ function KnowBasePageDocs() {
                 </Button>
               </Box>
             </Card>
-          </Grid2>
+          </Grid>
         ))}
-      </Grid2>
+      </Grid>
     </Container>
   )
 }

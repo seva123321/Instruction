@@ -269,6 +269,7 @@ class Position(models.Model):
         upload_to='positions/',
         blank=True,
         null=True,
+        default='positions/default.png',
     )
 
     class Meta:

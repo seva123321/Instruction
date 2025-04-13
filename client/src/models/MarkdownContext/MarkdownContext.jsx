@@ -434,6 +434,7 @@ const MarkdownContext = memo(({ markdown, header }) => {
         overflowY: 'auto',
         bgcolor: 'background.paper',
         boxShadow: 1,
+        mt: 3,
         p: 2,
         display: {
           xs: 'none',

@@ -300,6 +300,20 @@ class InstructionListSerializer(serializers.ModelSerializer):
         model = Instruction
         fields = ('id', 'name', 'type_of_instruction')
 
+class InstructionResultGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения результатов инструктажа."""
+
+    instruction = serializers.StringRelatedField()
+
+    class Meta:
+        model = InstructionResult
+        fields = (
+            'id',
+            'instruction',
+            'result',
+            'date',
+        )
+
 
 class InstructionResultSerializer(serializers.ModelSerializer):
     """Сериализатор для результатов инструктажа с проверкой ключей согласий."""

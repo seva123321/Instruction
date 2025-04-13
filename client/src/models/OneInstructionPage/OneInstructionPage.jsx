@@ -1,7 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { memo, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Grid2, Typography } from '@mui/material'
+import { Box, Grid, Typography } from '@mui/material'
 
 import MarkdownContext from '@/models/MarkdownContext'
 import CheckboxFields from '@/models/CheckboxFields'
@@ -72,13 +72,13 @@ const OneInstructionPage = memo(({ data, isLoading, error }) => {
     <Box sx={styles.root}>
       <MarkdownContext markdown={pageData.text} header={pageData.name} />
 
-      <Grid2 container spacing={0}>
-        <Grid2 size={{ xs: 12 }}>
+      <Grid container spacing={0}>
+        <Grid size={{ xs: 12 }}>
           <Box sx={styles.formContainer}>
             <CheckboxFields id={pageData.id} agreements={pageData.agreements} />
           </Box>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   )
 })

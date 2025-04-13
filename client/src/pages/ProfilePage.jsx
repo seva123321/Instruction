@@ -20,7 +20,7 @@ import {
   Fade,
   CircularProgress,
   Alert,
-  Grid2,
+  Grid,
   Card,
   CardContent,
 } from '@mui/material'
@@ -295,9 +295,9 @@ function ProfilePage() {
                   Игровые достижения
                 </Typography>
 
-                <Grid2 container spacing={3}>
+                <Grid container spacing={3}>
                   {/* Блок ранга */}
-                  <Grid2 size={{ xs: 12, md: 6 }}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                       sx={{
                         height: '100%',
@@ -407,10 +407,10 @@ function ProfilePage() {
                         </Box>
                       </CardContent>
                     </Card>
-                  </Grid2>
+                  </Grid>
 
                   {/* Блок прогресса */}
-                  <Grid2 size={{ xs: 12, md: 6 }}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                       sx={{
                         height: '100%',
@@ -501,10 +501,10 @@ function ProfilePage() {
                         </Box>
                       </CardContent>
                     </Card>
-                  </Grid2>
+                  </Grid>
 
                   {/* Блок значков */}
-                  <Grid2 size={{ xs: 12 }}>
+                  <Grid size={{ xs: 12 }}>
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -532,9 +532,9 @@ function ProfilePage() {
                     </Typography>
 
                     {profileData?.badges?.length ? (
-                      <Grid2 container spacing={2}>
+                      <Grid container spacing={2}>
                         {profileData.badges.map((badge) => (
-                          <Grid2
+                          <Grid
                             size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
                             key={badge.id}
                           >
@@ -648,9 +648,9 @@ function ProfilePage() {
                                 </Box>
                               </CardContent>
                             </Card>
-                          </Grid2>
+                          </Grid>
                         ))}
-                      </Grid2>
+                      </Grid>
                     ) : (
                       <Box
                         sx={{
@@ -686,8 +686,8 @@ function ProfilePage() {
                         </Typography>
                       </Box>
                     )}
-                  </Grid2>
-                </Grid2>
+                  </Grid>
+                </Grid>
               </Box>
             </Paper>
 

@@ -16,7 +16,6 @@ import {
 import KnowBaseHeader from '@/components/KnowBaseHeader'
 import { useGetKnowladgeNLAsQuery } from '@/slices/knowladgeApi'
 
-
 function KnowBasePageDocs() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))

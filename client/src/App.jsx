@@ -3,12 +3,11 @@ import { lazy, Suspense } from 'react'
 
 import Layout from '@/components/Layout'
 import LoadingIndicator from '@/components/LoadingIndicator'
+import TestingPage from '@/pages/TestingPage'
+import TestOnePage from '@/models/TestOnePage'
 
 import { AuthProvider } from './hoc/AuthProvider'
 import RequireAuth from './hoc/RequireAuth'
-
-import TestingPage from '@/pages/TestingPage'
-import TestOnePage from '@/models/TestOnePage'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))

@@ -112,7 +112,7 @@ function CheckboxFields({ agreements = [], id }) {
 
   const handleFaceDescriptor = async (data) => {
     setFaceDescriptor(data)
-    await submitFormData(data) 
+    await submitFormData(data)
   }
 
   const styles = {

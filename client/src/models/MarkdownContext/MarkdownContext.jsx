@@ -233,7 +233,7 @@ const SidebarContent = memo(
                 display: '-webkit-box',
                 WebkitLineClamp: 4,
                 WebkitBoxOrient: 'vertical',
-                transition: 'background-color 0.3s ease', // Добавляем плавный переход
+                transition: 'background-color 0.3s ease',
               }}
               onClick={(e) => {
                 e.preventDefault()
@@ -272,12 +272,10 @@ const MarkdownContext = memo(({ markdown, header }) => {
     dispatch(toggleMobileOpen())
   }
 
-  // Обработчик закрытия по свайпу
   const handleDrawerClose = useCallback(() => {
     dispatch(toggleMobileOpen(false))
   }, [dispatch])
 
-  // Обработчик открытия по свайпу
   const handleDrawerOpen = useCallback(() => {
     dispatch(toggleMobileOpen(true))
   }, [dispatch])
@@ -535,7 +533,7 @@ const MarkdownContext = memo(({ markdown, header }) => {
         onClose={handleDrawerClose}
         onOpen={handleDrawerOpen}
         ModalProps={{
-          keepMounted: true, // Better open performance on mobile
+          keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', md: 'none' },

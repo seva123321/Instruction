@@ -14,8 +14,8 @@ import {
 } from '@mui/material'
 
 import KnowBaseHeader from '@/components/KnowBaseHeader'
+import { useGetKnowladgeNLAsQuery } from '@/slices/knowladgeApi'
 
-import { useGetKnowladgeNLAsQuery } from '../slices/knowladgeApi'
 
 function KnowBasePageDocs() {
   const theme = useTheme()
@@ -50,7 +50,6 @@ function KnowBasePageDocs() {
         lineHeight: 1.3,
       },
       description: {
-        // mb: 3,
         color: theme.palette.text.secondary,
         lineHeight: 1.0,
         flexGrow: 1,

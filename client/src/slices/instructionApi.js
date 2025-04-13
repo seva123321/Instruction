@@ -49,32 +49,3 @@ export const {
 } = instructionApi
 
 export default instructionApi
-// import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react' // Изменили импорт
-// import { API_CONFIG } from '../config'
-
-// export const instructionApi = createApi({
-//   reducerPath: 'instructionApi',
-//   baseQuery: fetchBaseQuery({
-//     baseUrl: `/api/`,
-//     credentials: 'include',
-//     prepareHeaders: (headers) => {
-//       headers.set('Content-Type', 'application/json')
-//       return headers
-//     },
-//   }),
-//   tagTypes: ['Instruction'],
-//   endpoints: (build) => ({
-//     getInstructions: build.query({
-//       query: () => 'instructions/',
-//       providesTags: ['Instruction'],
-//     }),
-//     getInstructionById: build.query({
-//       query: (id) => `instructions/${id}/`,
-//       providesTags: ['Instruction'],
-//     }),
-//   }),
-// })
-
-// export const { useGetInstructionsQuery, useGetInstructionByIdQuery } =
-//   instructionApi
-// export default instructionApi

@@ -2,7 +2,7 @@ import { Box, Grid2, Typography } from '@mui/material'
 
 import enterpriseDawn2 from '@/assets/img/enterpriseDawn2.jpg'
 
-import AuthPage from '../models/AuthModel/AuthModel'
+import AuthPage from '@/models/AuthModel'
 
 export default function RegistrationPage() {
   return (

@@ -11,8 +11,6 @@ import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
-// const TestingPage = lazy(() => import('@/pages/TestingPage'))
-// const TestOnePage = lazy(() => import('@/models/TestOnePage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
 const KnowBaseVideosPage = lazy(() => import('@/pages/KnowBaseVideosPage'))
 const ProfilePage = lazy(() => import('@/pages/ProfilePage'))
@@ -21,12 +19,9 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
 
-// import ThemeProvider from './hoc/ThemeProvider'
-
 function App() {
   return (
     <AuthProvider>
-      {/* <ThemeProvider> */}
       <Routes>
         <Route path="/" element={<Navigate to="/auth/login" replace />} />
         <Route
@@ -70,15 +65,6 @@ function App() {
               </RequireAuth>
             }
           />
-          {/* @TODO when add audio */}
-          {/* <Route
-            path="knowladge/audios"
-            element={
-              <RequireAuth>
-                <KnowBasePageAudios />
-              </RequireAuth>
-            }
-          /> */}
           <Route
             path="knowladge/videos"
             element={
@@ -123,7 +109,6 @@ function App() {
         <Route path="/admin/*" element={<AdminRedirect />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      {/* </ThemeProvider> */}
     </AuthProvider>
   )
 }

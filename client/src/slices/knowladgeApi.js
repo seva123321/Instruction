@@ -7,21 +7,19 @@ const knowladgeApi = createApi({
   reducerPath: 'knowladgeApi',
   baseQuery: fetchBaseQuery({
     baseUrl: `${API_CONFIG.PROXY_PREFIX}/knowladge/`,
-    credentials: 'include', // важно для отправки кук
+    credentials: 'include', 
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
 
-      // Устанавливаем CSRF-токен, если он есть
       if (csrfToken) {
         headers.set('X-CSRFToken', csrfToken)
       }
 
-      // Устанавливаем Content-Type по умолчанию для всех запросов
       headers.set('Content-Type', 'application/json')
       return headers
     },
   }),
-  tagTypes: ['KnowladgeNLAs', 'KnowladgeVideos'], // Уточненные теги
+  tagTypes: ['KnowladgeNLAs', 'KnowladgeVideos'],
   endpoints: (build) => ({
     getKnowladgeNLAs: build.query({
       query: () => ({
@@ -52,7 +50,6 @@ const knowladgeApi = createApi({
   }),
 })
 
-// Экспортируем автоматически сгенерированные хуки
 export const {
   useGetKnowladgeNLAsQuery,
   useGetKnowladgeVideosQuery,

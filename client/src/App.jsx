@@ -2,6 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 
 import Layout from '@/components/Layout'
+import LoadingIndicator from '@/components/LoadingIndicator'
+
+import { AuthProvider } from './hoc/AuthProvider'
+import RequireAuth from './hoc/RequireAuth'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const TestingPage = lazy(() => import('@/pages/TestingPage'))
@@ -13,10 +17,6 @@ const SuccessPage = lazy(() => import('@/pages/SuccessPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
-
-import { AuthProvider } from './hoc/AuthProvider'
-import RequireAuth from './hoc/RequireAuth'
-import LoadingIndicator from '@/components/LoadingIndicator'
 
 // import ThemeProvider from './hoc/ThemeProvider'
 

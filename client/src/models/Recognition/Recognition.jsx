@@ -6,6 +6,7 @@ import {
 } from '@mui/icons-material'
 
 import Confirm from '@/components/Confirm'
+
 const FaceRecognition = lazy(() => import('@/components/FaceRecognition'))
 // import FaceRecognition from '@/components/FaceRecognition'
 

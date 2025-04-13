@@ -51,8 +51,8 @@ function CalendarResults() {
 
   // Загрузка данных
   useEffect(() => {
-    const processTestResults = (tests) => {
-      return tests.flatMap(
+    const processTestResults = (tests) =>
+      tests.flatMap(
         (test) =>
           test.test_results
             ?.filter((r) => r.completion_time)
@@ -68,7 +68,6 @@ function CalendarResults() {
               testId: test.id,
             })) || []
       )
-    }
 
     const fetchFromServer = async () => {
       try {

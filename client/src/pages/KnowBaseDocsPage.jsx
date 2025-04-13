@@ -13,9 +13,9 @@ import {
   Button,
 } from '@mui/material'
 
-import { useGetKnowladgeNLAsQuery } from '../slices/knowladgeApi'
-
 import KnowBaseHeader from '@/components/KnowBaseHeader'
+
+import { useGetKnowladgeNLAsQuery } from '../slices/knowladgeApi'
 
 function KnowBasePageDocs() {
   const theme = useTheme()

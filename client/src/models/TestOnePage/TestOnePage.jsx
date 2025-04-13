@@ -28,12 +28,12 @@ import { calculateMark } from '@/service/utilsFunction'
 import useTestState from '@/hook/useTestState'
 import useTestResults from '@/hook/useTestResults'
 import TabsWrapper from '@/components/TabsWrapper'
-
 import { initDB, getTestFromDB, STORE_NAMES } from '@/service/offlineDB'
 import { useGetTestByIdQuery } from '@/slices/testApi'
 import TestControls from '@/components/TestControls'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import QuestionView from '@/components/QuestionView'
+
 const TestResultsView = lazy(() => import('@/components/TestResultsView'))
 const QuestionFeedback = lazy(() => import('@/components/QuestionFeedback'))
 
@@ -1250,7 +1250,8 @@ export default memo(TestOnePage)
 //   //         // Если тест есть, но это базовая версия
 //   //         if (!offlineTest.content) {
 //   //           setWarning(
-//   //             'Доступна только базовая версия теста. Для полной версии подключитесь к интернету.'
+//   //             'Доступна только базовая версия теста.
+// //              Для полной версии подключитесь к интернету.'
 //   //           )
 //   //         }
 //   //       }

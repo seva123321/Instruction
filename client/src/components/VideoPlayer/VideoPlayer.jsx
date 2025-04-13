@@ -337,6 +337,7 @@ function UniversalVideoPlayer({
             },
           }}
         >
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             ref={videoRef}
             controls={false}
@@ -344,15 +345,13 @@ function UniversalVideoPlayer({
             muted={isMuted}
             loop={false}
             onClick={togglePlay}
-            style={{
-              cursor: 'pointer',
-            }}
+            style={{ cursor: 'pointer' }}
+            aria-label="Видео контент"
           >
             <source
               src={file}
               type={`video/${file.split('.').pop().toLowerCase()}`}
             />
-            <track kind="subtitles" src="" srcLang="ru" />
             Ваш браузер не поддерживает видео.
           </video>
 

@@ -187,9 +187,7 @@ function TestingPage() {
     }
   }, [state.isOnline, loadOnlineTests, loadOfflineTests, mergeTestsWithResults])
 
-  useEffect(() => {
-    return () => closeDB()
-  }, [closeDB])
+  useEffect(() => () => closeDB(), [closeDB])
 
   useEffect(() => {
     const handleOnline = async () => {
@@ -197,7 +195,9 @@ function TestingPage() {
       try {
         await syncPendingResults()
         await loadData()
-      } catch {}
+      } catch (err) {
+        throw new Error(err)
+      }
     }
 
     const handleOffline = () => {

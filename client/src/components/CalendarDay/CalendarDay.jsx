@@ -69,6 +69,10 @@ function CalendarDay({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [open, isMobile])
+  const opacityMap = {
+    true: 0.5, //
+    false: isCurrentMonth ? 1 : 0.6,
+  }
 
   const dayStyles = {
     container: {
@@ -78,7 +82,7 @@ function CalendarDay({
       borderColor: theme.palette.divider,
       p: 0.5,
       bgcolor: isToday ? theme.palette.action.selected : 'background.paper',
-      opacity: isOtherMonth ? 0.5 : isCurrentMonth ? 1 : 0.6,
+      opacity: opacityMap[isOtherMonth],
       position: 'relative',
       '&:hover': { bgcolor: theme.palette.action.hover },
       display: 'flex',

@@ -130,6 +130,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return default_rank
 
 
+class RatingSerializer(UserProfileSerializer):
+    """Сериализатор для рейтинга пользователей."""
+
+
+    class Meta(UserSerializer.Meta):
+        fields = tuple(
+            field for field in UserProfileSerializer.Meta.fields
+            if field not in {"mobile_phone", "role"}
+        )
+
+
 class SignUpSerializer(serializers.Serializer):
     """Сериализатор для регистрации нового пользователя."""
 

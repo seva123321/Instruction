@@ -12,8 +12,10 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
+from api.views import export_to_excel
 
 urlpatterns = [
+    path('admin/export/excel/', export_to_excel, name='export_excel'),
     path(
         'admin/',
         include(('two_factor.urls', 'two_factor'), namespace='two_factor'),

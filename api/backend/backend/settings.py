@@ -199,3 +199,5 @@ UNFOLD = {
     "SITE_HEADER": "Панель администратора",
     "DASHBOARD_CALLBACK": "api.admin.dashboard_callback",
 }
+
+DEFAULT_POSITION_ICON_URL = '/static/media/default.png'

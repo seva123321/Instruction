@@ -41,14 +41,13 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
-    "sass-embedded": "^1.85.1",
     "vite": "^6.2.0"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.0.1",
-    "@mui/material": "^6.4.10",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
     "@mui/x-date-pickers": "^7.28.3",
     "@reduxjs/toolkit": "^2.6.1",
     "date-fns": "^2.30.0",
@@ -61,6 +60,7 @@
     "react-markdown": "^10.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.3.0",
-    "react-swipeable": "^7.0.2"
+    "react-swipeable": "^7.0.2",
+    "react-window": "^1.8.11"
   }
 }

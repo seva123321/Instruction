@@ -15,7 +15,7 @@ def get_models():
     from telegram import Bot
     return DutySchedule, Notification, Bot
 
-@shared_task
+@shared_task(expires=timedelta(hours=1))
 def send_instruction_reminders():
     """Отправка напоминаний о предстоящем инструктаже"""
     DutySchedule, _, Bot = get_models()

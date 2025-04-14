@@ -4,14 +4,6 @@ from django.conf import settings
 import numpy as np
 from rest_framework import serializers
 
-from backend.constants import (
-    MAX_LENGTH_FACE_DESCRIPTOR,
-    MAX_LENGTH_EMAIL_ADDRESS,
-    MAX_LENGTH_FIRST_NAME,
-    MAX_LENGTH_LAST_NAME,
-    MAX_LENGTH_PHONE,
-    MAX_LENGTH_PASSWORD,
-)
 from api.models import (
     User,
     Instruction,
@@ -33,6 +25,14 @@ from api.models import (
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
+from backend.constants import (
+    MAX_LENGTH_FACE_DESCRIPTOR,
+    MAX_LENGTH_EMAIL_ADDRESS,
+    MAX_LENGTH_FIRST_NAME,
+    MAX_LENGTH_LAST_NAME,
+    MAX_LENGTH_PHONE,
+    MAX_LENGTH_PASSWORD,
+)
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

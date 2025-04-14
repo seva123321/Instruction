@@ -7,7 +7,6 @@ from django.db.models import CharField, Value
 from django.db.models.functions import Concat
 from django.db.models.query_utils import Q
 
-
 from .models import (
     User,
     TypeOfInstruction,

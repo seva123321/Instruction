@@ -7,7 +7,6 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 
 
-# Это нужно только если вы используете декоратор @shared_task
 @app.task(bind=True)
 def debug_task(self):
     print(f"Request: {self.request!r}")

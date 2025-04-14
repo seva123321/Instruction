@@ -1,11 +1,9 @@
 from asgiref.sync import sync_to_async, async_to_sync
-from django.db import transaction
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
 from telegram import Bot
-
-from django.db import models
 
 from .utils.validators import normalize_phone_number
 from backend.constants import (

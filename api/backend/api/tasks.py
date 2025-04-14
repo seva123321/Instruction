@@ -69,6 +69,7 @@ def send_instruction_reminders():
 
 
 async def _send_instruction_reminders(message, telegram_chat_id):
+    """Асинхронная отправка напоминаний о предстоящем инструктаже"""
     DutySchedule, _, Bot = get_models()
     try:
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)

@@ -61,7 +61,7 @@ function InstructionsPage() {
   const tabs =
     instructions?.results?.length > 1
       ? instructions.results.map((instruction) => ({
-          label: instruction.name,
+          label: instruction.name.split(' ').at(-1),
           to: `/instructions/${instruction.id}`,
         }))
       : null

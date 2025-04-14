@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import { memo } from 'react'
 import { Box, Card, CardContent, Typography, Chip, Avatar } from '@mui/material'
 import { CheckCircle, Event, Cancel, School } from '@mui/icons-material'
@@ -29,20 +30,24 @@ const TestResultsList = memo(({ events, currentDate, theme }) => {
 
   return (
     <Box sx={{ mt: 2 }}>
-      {monthEvents?.map((event) =>
-        event.type === 'test' ? (
-          <TestResultCard
-            key={`test-${event.id}`}
-            event={event}
-            theme={theme}
-          />
-        ) : (
-          <InstructionResultCard
-            key={`instruction-${event.id}`}
-            event={event}
-            theme={theme}
-          />
-        )
+      {/* eslint-disable-next-line no-confusing-arrow */}
+      {monthEvents?.map(
+        // eslint-disable-next-line no-confusing-arrow
+        (event) =>
+          event.type === 'test' ? (
+            <TestResultCard
+              key={`test-${event.id}`}
+              event={event}
+              theme={theme}
+            />
+          ) : (
+            <InstructionResultCard
+              key={`instruction-${event.id}`}
+              event={event}
+              theme={theme}
+            />
+          )
+        // eslint-disable-next-line function-paren-newline
       )}
     </Box>
   )

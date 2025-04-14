@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import { Box, List, ListItem, Typography, Chip, Stack } from '@mui/material'
 import { School, Quiz, CheckCircle, Cancel } from '@mui/icons-material'
 import { useTheme } from '@mui/material/styles'
@@ -8,11 +9,9 @@ function TestResultsTooltip({ dayEvents }) {
   const eventStyles = {
     test: {
       borderLeft: `4px solid ${theme.palette.primary.main}`,
-      // bgcolor: theme.palette.primary.light,
     },
     instruction: {
       borderLeft: `4px solid ${theme.palette.secondary.main}`,
-      // bgcolor: theme.palette.secondary.light,
     },
     common: {
       mb: 1,
@@ -73,7 +72,10 @@ function TestResultsTooltip({ dayEvents }) {
                 >
                   Оценка:
                 </Typography>
-                <Typography variant="body2">{event.mark}/10</Typography>
+                <Typography variant="body2">
+                  {event.mark}
+                  /10
+                </Typography>
               </Box>
               <Box display="flex" alignItems="center" mb={0.5}>
                 <Typography
@@ -83,7 +85,7 @@ function TestResultsTooltip({ dayEvents }) {
                   Баллы:
                 </Typography>
                 <Typography variant="body2">
-                  {event.score}/{event.totalPoints}
+                  {`${event.score}/балл${event.totalPoints}`}
                 </Typography>
               </Box>
               <Box display="flex" alignItems="center">
@@ -93,7 +95,7 @@ function TestResultsTooltip({ dayEvents }) {
                 >
                   Длительность:
                 </Typography>
-                <Typography variant="body2">{event.duration} сек</Typography>
+                <Typography variant="body2">{`${event.duration} сек`}</Typography>
               </Box>
             </>
           )}

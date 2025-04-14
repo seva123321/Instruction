@@ -1,4 +1,4 @@
-import { Button, Box, Typography, Alert } from '@mui/material'
+import { Button, Box, Alert } from '@mui/material'
 
 function ErrorMessage({ message, retryFn }) {
   return (

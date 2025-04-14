@@ -11,6 +11,7 @@ import {
 import { format, isSameMonth, isSameDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { Close, School, Quiz } from '@mui/icons-material'
+
 import TestResultsTooltip from '../TestResultsTooltip/TestResultsTooltip'
 
 function CalendarDay({
@@ -76,6 +77,7 @@ function CalendarDay({
       borderColor: theme.palette.divider,
       p: isMobile ? 0.2 : 0.5,
       bgcolor: isToday ? theme.palette.action.selected : 'background.paper',
+      // eslint-disable-next-line no-nested-ternary
       opacity: isOtherMonth ? 0.5 : isCurrentMonth ? 1 : 0.6,
       position: 'relative',
       '&:hover': { bgcolor: theme.palette.action.hover },

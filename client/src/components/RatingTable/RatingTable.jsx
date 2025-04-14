@@ -1,3 +1,5 @@
+/* eslint-disable no-nested-ternary */
+/* eslint-disable operator-linebreak */
 import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import {
   Table,
@@ -19,8 +21,6 @@ import {
   Skeleton,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import useDebounce from '@/hook/useDebounce'
-import useAuth from '@/hook/useAuth'
 import {
   EmojiEvents,
   MilitaryTech,
@@ -29,6 +29,9 @@ import {
   ExpandLess,
   FilterList,
 } from '@mui/icons-material'
+
+import useDebounce from '@/hook/useDebounce'
+import useAuth from '@/hook/useAuth'
 
 const MobileTableCell = styled(TableCell)(({ theme }) => ({
   padding: theme.spacing(1),
@@ -40,7 +43,9 @@ const MobileTableCell = styled(TableCell)(({ theme }) => ({
   },
 }))
 
-const StyledTableRow = styled(TableRow)(({ theme, isCurrentUser }) => ({
+const StyledTableRow = styled(TableRow, {
+  shouldForwardProp: (prop) => prop !== 'isCurrentUser',
+})(({ theme, isCurrentUser }) => ({
   '&:nth-of-type(odd)': {
     backgroundColor: isCurrentUser
       ? theme.palette.success.light
@@ -60,31 +65,34 @@ const StyledTableRow = styled(TableRow)(({ theme, isCurrentUser }) => ({
   }),
 }))
 
-const RankBadge = styled(Chip)(({ theme, rank }) => ({
-  marginRight: theme.spacing(0.5),
-  fontSize: '0.75rem',
-  height: 24,
-  '& .MuiChip-avatar': {
-    width: 18,
-    height: 18,
+const getRankBadgeColor = (rank, theme) => {
+  if (rank === 1) return theme.palette.warning.main
+  if (rank === 2) return theme.palette.grey[400]
+  if (rank === 3) return theme.palette.success.main
+  return null
+}
+
+const RankBadge = styled(Chip)(({ theme, rank }) => {
+  const backgroundColor = getRankBadgeColor(rank, theme)
+  const color = backgroundColor
+    ? theme.palette.getContrastText(backgroundColor)
+    : null
+
+  return {
+    marginRight: theme.spacing(0.5),
     fontSize: '0.75rem',
-  },
-  ...(rank <= 3 && {
-    backgroundColor:
-      rank === 1
-        ? theme.palette.warning.main
-        : rank === 2
-          ? theme.palette.grey[400]
-          : theme.palette.success.main,
-    color: theme.palette.getContrastText(
-      rank === 1
-        ? theme.palette.warning.main
-        : rank === 2
-          ? theme.palette.grey[400]
-          : theme.palette.success.main
-    ),
-  }),
-}))
+    height: 24,
+    '& .MuiChip-avatar': {
+      width: 18,
+      height: 18,
+      fontSize: '0.75rem',
+    },
+    ...(rank <= 3 && {
+      backgroundColor,
+      color,
+    }),
+  }
+})
 
 const ExperienceProgress = styled(LinearProgress)(({ theme, value }) => ({
   height: 6,
@@ -190,6 +198,13 @@ const ExpandedRow = memo(({ user, isMobile }) => (
   </TableRow>
 ))
 
+const getRankIcon = (rank) => {
+  if (rank === 1) return <EmojiEvents fontSize="small" />
+  if (rank === 2) return <MilitaryTech fontSize="small" />
+  if (rank === 3) return <WorkspacePremium fontSize="small" />
+  return null
+}
+
 const MobileUserRow = memo(
   ({
     user,
@@ -204,19 +219,16 @@ const MobileUserRow = memo(
     const globalRank = page * rowsPerPage + index + 1
     const isCurrentUser = currentUserDate?.user_id === user.id
 
-    const progress = useMemo(
-      () =>
-        user.next_rank
-          ? (user.experience_points / user.next_rank.required_points) * 100
-          : 0,
-      [user.experience_points, user.next_rank]
-    )
+    const progress = useMemo(() => {
+      if (!user.next_rank) return 0
+      return (user.experience_points / user.next_rank.required_points) * 100
+    }, [user.experience_points, user.next_rank])
 
     return (
       <>
         <StyledTableRow
           className={globalRank <= 3 ? `top-3 rank-${globalRank}` : ''}
-          iscurrentuser={isCurrentUser}
+          isCurrentUser={isCurrentUser}
         >
           <MobileTableCell sx={{ width: 40 }}>
             <RankBadge
@@ -227,13 +239,7 @@ const MobileUserRow = memo(
                   <Avatar
                     sx={{ bgcolor: 'transparent', width: 18, height: 18 }}
                   >
-                    {globalRank === 1 ? (
-                      <EmojiEvents fontSize="small" />
-                    ) : globalRank === 2 ? (
-                      <MilitaryTech fontSize="small" />
-                    ) : (
-                      <WorkspacePremium fontSize="small" />
-                    )}
+                    {getRankIcon(globalRank)}
                   </Avatar>
                 ) : null
               }
@@ -308,13 +314,10 @@ const DesktopUserRow = memo(
     const isCurrentUser = currentUser?.user_id === user.id
     const globalRank = page * rowsPerPage + index + 1
 
-    const progress = useMemo(
-      () =>
-        user.next_rank
-          ? (user.experience_points / user.next_rank.required_points) * 100
-          : 0,
-      [user.experience_points, user.next_rank]
-    )
+    const progress = useMemo(() => {
+      if (!user.next_rank) return 0
+      return (user.experience_points / user.next_rank.required_points) * 100
+    }, [user.experience_points, user.next_rank])
 
     return (
       <>
@@ -329,13 +332,7 @@ const DesktopUserRow = memo(
               avatar={
                 globalRank <= 3 ? (
                   <Avatar sx={{ bgcolor: 'transparent' }}>
-                    {globalRank === 1 ? (
-                      <EmojiEvents />
-                    ) : globalRank === 2 ? (
-                      <MilitaryTech />
-                    ) : (
-                      <WorkspacePremium />
-                    )}
+                    {getRankIcon(globalRank)}
                   </Avatar>
                 ) : null
               }
@@ -387,8 +384,7 @@ const DesktopUserRow = memo(
                 </Typography>
                 {user.next_rank && (
                   <Typography variant="caption" color="text.secondary">
-                    До {user.next_rank.name}:{' '}
-                    {user.next_rank.required_points - user.experience_points}
+                    {` До {user.next_rank.name}: ${user.next_rank.required_points - user.experience_points}`}
                   </Typography>
                 )}
               </Box>
@@ -450,11 +446,11 @@ function RatingTable({ data, isLoading }) {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [expandedUser, setExpandedUser] = useState(null)
   const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [sortConfig, setSortConfig] = useState({
     key: 'experience_points',
     direction: 'desc',
   })
+  const rowsPerPage = 10
 
   useEffect(() => {
     setPage(0)
@@ -493,15 +489,6 @@ function RatingTable({ data, isLoading }) {
     [sortedData, page, rowsPerPage]
   )
 
-  const handleChangePage = useCallback((event, newPage) => {
-    setPage(newPage)
-  }, [])
-
-  const handleChangeRowsPerPage = useCallback((event) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }, [])
-
   const toggleExpandUser = useCallback((userId) => {
     setExpandedUser((prev) => (prev === userId ? null : userId))
   }, [])
@@ -518,7 +505,8 @@ function RatingTable({ data, isLoading }) {
     return (
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
         {Array.from({ length: 5 }).map((_, index) => (
-          <Box key={index} p={2}>
+          // eslint-disable-next-line react/no-array-index-key
+          <Box key={`skeleton-${index}`} p={2}>
             <Skeleton variant="rectangular" width="100%" height={40} />
             <Box mt={1}>
               <Skeleton width="60%" />

@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { Box } from '@mui/material'
 
-import useAuth from '../hook/useAuth'
+import useAuth from '@/hook/useAuth'
 
 function RequireAuth({ children }) {
   const location = useLocation()

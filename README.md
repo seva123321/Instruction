@@ -119,6 +119,8 @@ npm run built - сборка проекта на продакшн
 - ALLOWED_HOSTS=127.0.0.1,localhost,{{ваш_доменный_адрес}},{{ваш_IP_адрес}}
 - DEBUG=False
 - USE_SQLITE=False (параметр для быстрой смены БД с PostgreSQL на SQLite)
+- SESSION_COOKIE_SECURE=True (для деплоя)
+- CSRF_COOKIE_SECURE=True (для деплоя)
 
 ### Планируемые улучшение
 - Развернуть проект в Docker;

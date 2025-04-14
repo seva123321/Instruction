@@ -17,10 +17,12 @@ from api.views import (
     NormativeLegislationViewSet,
     InstructionResultView,
     NotificationViewSet,
+    RatingViewSet
 )
 
 router = DefaultRouter()
 
+router.register('rating', RatingViewSet, basename='rating')
 router.register('instructions', InstructionViewSet, basename='instructions')
 router.register('tests', TestViewSet, basename='tests')
 router.register('knowladge/videos', VideoViewSet, basename='knowladge/videos')

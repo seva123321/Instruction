@@ -44,6 +44,7 @@ from api.serializers import (
     InstructionResultSerializer,
     InstructionResultGetSerializer,
     NotificationSerializer,
+    RatingSerializer
 )
 from api.permissions import IsAdminPermission
 from backend.constants import ME
@@ -112,6 +113,23 @@ class UserViewSet(ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+@extend_schema(tags=['Rating'], description='Рейтинг пользователей.')
+class RatingViewSet(viewsets.ReadOnlyModelViewSet):
+    """Представление для получения рейтинга пользователей."""
+
+    queryset = User.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes = (IsAuthenticated,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('last_name',)
+    http_method_names = ('get',)
+
+    def get_queryset(self):
+        """Оптимизация запросов к БД."""
+        return super().get_queryset().prefetch_related(
+            'badges__badge',
+            'current_rank'
+        ).order_by('-experience_points')
 
 @extend_schema(tags=['SignUp'], description='Регистрация пользователей.')
 class SignUpView(APIView):

@@ -122,6 +122,27 @@ npm run built - сборка проекта на продакшн
 - SESSION_COOKIE_SECURE=True (для деплоя)
 - CSRF_COOKIE_SECURE=True (для деплоя)
 
+### Оптиционально
+После установки виртульного окружения необходимо настроить библиотека two_factor.
+Откройте файл two_factor/urls.py, удалите последнюю строку в файле и добавьте две другие
+```
+app_name = 'two_factor'  # Добавляем app_name
+urlpatterns = core + profile + plugin_urlpatterns  # Убираем кортеж
+```
+Также добавьте в админ-панель кнопку перехода в настройки 2ФА.
+Для этого откройте unfold/templates/unfold/helpers/account_likes.html
+```
+                {% firstof user.get_short_name user.get_username %}
+            </span>
+        </div>
+<!--        Добавьте следующие строки-->
+            <a href="account/two_factor/" class="mx-1 px-3 py-2 rounded hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
+                Двухфакторная аутентификация
+            </a>
+<!--        Добавьте следующие строки-->
+        {% if site_url %}
+```
+
 ### Планируемые улучшение
 - Развернуть проект в Docker;
 - Улучшить систему геймификации;

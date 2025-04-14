@@ -18,7 +18,7 @@ def get_models():
     return DutySchedule, Notification, Bot
 
 
-@shared_task(expires=timedelta(600))
+@shared_task(expires=600)
 def send_instruction_reminders():
     """Отправка напоминаний о предстоящем инструктаже"""
     DutySchedule, _, Bot = get_models()

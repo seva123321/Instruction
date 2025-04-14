@@ -9,11 +9,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 # Ленивые импорты для моделей и зависимостей
 def get_models():
     from .models import DutySchedule, Notification
     from telegram import Bot
+
     return DutySchedule, Notification, Bot
+
 
 @shared_task(expires=timedelta(hours=1))
 def send_instruction_reminders():
@@ -26,10 +29,14 @@ def send_instruction_reminders():
 
     try:
         upcoming_shifts = DutySchedule.objects.filter(
-        date=now.date(),
-        shift__start_time__gte=(reminder_time - timedelta(minutes=1)).time(),
-        shift__start_time__lte=(reminder_time + timedelta(minutes=1)).time()
-    ).select_related('user', 'shift', 'instruction')
+            date=now.date(),
+            shift__start_time__gte=(
+                reminder_time - timedelta(minutes=1)
+            ).time(),
+            shift__start_time__lte=(
+                reminder_time + timedelta(minutes=1)
+            ).time(),
+        ).select_related("user", "shift", "instruction")
         print(upcoming_shifts.count())
         for schedule in upcoming_shifts:
             if schedule.user.telegram_chat_id:
@@ -44,7 +51,11 @@ def send_instruction_reminders():
                     f"💥 Награда за выполнение: +50 XP"
                 )
                 try:
-                    asyncio.run(_send_instruction_reminders(message, schedule.user.telegram_chat_id))
+                    asyncio.run(
+                        _send_instruction_reminders(
+                            message, schedule.user.telegram_chat_id
+                        )
+                    )
                 except Exception as e:
                     logger.error(
                         f"Ошибка отправки уведомления пользователю {schedule.user_id}: {str(e)}"
@@ -55,6 +66,7 @@ def send_instruction_reminders():
     except Exception as e:
         logger.error(f"Ошибка в задаче send_instruction_reminders: {str(e)}")
         raise
+
 
 async def _send_instruction_reminders(message, telegram_chat_id):
     DutySchedule, _, Bot = get_models()

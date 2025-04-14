@@ -7,23 +7,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0002_alter_user_middle_name_alter_user_mobile_phone'),
+        ("api", "0002_alter_user_middle_name_alter_user_mobile_phone"),
     ]
 
     operations = [
         migrations.AlterModelManagers(
-            name='user',
+            name="user",
             managers=[
-                ('objects', api.models.UserManager()),
+                ("objects", api.models.UserManager()),
             ],
         ),
         migrations.RemoveField(
-            model_name='user',
-            name='username',
+            model_name="user",
+            name="username",
         ),
         migrations.AlterField(
-            model_name='user',
-            name='birthday',
-            field=models.DateField(blank=True, verbose_name='Дата рождения'),
+            model_name="user",
+            name="birthday",
+            field=models.DateField(blank=True, verbose_name="Дата рождения"),
         ),
     ]

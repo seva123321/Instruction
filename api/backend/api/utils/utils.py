@@ -15,13 +15,14 @@ def is_face_already_registered(input_descriptor):
     for user in User.objects.exclude(face_descriptor__isnull=True):
         try:
             stored_descriptor = np.array(
-                json.loads(user.face_descriptor),
-                dtype=np.float32
+                json.loads(user.face_descriptor), dtype=np.float32
             )
             distance = np.linalg.norm(input_descriptor - stored_descriptor)
             if distance < settings.FACE_MATCH_THRESHOLD:
                 return True
         except (json.JSONDecodeError, TypeError) as e:
-            print(f'Ошибка обработки дескриптора лица пользователя {user.id}: {str(e)}')
+            print(
+                f"Ошибка обработки дескриптора лица пользователя {user.id}: {str(e)}"
+            )
             continue
     return False

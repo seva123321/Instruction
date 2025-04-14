@@ -7,52 +7,52 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0026_tests_test_is_control'),
+        ("api", "0026_tests_test_is_control"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='question',
-            name='question_type',
+            model_name="question",
+            name="question_type",
             field=models.CharField(
                 choices=[
-                    ('single', 'Один вариант'),
-                    ('several', 'Несколько вариантов'),
+                    ("single", "Один вариант"),
+                    ("several", "Несколько вариантов"),
                 ],
-                default='single',
+                default="single",
                 max_length=20,
-                verbose_name='Тип вопроса',
+                verbose_name="Тип вопроса",
             ),
         ),
         migrations.AddField(
-            model_name='tests',
-            name='total_points',
+            model_name="tests",
+            name="total_points",
             field=models.IntegerField(
                 default=1,
-                verbose_name='Максимальное количество баллов за тест',
+                verbose_name="Максимальное количество баллов за тест",
             ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='testresult',
-            name='mark',
+            model_name="testresult",
+            name="mark",
             field=models.IntegerField(
                 validators=[
                     django.core.validators.MinValueValidator(1),
                     django.core.validators.MaxValueValidator(100),
                 ],
-                verbose_name='Оценка',
+                verbose_name="Оценка",
             ),
         ),
         migrations.AlterField(
-            model_name='tests',
-            name='passing_score',
+            model_name="tests",
+            name="passing_score",
             field=models.IntegerField(
                 validators=[
                     django.core.validators.MinValueValidator(1),
                     django.core.validators.MaxValueValidator(100),
                 ],
-                verbose_name='Проходной балл',
+                verbose_name="Проходной балл",
             ),
         ),
     ]

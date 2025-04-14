@@ -8,50 +8,50 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0007_instruction_instruction_agreement'),
+        ("api", "0007_instruction_instruction_agreement"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PhotoData',
+            name="PhotoData",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'photo_data',
+                    "photo_data",
                     models.TextField(
-                        verbose_name='Массив данных фото пользователя'
+                        verbose_name="Массив данных фото пользователя"
                     ),
                 ),
                 (
-                    'created_at',
+                    "created_at",
                     models.DateTimeField(
-                        auto_now_add=True, verbose_name='Дата создания'
+                        auto_now_add=True, verbose_name="Дата создания"
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='publickey',
+                        related_name="publickey",
                         to=settings.AUTH_USER_MODEL,
-                        verbose_name='Пользователь',
+                        verbose_name="Пользователь",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Массив данных',
-                'verbose_name_plural': 'Массивы данных',
+                "verbose_name": "Массив данных",
+                "verbose_name_plural": "Массивы данных",
             },
         ),
         migrations.DeleteModel(
-            name='Publickey',
+            name="Publickey",
         ),
     ]

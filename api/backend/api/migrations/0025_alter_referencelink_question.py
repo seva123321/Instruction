@@ -7,20 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0024_testresult_mark_alter_tests_passing_score'),
+        ("api", "0024_testresult_mark_alter_tests_passing_score"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='referencelink',
-            name='question',
+            model_name="referencelink",
+            name="question",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name='reference_link',
-                to='api.question',
-                verbose_name='Вопрос',
+                related_name="reference_link",
+                to="api.question",
+                verbose_name="Вопрос",
             ),
         ),
     ]

@@ -1,6 +1,6 @@
 """Константы проекта."""
 
-ME = 'profile'
+ME = "profile"
 
 # User
 MAX_LENGTH_FIRST_NAME = 150

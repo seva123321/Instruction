@@ -6,62 +6,62 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0018_alter_referencelink_question'),
+        ("api", "0018_alter_referencelink_question"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='attention',
+            model_name="instructionagreement",
+            name="attention",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='compliance',
+            model_name="instructionagreement",
+            name="compliance",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='date',
+            model_name="instructionagreement",
+            name="date",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='emergency',
+            model_name="instructionagreement",
+            name="emergency",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='health',
+            model_name="instructionagreement",
+            name="health",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='is_passed',
+            model_name="instructionagreement",
+            name="is_passed",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='is_provided',
+            model_name="instructionagreement",
+            name="is_provided",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='med_aid',
+            model_name="instructionagreement",
+            name="med_aid",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='no_alcohol',
+            model_name="instructionagreement",
+            name="no_alcohol",
         ),
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='report',
+            model_name="instructionagreement",
+            name="report",
         ),
         migrations.AddField(
-            model_name='instructionagreement',
-            name='name',
+            model_name="instructionagreement",
+            name="name",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Название согласия'
+                blank=True, null=True, verbose_name="Название согласия"
             ),
         ),
         migrations.AddField(
-            model_name='instructionagreement',
-            name='text',
+            model_name="instructionagreement",
+            name="text",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Текст согласия'
+                blank=True, null=True, verbose_name="Текст согласия"
             ),
         ),
     ]

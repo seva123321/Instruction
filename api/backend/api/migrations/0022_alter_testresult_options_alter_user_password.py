@@ -6,21 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0021_question_image_alter_question_explanation'),
+        ("api", "0021_question_image_alter_question_explanation"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='testresult',
+            name="testresult",
             options={
-                'ordering': ('-date',),
-                'verbose_name': 'Результат тестирования',
-                'verbose_name_plural': 'Результаты тестирования',
+                "ordering": ("-date",),
+                "verbose_name": "Результат тестирования",
+                "verbose_name_plural": "Результаты тестирования",
             },
         ),
         migrations.AlterField(
-            model_name='user',
-            name='password',
-            field=models.CharField(max_length=128, verbose_name='Пароль'),
+            model_name="user",
+            name="password",
+            field=models.CharField(max_length=128, verbose_name="Пароль"),
         ),
     ]

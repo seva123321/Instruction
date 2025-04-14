@@ -4,14 +4,14 @@ import django.db.models.deletion
 
 
 def migrate_positions_forward(apps, schema_editor):
-    User = apps.get_model('api', 'User')
-    Position = apps.get_model('api', 'Position')
+    User = apps.get_model("api", "User")
+    Position = apps.get_model("api", "Position")
 
     # Собираем все существующие должности
     positions = (
         User.objects.exclude(position__isnull=True)
-        .exclude(position__exact='')
-        .values_list('position', flat=True)
+        .exclude(position__exact="")
+        .values_list("position", flat=True)
         .distinct()
     )
 
@@ -31,54 +31,54 @@ def migrate_positions_forward(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('api', '0041_rename_url_referencelink_source'),
+        ("api", "0041_rename_url_referencelink_source"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Position',
+            name="Position",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'name',
+                    "name",
                     models.CharField(
-                        max_length=150, unique=True, verbose_name='Название'
+                        max_length=150, unique=True, verbose_name="Название"
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Должность',
-                'verbose_name_plural': 'Должности',
+                "verbose_name": "Должность",
+                "verbose_name_plural": "Должности",
             },
         ),
         migrations.AddField(
-            model_name='user',
-            name='position_fk',
+            model_name="user",
+            name="position_fk",
             field=models.ForeignKey(
                 null=True,
                 blank=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name='users',
-                to='api.position',
-                verbose_name='Должность',
+                related_name="users",
+                to="api.position",
+                verbose_name="Должность",
             ),
         ),
         migrations.RunPython(migrate_positions_forward),
         migrations.RemoveField(
-            model_name='user',
-            name='position',
+            model_name="user",
+            name="position",
         ),
         migrations.RenameField(
-            model_name='user',
-            old_name='position_fk',
-            new_name='position',
+            model_name="user",
+            old_name="position_fk",
+            new_name="position",
         ),
     ]

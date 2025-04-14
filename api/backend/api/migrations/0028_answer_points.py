@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0027_question_question_type_tests_total_points_and_more'),
+        ("api", "0027_question_question_type_tests_total_points_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='answer',
-            name='points',
+            model_name="answer",
+            name="points",
             field=models.IntegerField(
-                default=1, verbose_name='Количество баллов за ответ'
+                default=1, verbose_name="Количество баллов за ответ"
             ),
             preserve_default=False,
         ),

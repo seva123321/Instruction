@@ -7,23 +7,23 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0009_rename_answer_answer_name_and_more'),
+        ("api", "0009_rename_answer_answer_name_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='tests',
-            name='question',
+            model_name="tests",
+            name="question",
         ),
         migrations.AddField(
-            model_name='question',
-            name='tests',
+            model_name="question",
+            name="tests",
             field=models.ForeignKey(
                 default=1,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='questions',
-                to='api.tests',
-                verbose_name='Тест',
+                related_name="questions",
+                to="api.tests",
+                verbose_name="Тест",
             ),
             preserve_default=False,
         ),

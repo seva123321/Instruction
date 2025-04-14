@@ -6,22 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0020_alter_answer_question_and_more'),
+        ("api", "0020_alter_answer_question_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='question',
-            name='image',
+            model_name="question",
+            name="image",
             field=models.URLField(
-                blank=True, null=True, verbose_name='Изображение'
+                blank=True, null=True, verbose_name="Изображение"
             ),
         ),
         migrations.AlterField(
-            model_name='question',
-            name='explanation',
+            model_name="question",
+            name="explanation",
             field=models.TextField(
-                blank=True, default='', verbose_name='Объяснение'
+                blank=True, default="", verbose_name="Объяснение"
             ),
         ),
     ]

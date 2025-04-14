@@ -9,13 +9,13 @@ def normalize_phone_number(phone):
     if not phone:
         return None
 
-    cleaned = re.sub(r'[^\d+]', '', str(phone))
+    cleaned = re.sub(r"[^\d+]", "", str(phone))
 
-    if cleaned.startswith('8'):
-        normalized = '+7' + cleaned[1:]
-    elif cleaned.startswith('7'):
-        normalized = '+' + cleaned
-    elif cleaned.startswith('+7'):
+    if cleaned.startswith("8"):
+        normalized = "+7" + cleaned[1:]
+    elif cleaned.startswith("7"):
+        normalized = "+" + cleaned
+    elif cleaned.startswith("+7"):
         normalized = cleaned
     else:
         return None

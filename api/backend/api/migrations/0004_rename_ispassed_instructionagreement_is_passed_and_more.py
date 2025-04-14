@@ -6,28 +6,28 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0003_alter_user_managers_remove_user_username_and_more'),
+        ("api", "0003_alter_user_managers_remove_user_username_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='instructionagreement',
-            old_name='isPassed',
-            new_name='is_passed',
+            model_name="instructionagreement",
+            old_name="isPassed",
+            new_name="is_passed",
         ),
         migrations.RenameField(
-            model_name='instructionagreement',
-            old_name='isProvided',
-            new_name='is_provided',
+            model_name="instructionagreement",
+            old_name="isProvided",
+            new_name="is_provided",
         ),
         migrations.RenameField(
-            model_name='instructionagreement',
-            old_name='medAid',
-            new_name='med_aid',
+            model_name="instructionagreement",
+            old_name="medAid",
+            new_name="med_aid",
         ),
         migrations.RenameField(
-            model_name='instructionagreement',
-            old_name='noAlcohol',
-            new_name='no_alcohol',
+            model_name="instructionagreement",
+            old_name="noAlcohol",
+            new_name="no_alcohol",
         ),
     ]

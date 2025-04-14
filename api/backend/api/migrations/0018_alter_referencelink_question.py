@@ -7,20 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0017_alter_referencelink_question'),
+        ("api", "0017_alter_referencelink_question"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='referencelink',
-            name='question',
+            model_name="referencelink",
+            name="question",
             field=models.OneToOneField(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='reference_link',
-                to='api.question',
-                verbose_name='Вопрос',
+                related_name="reference_link",
+                to="api.question",
+                verbose_name="Вопрос",
             ),
         ),
     ]

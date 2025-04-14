@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0011_user_created_at_user_face_descriptor_and_more'),
+        ("api", "0011_user_created_at_user_face_descriptor_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='birthday',
+            model_name="user",
+            name="birthday",
             field=models.DateField(
-                blank=True, null=True, verbose_name='Дата рождения'
+                blank=True, null=True, verbose_name="Дата рождения"
             ),
         ),
     ]

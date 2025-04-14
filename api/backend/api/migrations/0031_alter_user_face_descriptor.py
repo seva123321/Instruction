@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0030_video_date_alter_video_file'),
+        ("api", "0030_video_date_alter_video_file"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='face_descriptor',
+            model_name="user",
+            name="face_descriptor",
             field=models.TextField(
                 blank=True,
                 null=True,
                 unique=True,
-                verbose_name='Дескриптор лица',
+                verbose_name="Дескриптор лица",
             ),
         ),
     ]

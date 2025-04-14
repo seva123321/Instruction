@@ -7,19 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_remove_instructionagreement_user'),
+        ("api", "0006_remove_instructionagreement_user"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='instruction',
-            name='instruction_agreement',
+            model_name="instruction",
+            name="instruction_agreement",
             field=models.ForeignKey(
                 default=1,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='instruction',
-                to='api.instructionagreement',
-                verbose_name='Согласие на инструктаж',
+                related_name="instruction",
+                to="api.instructionagreement",
+                verbose_name="Согласие на инструктаж",
             ),
             preserve_default=False,
         ),

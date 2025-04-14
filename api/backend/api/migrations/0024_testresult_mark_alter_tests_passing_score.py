@@ -7,32 +7,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0023_alter_user_password'),
+        ("api", "0023_alter_user_password"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='testresult',
-            name='mark',
+            model_name="testresult",
+            name="mark",
             field=models.IntegerField(
                 default=1,
                 validators=[
                     django.core.validators.MinValueValidator(10),
                     django.core.validators.MaxValueValidator(10),
                 ],
-                verbose_name='Оценка',
+                verbose_name="Оценка",
             ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='tests',
-            name='passing_score',
+            model_name="tests",
+            name="passing_score",
             field=models.IntegerField(
                 validators=[
                     django.core.validators.MinValueValidator(10),
                     django.core.validators.MaxValueValidator(10),
                 ],
-                verbose_name='Проходной балл',
+                verbose_name="Проходной балл",
             ),
         ),
     ]

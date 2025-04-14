@@ -216,7 +216,7 @@ const MobileUserRow = memo(
       <>
         <StyledTableRow
           className={globalRank <= 3 ? `top-3 rank-${globalRank}` : ''}
-          iscurrentuser={isCurrentUser}
+          isCurrentUser={isCurrentUser}
         >
           <MobileTableCell sx={{ width: 40 }}>
             <RankBadge

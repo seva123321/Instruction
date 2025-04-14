@@ -218,7 +218,7 @@ function TestResultsView({
 
         {/* Детализация вопросов */}
         {!isControlTest && (
-          <Accordion defaultExpanded sx={{ mt: 4 }}>
+          <Accordion sx={{ mt: 4 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="h6" sx={{ fontWeight: 500 }}>
                 Ответы на вопросы

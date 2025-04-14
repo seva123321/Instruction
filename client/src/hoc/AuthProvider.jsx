@@ -1,4 +1,4 @@
-import { createContext, useCallback, useMemo, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   useSignUpMutation,
@@ -11,6 +11,7 @@ export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
     useLoginMutation()
@@ -22,6 +23,15 @@ export function AuthProvider({ children }) {
   ] = useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout, error: logoutError }] =
     useLogoutMutation()
+
+  useEffect(() => {
+    const checkSession = () => {
+      const hasSession = document.cookie.includes('sessionid')
+      setUser(hasSession ? { isAuthenticated: true } : null)
+      setIsInitialized(true)
+    }
+    checkSession()
+  }, [])
 
   const auth = useCallback(
     async (userData) => {
@@ -70,6 +80,7 @@ export function AuthProvider({ children }) {
       auth,
       signIn,
       signOut,
+      isInitialized,
       isLoading:
         isLoadingLogin ||
         isLoadingSignup ||
@@ -82,6 +93,7 @@ export function AuthProvider({ children }) {
       auth,
       signIn,
       signOut,
+      isInitialized,
       isLoadingLogin,
       isLoadingSignup,
       isLoadingFaceLogin,

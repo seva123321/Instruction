@@ -73,16 +73,6 @@ async def _send_instruction_reminders(message, telegram_chat_id):
     try:
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 
-        stickers = (
-            "CAACAgIAAxkBAAEL7VNmBv1XZQABdUcBxR8y4m4V7hNKeT8AAhUAA8A2TxMX7hkCEj2SfTQE",
-            "CAACAgIAAxkBAAEL7VVmBv1gAAE8jJxHxJkAAbQHwTXFgS0sAAIeAAPANk8Tv8n_BktA7Ow0BA",
-            "CAACAgIAAxkBAAEL7VdmBv1j0Vj4HxVhqBkAAXJkAAH4LQACJAADwDZPE6Jv0tRkXwAB7DQE",
-        )
-
-        await bot.send_sticker(
-            chat_id=telegram_chat_id, sticker=choice(stickers)
-        )
-
         await bot.send_message(
             chat_id=telegram_chat_id, text=message, parse_mode="Markdown"
         )

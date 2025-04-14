@@ -121,7 +121,7 @@ sudo systemctl status redis
      Memory: 5.1M
         CPU: 23.894s
      CGroup: /system.slice/redis-server.service
-             └─1143 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""vvvvvvv
+             └─1143 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""
 ```
 #### Frontend
 Запускаем сервер

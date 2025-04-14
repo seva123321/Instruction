@@ -1,6 +1,7 @@
-import TabsWrapper from '@/components/TabsWrapper'
 import { Outlet } from 'react-router-dom'
 import { Box } from '@mui/material'
+
+import TabsWrapper from '@/components/TabsWrapper'
 
 const tabs = [
   {

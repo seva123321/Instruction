@@ -98,7 +98,6 @@ function App() {
               </RequireAuth>
             }
           />
-          {/* Маршруты для SuccessPage с вложенными табами */}
           <Route
             path="success"
             element={

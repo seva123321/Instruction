@@ -8,7 +8,6 @@ import {
   useMediaQuery,
   IconButton,
   Divider,
-  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -220,7 +219,7 @@ function CalendarResults() {
         {/* Ячейки календаря */}
         {weeks.map((oneWeek, weekIndex) => (
           <Box
-            key={weekIndex}
+            key={oneWeek[weekIndex]}
             sx={{
               display: 'grid',
               gridTemplateColumns: 'repeat(7, 1fr)',

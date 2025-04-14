@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="normativelegislation",
             name="file",
-            field=models.FileField(blank=True, upload_to="nlas/", verbose_name="НПА"),
+            field=models.FileField(
+                blank=True, upload_to="nlas/", verbose_name="НПА"
+            ),
         ),
         migrations.AlterField(
             model_name="video",

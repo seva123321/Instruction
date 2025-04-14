@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0025_alter_referencelink_question'),
+        ("api", "0025_alter_referencelink_question"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tests',
-            name='test_is_control',
+            model_name="tests",
+            name="test_is_control",
             field=models.BooleanField(
-                default=1, verbose_name='Тест является контрольным'
+                default=1, verbose_name="Тест является контрольным"
             ),
             preserve_default=False,
         ),

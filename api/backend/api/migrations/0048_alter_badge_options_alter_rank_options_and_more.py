@@ -13,11 +13,17 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name="badge",
-            options={"verbose_name": "Значок", "verbose_name_plural": "Значки"},
+            options={
+                "verbose_name": "Значок",
+                "verbose_name_plural": "Значки",
+            },
         ),
         migrations.AlterModelOptions(
             name="rank",
-            options={"verbose_name": "Звание", "verbose_name_plural": "Звания"},
+            options={
+                "verbose_name": "Звание",
+                "verbose_name_plural": "Звания",
+            },
         ),
         migrations.AlterModelOptions(
             name="userbadge",
@@ -45,7 +51,10 @@ class Migration(migrations.Migration):
             model_name="position",
             name="icon",
             field=models.ImageField(
-                blank=True, null=True, upload_to="positions/", verbose_name="Иконка"
+                blank=True,
+                null=True,
+                upload_to="positions/",
+                verbose_name="Иконка",
             ),
         ),
         migrations.DeleteModel(

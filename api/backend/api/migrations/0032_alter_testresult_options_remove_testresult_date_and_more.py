@@ -8,33 +8,33 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0031_alter_user_face_descriptor'),
+        ("api", "0031_alter_user_face_descriptor"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='testresult',
+            name="testresult",
             options={
-                'ordering': ('-completion_time',),
-                'verbose_name': 'Результат тестирования',
-                'verbose_name_plural': 'Результаты тестирования',
+                "ordering": ("-completion_time",),
+                "verbose_name": "Результат тестирования",
+                "verbose_name_plural": "Результаты тестирования",
             },
         ),
         migrations.RemoveField(
-            model_name='testresult',
-            name='date',
+            model_name="testresult",
+            name="date",
         ),
         migrations.RemoveField(
-            model_name='testresult',
-            name='result',
+            model_name="testresult",
+            name="result",
         ),
         migrations.RemoveField(
-            model_name='testresult',
-            name='time',
+            model_name="testresult",
+            name="time",
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='completion_time',
+            model_name="testresult",
+            name="completion_time",
             field=models.DateTimeField(
                 default=datetime.datetime(
                     2025,
@@ -46,27 +46,27 @@ class Migration(migrations.Migration):
                     548885,
                     tzinfo=datetime.timezone.utc,
                 ),
-                verbose_name='Время завершения теста',
+                verbose_name="Время завершения теста",
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='is_passed',
+            model_name="testresult",
+            name="is_passed",
             field=models.BooleanField(
-                default=False, verbose_name='Тест пройден'
+                default=False, verbose_name="Тест пройден"
             ),
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='score',
+            model_name="testresult",
+            name="score",
             field=models.IntegerField(
-                default=0, verbose_name='Набранные баллы'
+                default=0, verbose_name="Набранные баллы"
             ),
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='start_time',
+            model_name="testresult",
+            name="start_time",
             field=models.DateTimeField(
                 default=datetime.datetime(
                     2025,
@@ -78,86 +78,86 @@ class Migration(migrations.Migration):
                     933819,
                     tzinfo=datetime.timezone.utc,
                 ),
-                verbose_name='Время начала теста',
+                verbose_name="Время начала теста",
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='test_duration',
+            model_name="testresult",
+            name="test_duration",
             field=models.IntegerField(
-                default=0, verbose_name='Длительность теста (в секундах)'
+                default=0, verbose_name="Длительность теста (в секундах)"
             ),
         ),
         migrations.AddField(
-            model_name='testresult',
-            name='total_points',
+            model_name="testresult",
+            name="total_points",
             field=models.IntegerField(
-                default=0, verbose_name='Максимальный балл'
+                default=0, verbose_name="Максимальный балл"
             ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='face_descriptor',
+            model_name="user",
+            name="face_descriptor",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Дескриптор лица'
+                blank=True, null=True, verbose_name="Дескриптор лица"
             ),
         ),
         migrations.CreateModel(
-            name='UserAnswer',
+            name="UserAnswer",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'is_correct',
+                    "is_correct",
                     models.BooleanField(
-                        default=False, verbose_name='Ответ верный'
+                        default=False, verbose_name="Ответ верный"
                     ),
                 ),
                 (
-                    'points_earned',
+                    "points_earned",
                     models.IntegerField(
-                        default=0, verbose_name='Полученные баллы'
+                        default=0, verbose_name="Полученные баллы"
                     ),
                 ),
                 (
-                    'question',
+                    "question",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='api.question',
-                        verbose_name='Вопрос',
+                        to="api.question",
+                        verbose_name="Вопрос",
                     ),
                 ),
                 (
-                    'selected_answer',
+                    "selected_answer",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='api.answer',
-                        verbose_name='Выбранный ответ',
+                        to="api.answer",
+                        verbose_name="Выбранный ответ",
                     ),
                 ),
                 (
-                    'test_result',
+                    "test_result",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='user_answers',
-                        to='api.testresult',
-                        verbose_name='Результат теста',
+                        related_name="user_answers",
+                        to="api.testresult",
+                        verbose_name="Результат теста",
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Ответ пользователя',
-                'verbose_name_plural': 'Ответы пользователя',
+                "verbose_name": "Ответ пользователя",
+                "verbose_name_plural": "Ответы пользователя",
             },
         ),
     ]

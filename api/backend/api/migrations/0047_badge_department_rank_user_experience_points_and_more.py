@@ -24,7 +24,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=100, verbose_name="Название")),
+                (
+                    "name",
+                    models.CharField(max_length=100, verbose_name="Название"),
+                ),
                 ("description", models.TextField(verbose_name="Описание")),
                 (
                     "badge_type",
@@ -38,10 +41,17 @@ class Migration(migrations.Migration):
                         verbose_name="Тип значка",
                     ),
                 ),
-                ("icon", models.ImageField(upload_to="badges/", verbose_name="Иконка")),
+                (
+                    "icon",
+                    models.ImageField(
+                        upload_to="badges/", verbose_name="Иконка"
+                    ),
+                ),
                 (
                     "required_count",
-                    models.IntegerField(default=1, verbose_name="Требуемое количество"),
+                    models.IntegerField(
+                        default=1, verbose_name="Требуемое количество"
+                    ),
                 ),
             ],
         ),
@@ -57,8 +67,16 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=50, verbose_name="Название")),
-                ("icon", models.CharField(max_length=5, verbose_name="Иконка-эмодзи")),
+                (
+                    "name",
+                    models.CharField(max_length=50, verbose_name="Название"),
+                ),
+                (
+                    "icon",
+                    models.CharField(
+                        max_length=5, verbose_name="Иконка-эмодзи"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
@@ -73,9 +91,20 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=50, verbose_name="Название")),
-                ("required_points", models.IntegerField(verbose_name="Требуемые очки")),
-                ("icon", models.ImageField(upload_to="ranks/", verbose_name="Иконка")),
+                (
+                    "name",
+                    models.CharField(max_length=50, verbose_name="Название"),
+                ),
+                (
+                    "required_points",
+                    models.IntegerField(verbose_name="Требуемые очки"),
+                ),
+                (
+                    "icon",
+                    models.ImageField(
+                        upload_to="ranks/", verbose_name="Иконка"
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
@@ -104,7 +133,8 @@ class Migration(migrations.Migration):
                 (
                     "badge",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="api.badge"
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="api.badge",
                     ),
                 ),
                 (

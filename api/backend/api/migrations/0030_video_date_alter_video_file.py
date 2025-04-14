@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0029_video_delete_media'),
+        ("api", "0029_video_delete_media"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='video',
-            name='date',
+            model_name="video",
+            name="date",
             field=models.DateTimeField(
                 auto_now_add=True,
                 default=datetime.datetime(
@@ -26,15 +26,15 @@ class Migration(migrations.Migration):
                     773363,
                     tzinfo=datetime.timezone.utc,
                 ),
-                verbose_name='Дата загрузки',
+                verbose_name="Дата загрузки",
             ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='video',
-            name='file',
+            model_name="video",
+            name="file",
             field=models.FileField(
-                blank=True, upload_to='media/videos/', verbose_name='Видеофайл'
+                blank=True, upload_to="media/videos/", verbose_name="Видеофайл"
             ),
         ),
     ]

@@ -33,51 +33,61 @@ from .models import (
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'role', 'experience_points', 'current_rank')
-    search_fields = ('email', 'first_name', 'last_name')
-    list_filter = ('role',)
+    list_display = (
+        "email",
+        "first_name",
+        "last_name",
+        "role",
+        "experience_points",
+        "current_rank",
+    )
+    search_fields = ("email", "first_name", "last_name")
+    list_filter = ("role",)
 
 
 @admin.register(Badge)
 class BadgeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'required_count', 'position')
-    search_fields = ('name', 'description')
-    list_filter = ('position',)
+    list_display = ("name", "required_count", "position")
+    search_fields = ("name", "description")
+    list_filter = ("position",)
+
 
 @admin.register(UserBadge)
 class UserBadgeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'badge', 'awarded_at')
-    search_fields = ('user__email', 'badge__name')
-    list_filter = ('awarded_at',)
+    list_display = ("user", "badge", "awarded_at")
+    search_fields = ("user__email", "badge__name")
+    list_filter = ("awarded_at",)
+
 
 @admin.register(Rank)
 class RankAdmin(admin.ModelAdmin):
-    list_display = ('name', 'required_points', 'position')
-    search_fields = ('name',)
+    list_display = ("name", "required_points", "position")
+    search_fields = ("name",)
     list_filter = ("position",)
+
 
 @admin.register(Position)
 class PositionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'icon')
-    search_fields = ('name',)
+    list_display = ("name", "icon")
+    search_fields = ("name",)
 
 
 @admin.register(TypeOfInstruction)
 class TypeOfInstructionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'frequency_of_passage')
-    search_fields = ('name',)
+    list_display = ("name", "frequency_of_passage")
+    search_fields = ("name",)
 
 
 @admin.register(Instruction)
 class InstructionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type_of_instruction')
-    search_fields = ('name', 'type_of_instruction__name')
+    list_display = ("name", "type_of_instruction")
+    search_fields = ("name", "type_of_instruction__name")
 
 
 @admin.register(InstructionAgreement)
 class InstructionAgreementAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('email',)
+    list_display = ("name",)
+    search_fields = ("email",)
 
 
 class QuestionInline(admin.TabularInline):
@@ -86,8 +96,8 @@ class QuestionInline(admin.TabularInline):
 
 @admin.register(Tests)
 class TestsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'passing_score', 'test_is_control')
-    search_fields = ('name',)
+    list_display = ("name", "description", "passing_score", "test_is_control")
+    search_fields = ("name",)
     inlines = (QuestionInline,)
 
 
@@ -101,104 +111,104 @@ class ReferenceLinkInline(admin.TabularInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tests')
-    search_fields = ('name', 'tests__name')
+    list_display = ("name", "tests")
+    search_fields = ("name", "tests__name")
     inlines = (ReferenceLinkInline, AnswerInline)
 
 
 @admin.register(ReferenceLink)
 class ReferenceLinkAdmin(admin.ModelAdmin):
-    list_display = ('title', 'source', 'question')
-    search_fields = ('name',)
+    list_display = ("title", "source", "question")
+    search_fields = ("name",)
 
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_correct', 'question')
-    search_fields = ('name',)
+    list_display = ("name", "is_correct", "question")
+    search_fields = ("name",)
 
 
 @admin.register(TestResult)
 class TestResultAdmin(admin.ModelAdmin):
     list_display = (
-        'user',
-        'test',
-        'is_passed',
-        'mark',
-        'score',
-        'completion_time',
+        "user",
+        "test",
+        "is_passed",
+        "mark",
+        "score",
+        "completion_time",
     )
-    search_fields = ('user__email', 'test__name')
+    search_fields = ("user__email", "test__name")
 
 
 @admin.register(InstructionResult)
 class InstructionResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'instruction', 'result', 'date', 'time')
-    search_fields = ('user__email', 'instruction__name')
+    list_display = ("user", "instruction", "result", "date", "time")
+    search_fields = ("user__email", "instruction__name")
 
 
 @admin.register(Video)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = ('title', 'url', 'file')
-    search_fields = ('name',)
+    list_display = ("title", "url", "file")
+    search_fields = ("name",)
 
 
 @admin.register(UserAnswer)
 class UserAnswerAdmin(admin.ModelAdmin):
     list_display = (
-        'test_result',
-        'question',
-        'selected_answer',
-        'is_correct',
-        'points_earned',
+        "test_result",
+        "question",
+        "selected_answer",
+        "is_correct",
+        "points_earned",
     )
     search_fields = (
-        'test_result__user__email',
-        'question__name',
-        'selected_answer__name',
+        "test_result__user__email",
+        "question__name",
+        "selected_answer__name",
     )
-    list_filter = ('is_correct',)
+    list_filter = ("is_correct",)
 
 
 @admin.register(NormativeLegislation)
 class NormativeLegislationAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date')
-    search_fields = ('title', 'description')
-    list_filter = ('date',)
+    list_display = ("title", "date")
+    search_fields = ("title", "description")
+    list_filter = ("date",)
 
 
 def dashboard_callback(request, context):
     # Статистика по тестам
     test_stats = TestResult.objects.aggregate(
-        total=Count('id'),
-        passed=Count('id', filter=Q(is_passed=True)),
-        failed=Count('id', filter=Q(is_passed=False)),
-        avg_score=Avg('score'),
+        total=Count("id"),
+        passed=Count("id", filter=Q(is_passed=True)),
+        failed=Count("id", filter=Q(is_passed=False)),
+        avg_score=Avg("score"),
     )
 
     # Статистика по инструктажам
     instruction_stats = InstructionResult.objects.aggregate(
-        total=Count('id'),
-        passed=Count('id', filter=Q(result=True)),
-        failed=Count('id', filter=Q(result=False)),
+        total=Count("id"),
+        passed=Count("id", filter=Q(result=True)),
+        failed=Count("id", filter=Q(result=False)),
     )
 
     # Последние проваленные тесты
     recent_failed_tests = TestResult.objects.filter(
         is_passed=False
-    ).select_related('user', 'test')[:5]
+    ).select_related("user", "test")[:5]
 
     # Последние проваленные инструктажи
     recent_failed_instructions = InstructionResult.objects.filter(
         result=False
-    ).select_related('user', 'instruction')[:5]
+    ).select_related("user", "instruction")[:5]
 
     # Проблемные вопросы (топ 5)
     problematic_questions = (
         UserAnswer.objects.filter(is_correct=False)
-        .values('question__name')
-        .annotate(total_errors=Count('id'), question_id=F('question__id'))
-        .order_by('-total_errors')[:5]
+        .values("question__name")
+        .annotate(total_errors=Count("id"), question_id=F("question__id"))
+        .order_by("-total_errors")[:5]
     )
 
     # Слабоквалифицированные сотрудники (топ 5)
@@ -231,22 +241,22 @@ def dashboard_callback(request, context):
         .annotate(instruction_fails=Count("id"), user_name=F("user_name"))
     )
 
-    user_stats = defaultdict(lambda: {'test_fails': 0, 'instruction_fails': 0})
+    user_stats = defaultdict(lambda: {"test_fails": 0, "instruction_fails": 0})
 
     for entry in test_fails:
-        user_stats[entry['user']]['test_fails'] = entry['test_fails']
-        user_stats[entry['user']]['user_name'] = entry['user_name']
+        user_stats[entry["user"]]["test_fails"] = entry["test_fails"]
+        user_stats[entry["user"]]["user_name"] = entry["user_name"]
 
     for entry in instruction_fails:
-        user_stats[entry['user']]['instruction_fails'] = entry[
-            'instruction_fails'
+        user_stats[entry["user"]]["instruction_fails"] = entry[
+            "instruction_fails"
         ]
-        user_stats[entry['user']]['user_name'] = entry['user_name']
+        user_stats[entry["user"]]["user_name"] = entry["user_name"]
 
     # Сортируем по общему количеству провалов
     weak_users = sorted(
         user_stats.values(),
-        key=lambda x: (x['test_fails'] + x['instruction_fails']),
+        key=lambda x: (x["test_fails"] + x["instruction_fails"]),
         reverse=True,
     )[:5]
 
@@ -265,12 +275,13 @@ def dashboard_callback(request, context):
 
 @admin.register(Shift)
 class ShiftAdmin(admin.ModelAdmin):
-    list_display = ('name', 'start_time', 'end_time')
-    list_editable = ('start_time', 'end_time')
+    list_display = ("name", "start_time", "end_time")
+    list_editable = ("start_time", "end_time")
+
 
 @admin.register(DutySchedule)
 class DutyScheduleAdmin(admin.ModelAdmin):
-    list_display = ('user', 'date', 'shift', 'instruction')
-    list_filter = ('date', 'shift')
-    search_fields = ('user__last_name', 'user__first_name')
-    date_hierarchy = 'date'
+    list_display = ("user", "date", "shift", "instruction")
+    list_filter = ("date", "shift")
+    search_fields = ("user__last_name", "user__first_name")
+    date_hierarchy = "date"

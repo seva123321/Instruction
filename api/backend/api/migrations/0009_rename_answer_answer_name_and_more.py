@@ -7,33 +7,33 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0008_photodata_delete_publickey'),
+        ("api", "0008_photodata_delete_publickey"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='answer',
-            old_name='answer',
-            new_name='name',
+            model_name="answer",
+            old_name="answer",
+            new_name="name",
         ),
         migrations.RenameField(
-            model_name='question',
-            old_name='question',
-            new_name='name',
+            model_name="question",
+            old_name="question",
+            new_name="name",
         ),
         migrations.RemoveField(
-            model_name='question',
-            name='tests',
+            model_name="question",
+            name="tests",
         ),
         migrations.AddField(
-            model_name='tests',
-            name='question',
+            model_name="tests",
+            name="question",
             field=models.ForeignKey(
                 default=1,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='tests',
-                to='api.question',
-                verbose_name='Вопрос',
+                related_name="tests",
+                to="api.question",
+                verbose_name="Вопрос",
             ),
             preserve_default=False,
         ),

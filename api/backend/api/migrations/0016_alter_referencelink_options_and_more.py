@@ -7,27 +7,27 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0015_alter_referencelink_question'),
+        ("api", "0015_alter_referencelink_question"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='referencelink',
+            name="referencelink",
             options={
-                'verbose_name': 'Ссылка на объяснение',
-                'verbose_name_plural': 'Ссылки на объяснение',
+                "verbose_name": "Ссылка на объяснение",
+                "verbose_name_plural": "Ссылки на объяснение",
             },
         ),
         migrations.AlterField(
-            model_name='referencelink',
-            name='question',
+            model_name="referencelink",
+            name="question",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='referenceLinks',
-                to='api.question',
-                verbose_name='Вопрос',
+                related_name="referenceLinks",
+                to="api.question",
+                verbose_name="Вопрос",
             ),
         ),
     ]

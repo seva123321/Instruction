@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0010_remove_tests_question_question_tests'),
+        ("api", "0010_remove_tests_question_question_tests"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='face_descriptor',
+            model_name="user",
+            name="face_descriptor",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Дескриптор лица'
+                blank=True, null=True, verbose_name="Дескриптор лица"
             ),
         ),
         migrations.DeleteModel(
-            name='PhotoData',
+            name="PhotoData",
         ),
     ]

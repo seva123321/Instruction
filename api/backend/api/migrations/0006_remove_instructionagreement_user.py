@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0005_alter_instructionagreement_attention_and_more'),
+        ("api", "0005_alter_instructionagreement_attention_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='instructionagreement',
-            name='user',
+            model_name="instructionagreement",
+            name="user",
         ),
     ]

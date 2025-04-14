@@ -7,45 +7,45 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0012_alter_user_birthday'),
+        ("api", "0012_alter_user_birthday"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ReferenceLink',
+            name="ReferenceLink",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('title', models.TextField(verbose_name='Заголовок')),
-                ('url', models.URLField(verbose_name='URL')),
+                ("title", models.TextField(verbose_name="Заголовок")),
+                ("url", models.URLField(verbose_name="URL")),
             ],
             options={
-                'verbose_name': 'Объяснение',
-                'verbose_name_plural': 'Объяснения',
+                "verbose_name": "Объяснение",
+                "verbose_name_plural": "Объяснения",
             },
         ),
         migrations.AddField(
-            model_name='question',
-            name='explanation',
-            field=models.TextField(default='', verbose_name='Объяснение'),
+            model_name="question",
+            name="explanation",
+            field=models.TextField(default="", verbose_name="Объяснение"),
         ),
         migrations.AddField(
-            model_name='question',
-            name='reference_links',
+            model_name="question",
+            name="reference_links",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='questions',
-                to='api.referencelink',
-                verbose_name='Ссылка на объяснение',
+                related_name="questions",
+                to="api.referencelink",
+                verbose_name="Ссылка на объяснение",
             ),
         ),
     ]

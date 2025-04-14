@@ -6,55 +6,55 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0028_answer_points'),
+        ("api", "0028_answer_points"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Video',
+            name="Video",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.BigAutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'type',
+                    "type",
                     models.CharField(
                         choices=[
-                            ('youtube', 'Youtube'),
-                            ('server', 'Видео на сервере'),
+                            ("youtube", "Youtube"),
+                            ("server", "Видео на сервере"),
                         ],
-                        default='youtube',
+                        default="youtube",
                         max_length=100,
-                        verbose_name='Тип видео',
+                        verbose_name="Тип видео",
                     ),
                 ),
                 (
-                    'url',
-                    models.URLField(blank=True, null=True, verbose_name='URL'),
+                    "url",
+                    models.URLField(blank=True, null=True, verbose_name="URL"),
                 ),
                 (
-                    'title',
-                    models.CharField(max_length=100, verbose_name='Название'),
+                    "title",
+                    models.CharField(max_length=100, verbose_name="Название"),
                 ),
                 (
-                    'file',
+                    "file",
                     models.FileField(
-                        upload_to='media/videos/', verbose_name='Видеофайл'
+                        upload_to="media/videos/", verbose_name="Видеофайл"
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'Видеофайл',
-                'verbose_name_plural': 'Видеофайлы',
+                "verbose_name": "Видеофайл",
+                "verbose_name_plural": "Видеофайлы",
             },
         ),
         migrations.DeleteModel(
-            name='Media',
+            name="Media",
         ),
     ]

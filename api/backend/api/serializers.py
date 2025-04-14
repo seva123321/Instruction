@@ -29,11 +29,10 @@ from api.models import (
     InstructionAgreementResult,
     Notification,
     Badge,
-    Rank
+    Rank,
 )
 from api.utils.utils import is_face_already_registered
 from api.utils.validators import normalize_phone_number
-
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -41,7 +40,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ('password',)
+        exclude = ("password",)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -88,7 +87,7 @@ class RankSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rank
-        fields = ('id', 'name', 'icon')
+        fields = ("id", "name", "icon")
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -99,9 +98,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     position = serializers.StringRelatedField(read_only=True)
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + (
-            "badges",
-        )
+        fields = UserSerializer.Meta.fields + ("badges",)
         extra_kwargs = {**UserSerializer.Meta.extra_kwargs}
 
     def get_badges(self, obj):
@@ -109,7 +106,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return BadgeSerializer(
             Badge.objects.filter(userbadge__user=obj),
             many=True,
-            context=self.context
+            context=self.context,
         ).data
 
     def get_current_rank(self, obj):
@@ -133,10 +130,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class RatingSerializer(UserProfileSerializer):
     """Сериализатор для рейтинга пользователей."""
 
-
     class Meta(UserSerializer.Meta):
         fields = tuple(
-            field for field in UserProfileSerializer.Meta.fields
+            field
+            for field in UserProfileSerializer.Meta.fields
             if field not in {"mobile_phone", "role"}
         )
 
@@ -151,7 +148,7 @@ class SignUpSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_PASSWORD,
         required=True,
         write_only=True,
-        style={'input_type': 'password'},
+        style={"input_type": "password"},
     )
     first_name = serializers.CharField(
         max_length=MAX_LENGTH_FIRST_NAME, required=True
@@ -169,24 +166,24 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         errors = {}
 
-        if User.objects.filter(email=data['email']).exists():
-            errors['email'] = 'Пользователь с таким email уже существует'
+        if User.objects.filter(email=data["email"]).exists():
+            errors["email"] = "Пользователь с таким email уже существует"
 
-        if User.objects.filter(mobile_phone=data['mobile_phone']).exists():
-            errors['mobile_phone'] = (
-                'Пользователь с таким номером телефона уже существует'
+        if User.objects.filter(mobile_phone=data["mobile_phone"]).exists():
+            errors["mobile_phone"] = (
+                "Пользователь с таким номером телефона уже существует"
             )
 
         try:
             input_descriptor = np.array(
-                data['face_descriptor'], dtype=np.float32
+                data["face_descriptor"], dtype=np.float32
             )
             if is_face_already_registered(input_descriptor):
-                errors['face_descriptor'] = (
-                    'Пользователь с таким лицом уже существует'
+                errors["face_descriptor"] = (
+                    "Пользователь с таким лицом уже существует"
                 )
         except Exception as e:
-            errors['face_descriptor'] = str(e)
+            errors["face_descriptor"] = str(e)
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -198,17 +195,17 @@ class SignUpSerializer(serializers.Serializer):
             input_descriptor = np.array(value, dtype=np.float32)
         except:
             raise serializers.ValidationError(
-                'Неправильный формат дескриптора лица'
+                "Неправильный формат дескриптора лица"
             )
 
         if len(input_descriptor) != 128:
             raise serializers.ValidationError(
-                'Дескриптор лица должен содержать 128 элементов'
+                "Дескриптор лица должен содержать 128 элементов"
             )
 
         if is_face_already_registered(input_descriptor):
             raise serializers.ValidationError(
-                'Пользователь с таким дескриптором лица уже существует'
+                "Пользователь с таким дескриптором лица уже существует"
             )
 
         return value
@@ -216,7 +213,7 @@ class SignUpSerializer(serializers.Serializer):
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
-                'Пользователь с таким email уже существует'
+                "Пользователь с таким email уже существует"
             )
         return value
 
@@ -225,13 +222,13 @@ class SignUpSerializer(serializers.Serializer):
 
         if not normalized_phone:
             raise serializers.ValidationError(
-                'Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999'
+                "Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999"
             )
 
         # Проверяем уникальность
         if User.objects.filter(mobile_phone=normalized_phone).exists():
             raise serializers.ValidationError(
-                'Пользователь с таким номером телефона уже существует'
+                "Пользователь с таким номером телефона уже существует"
             )
 
         return normalized_phone
@@ -261,7 +258,7 @@ class LoginSerializer(serializers.Serializer):
         max_length=MAX_LENGTH_PASSWORD,
         required=True,
         write_only=True,
-        style={'input_type': 'password'},
+        style={"input_type": "password"},
     )
 
 
@@ -270,7 +267,7 @@ class TypeOfInstructionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TypeOfInstruction
-        fields = ('id', 'name')
+        fields = ("id", "name")
 
 
 class InstructionAgreementSerializer(serializers.ModelSerializer):
@@ -278,13 +275,15 @@ class InstructionAgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstructionAgreement
-        exclude = ('id',)
+        exclude = ("id",)
 
 
 class InstructionSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Instruction."""
 
-    instruction_agreement = serializers.SerializerMethodField()  # Изменяем на метод
+    instruction_agreement = (
+        serializers.SerializerMethodField()
+    )  # Изменяем на метод
     type_of_instruction = TypeOfInstructionSerializer(read_only=True)
 
     class Meta:
@@ -309,7 +308,8 @@ class InstructionListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Instruction
-        fields = ('id', 'name', 'type_of_instruction')
+        fields = ("id", "name", "type_of_instruction")
+
 
 class InstructionResultGetSerializer(serializers.ModelSerializer):
     """Сериализатор для получения результатов инструктажа."""
@@ -319,10 +319,10 @@ class InstructionResultGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstructionResult
         fields = (
-            'id',
-            'instruction',
-            'result',
-            'date',
+            "id",
+            "instruction",
+            "result",
+            "date",
         )
 
 
@@ -340,20 +340,20 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstructionResult
         fields = [
-            'instruction_id',
-            'instruction_agreement',
-            'face_descriptor',
-            'result',
+            "instruction_id",
+            "instruction_agreement",
+            "face_descriptor",
+            "result",
         ]
         extra_kwargs = {
-            'instruction_id': {'source': 'instruction', 'required': True},
-            'result': {'read_only': True},
+            "instruction_id": {"source": "instruction", "required": True},
+            "result": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.valid_agreement_keys = set(
-            InstructionAgreement.objects.values_list('name', flat=True)
+            InstructionAgreement.objects.values_list("name", flat=True)
         )
 
     def validate_instruction_agreement(self, value):
@@ -373,35 +373,35 @@ class InstructionResultSerializer(serializers.ModelSerializer):
             input_descriptor = np.array(value, dtype=np.float32)
             if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:
                 raise serializers.ValidationError(
-                    'Дескриптор лица должен содержать 128 элементов'
+                    "Дескриптор лица должен содержать 128 элементов"
                 )
 
             if not is_face_already_registered(input_descriptor):
                 raise serializers.ValidationError(
-                    'Лицо не распознано. Пройдите аутентификацию.'
+                    "Лицо не распознано. Пройдите аутентификацию."
                 )
 
             return input_descriptor
         except Exception as e:
             raise serializers.ValidationError(
-                f'Ошибка обработки дескриптора лица: {str(e)}'
+                f"Ошибка обработки дескриптора лица: {str(e)}"
             )
 
     def validate(self, data):
         """Проверяем, что хотя бы одно согласие получено."""
-        agreements = data.get('instruction_agreement', [])
+        agreements = data.get("instruction_agreement", [])
 
         if not any(list(agreement.values())[0] for agreement in agreements):
             raise serializers.ValidationError(
-                'Необходимо подтвердить хотя бы одно согласие'
+                "Необходимо подтвердить хотя бы одно согласие"
             )
         return data
 
     def create(self, validated_data):
         """Создаем запись о результате инструктажа с сохранением согласий."""
-        request = self.context.get('request')
-        agreements_data = validated_data.pop('instruction_agreement')
-        face_descriptor = validated_data.pop('face_descriptor')
+        request = self.context.get("request")
+        agreements_data = validated_data.pop("instruction_agreement")
+        face_descriptor = validated_data.pop("face_descriptor")
 
         is_passed = any(
             list(agreement.values())[0] for agreement in agreements_data
@@ -409,7 +409,7 @@ class InstructionResultSerializer(serializers.ModelSerializer):
 
         instruction_result = InstructionResult.objects.create(
             user=request.user,
-            instruction=validated_data['instruction'],
+            instruction=validated_data["instruction"],
             result=is_passed,
         )
 
@@ -434,7 +434,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ('id', 'name', 'is_correct')
+        fields = ("id", "name", "is_correct")
 
 
 class ReferenceLinkSerializer(serializers.ModelSerializer):
@@ -442,7 +442,7 @@ class ReferenceLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReferenceLink
-        fields = ('id', 'title', 'source')
+        fields = ("id", "title", "source")
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -454,32 +454,32 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = (
-            'id',
-            'name',
-            'question_type',
-            'points',
-            'answers',
-            'explanation',
-            'reference_link',
-            'image',
+            "id",
+            "name",
+            "question_type",
+            "points",
+            "answers",
+            "explanation",
+            "reference_link",
+            "image",
         )
 
     def to_representation(self, instance):
         """Переопределяем представление для исключения
         explanation при необходимости."""
         data = super().to_representation(instance)
-        if self.context.get('test_is_control', False):
-            data.pop('explanation', None)
+        if self.context.get("test_is_control", False):
+            data.pop("explanation", None)
         return data
 
 
 class UserAnswerSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='question.id')
-    selected_id = serializers.IntegerField(source='selected_answer.id')
+    id = serializers.IntegerField(source="question.id")
+    selected_id = serializers.IntegerField(source="selected_answer.id")
 
     class Meta:
         model = UserAnswer
-        fields = ('id', 'selected_id', 'is_correct')
+        fields = ("id", "selected_id", "is_correct")
 
 
 class TestResultSerializer(serializers.ModelSerializer):
@@ -488,14 +488,14 @@ class TestResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
         fields = (
-            'id',
-            'is_passed',
-            'mark',
-            'score',
-            'total_points',
-            'start_time',
-            'completion_time',
-            'test_duration',
+            "id",
+            "is_passed",
+            "mark",
+            "score",
+            "total_points",
+            "start_time",
+            "completion_time",
+            "test_duration",
         )
 
 
@@ -507,19 +507,19 @@ class TestResultCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
         fields = (
-            'test',
-            'mark',
-            'is_passed',
-            'start_time',
-            'completion_time',
-            'test_duration',
-            'score',
-            'total_points',
-            'user_answers',
+            "test",
+            "mark",
+            "is_passed",
+            "start_time",
+            "completion_time",
+            "test_duration",
+            "score",
+            "total_points",
+            "user_answers",
         )
         extra_kwargs = {
-            'test': {'required': True},
-            'mark': {'required': True},
+            "test": {"required": True},
+            "mark": {"required": True},
         }
 
     def create(self, validated_data):
@@ -529,10 +529,10 @@ class TestResultCreateSerializer(serializers.ModelSerializer):
         for answer_data in user_answers_data:
             UserAnswer.objects.create(
                 test_result=test_result,
-                question_id=answer_data['question']['id'],
-                selected_answer_id=answer_data['selected_answer']['id'],
-                is_correct=answer_data['is_correct'],
-                points_earned=answer_data.get('points_earned', 0),
+                question_id=answer_data["question"]["id"],
+                selected_answer_id=answer_data["selected_answer"]["id"],
+                is_correct=answer_data["is_correct"],
+                points_earned=answer_data.get("points_earned", 0),
             )
 
         return test_result
@@ -545,7 +545,7 @@ class BaseTestSerializer(serializers.ModelSerializer):
 
     def get_test_results(self, obj):
         """Общий метод для получения результатов теста"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user.is_authenticated:
             return TestResultSerializer(
                 obj.test_results.filter(user=request.user),
@@ -561,11 +561,11 @@ class TestListSerializer(BaseTestSerializer):
     class Meta:
         model = Tests
         fields = (
-            'id',
-            'name',
-            'description',
-            'test_is_control',
-            'test_results',
+            "id",
+            "name",
+            "description",
+            "test_is_control",
+            "test_results",
         )
 
 
@@ -578,26 +578,26 @@ class TestSerializer(BaseTestSerializer):
     class Meta:
         model = Tests
         fields = (
-            'id',
-            'name',
-            'description',
-            'test_is_control',
-            'passing_score',
-            'total_points',
-            'test_results',
-            'questions',
+            "id",
+            "name",
+            "description",
+            "test_is_control",
+            "passing_score",
+            "total_points",
+            "test_results",
+            "questions",
         )
 
     def get_questions(self, obj):
         """Метод для получения вопросов теста"""
         questions = obj.questions.all()
 
-        limit = getattr(settings, 'TEST_QUESTIONS_LIMIT')
+        limit = getattr(settings, "TEST_QUESTIONS_LIMIT")
         if limit:
-            questions = questions.order_by('?')[:limit]
+            questions = questions.order_by("?")[:limit]
 
         question_context = self.context.copy()
-        question_context['test_is_control'] = obj.test_is_control
+        question_context["test_is_control"] = obj.test_is_control
 
         return QuestionSerializer(
             questions, many=True, context=question_context
@@ -606,13 +606,13 @@ class TestSerializer(BaseTestSerializer):
     def get_total_points(self, obj):
         """Вычисляем сумму баллов выбранных вопросов"""
         questions = self.get_questions(obj)
-        return sum(q['points'] for q in questions)
+        return sum(q["points"] for q in questions)
 
 
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ('id', 'type', 'url', 'title', 'file', 'date')
+        fields = ("id", "type", "url", "title", "file", "date")
 
 
 class NormativeLegislationSerializer(serializers.ModelSerializer):
@@ -620,7 +620,7 @@ class NormativeLegislationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NormativeLegislation
-        fields = ('id', 'title', 'description', 'url', 'file', 'date')
+        fields = ("id", "title", "description", "url", "file", "date")
         read_only_fields = fields
 
 

@@ -26,7 +26,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "name",
-                    models.CharField(max_length=50, verbose_name="Название смены"),
+                    models.CharField(
+                        max_length=50, verbose_name="Название смены"
+                    ),
                 ),
                 ("start_time", models.TimeField(verbose_name="Время начала")),
                 ("end_time", models.TimeField(verbose_name="Время окончания")),

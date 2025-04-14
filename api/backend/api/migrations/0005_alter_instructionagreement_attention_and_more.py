@@ -7,81 +7,81 @@ class Migration(migrations.Migration):
 
     dependencies = [
         (
-            'api',
-            '0004_rename_ispassed_instructionagreement_is_passed_and_more',
+            "api",
+            "0004_rename_ispassed_instructionagreement_is_passed_and_more",
         ),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='attention',
+            model_name="instructionagreement",
+            name="attention",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Внимание'
+                blank=True, null=True, verbose_name="Внимание"
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='compliance',
+            model_name="instructionagreement",
+            name="compliance",
             field=models.TextField(
                 blank=True,
                 null=True,
-                verbose_name='Соблюдение правил техники безопасности',
+                verbose_name="Соблюдение правил техники безопасности",
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='emergency',
+            model_name="instructionagreement",
+            name="emergency",
             field=models.TextField(
                 blank=True,
                 null=True,
-                verbose_name='Правила действий при возникновении чрезвычайных ситуаций',
+                verbose_name="Правила действий при возникновении чрезвычайных ситуаций",
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='health',
+            model_name="instructionagreement",
+            name="health",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Состояние здоровья'
+                blank=True, null=True, verbose_name="Состояние здоровья"
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='is_passed',
-            field=models.TextField(
-                blank=True,
-                null=True,
-                verbose_name='Прошел инструктаж по безопасности',
-            ),
-        ),
-        migrations.AlterField(
-            model_name='instructionagreement',
-            name='is_provided',
+            model_name="instructionagreement",
+            name="is_passed",
             field=models.TextField(
                 blank=True,
                 null=True,
-                verbose_name='Предоставлены средства индивидуальной защиты',
+                verbose_name="Прошел инструктаж по безопасности",
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='med_aid',
+            model_name="instructionagreement",
+            name="is_provided",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Первая помощь'
+                blank=True,
+                null=True,
+                verbose_name="Предоставлены средства индивидуальной защиты",
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='no_alcohol',
+            model_name="instructionagreement",
+            name="med_aid",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Отказ от алкоголя'
+                blank=True, null=True, verbose_name="Первая помощь"
             ),
         ),
         migrations.AlterField(
-            model_name='instructionagreement',
-            name='report',
+            model_name="instructionagreement",
+            name="no_alcohol",
             field=models.TextField(
-                blank=True, null=True, verbose_name='Доклад'
+                blank=True, null=True, verbose_name="Отказ от алкоголя"
+            ),
+        ),
+        migrations.AlterField(
+            model_name="instructionagreement",
+            name="report",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Доклад"
             ),
         ),
     ]

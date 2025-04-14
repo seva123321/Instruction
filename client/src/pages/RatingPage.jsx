@@ -40,3 +40,4 @@ function RatingPage() {
 }
 
 export default RatingPage
+

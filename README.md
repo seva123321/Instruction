@@ -99,6 +99,30 @@ Quit the server with CONTROL-C.
 python: can't open file 'manage.py'[Errno 2] No such file or directory
 ```
 убедитесь, что вы находитесь в корневой директории проекта
+
+Далее открываем ещё два терминала и активируем работу Celery.
+```
+celery -A backend.celery_app worker -l info -P gevent
+celery -A backend.celery_app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+```
+Проверяем работу Redis
+```
+sudo systemctl status redis
+
+# Вывод команды:
+ redis-server.service - Advanced key-value store
+     Loaded: loaded (/lib/systemd/system/redis-server.service; enabled; vendor >
+     Active: **active (running)** since Mon 2025-04-14 08:25:20 MSK; 10h ago
+       Docs: http://redis.io/documentation,
+             man:redis-server(1)
+   Main PID: 1143 (redis-server)
+     Status: "Ready to accept connections"
+      Tasks: 5 (limit: 18715)
+     Memory: 5.1M
+        CPU: 23.894s
+     CGroup: /system.slice/redis-server.service
+             └─1143 "/usr/bin/redis-server 127.0.0.1:6379" "" "" "" "" "" "" ""vvvvvvv
+```
 #### Frontend
 Запускаем сервер
 ```

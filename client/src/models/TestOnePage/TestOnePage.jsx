@@ -1,6 +1,6 @@
 /* eslint-disable operator-linebreak */
 import { memo, useMemo, useCallback, useEffect, useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
 import {
   Box,
@@ -88,6 +88,7 @@ function LoadingState() {
 }
 
 function NotFoundState({ isOnline }) {
+  const navigate = useNavigate()
   return (
     <Box sx={{ p: 3, textAlign: 'center' }}>
       <Typography variant="h6">
@@ -97,9 +98,9 @@ function NotFoundState({ isOnline }) {
         <Button
           variant="contained"
           sx={{ mt: 2 }}
-          onClick={() => window.location.reload()}
+          onClick={() => navigate('/tests')}
         >
-          Обновить страницу
+          Вернуться к списку тестов
         </Button>
       )}
     </Box>

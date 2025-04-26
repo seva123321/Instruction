@@ -89,14 +89,10 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(
     async (cb) => {
-      try {
-        await postLogout().unwrap()
-        secureStorage.remove('user')
-        setUser(null)
-        cb?.()
-      } catch (error) {
-        throw error
-      }
+      await postLogout().unwrap()
+      secureStorage.remove('user')
+      setUser(null)
+      cb?.()
     },
     [postLogout]
   )

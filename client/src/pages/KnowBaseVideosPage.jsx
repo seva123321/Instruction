@@ -130,7 +130,6 @@ function KnowBaseVideosPage() {
       }),
     [videos, searchQuery, filter]
   )
-
   const handleFilterChange = (_, newFilter) => {
     if (newFilter !== null) setFilter(newFilter)
   }

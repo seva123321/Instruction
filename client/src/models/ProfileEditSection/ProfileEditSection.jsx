@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   Typography,
-  Container,
   Paper,
   InputAdornment,
   useMediaQuery,
@@ -14,9 +13,6 @@ import {
   Avatar,
   Divider,
   Chip,
-  Slide,
-  Fade,
-  CircularProgress,
 } from '@mui/material'
 import {
   Save as SaveIcon,
@@ -26,6 +22,7 @@ import {
   Work as WorkIcon,
   Info as InfoIcon,
 } from '@mui/icons-material'
+import { format } from 'date-fns'
 
 import { usePatchProfileMutation } from '@/slices/userApi'
 import {
@@ -35,7 +32,6 @@ import {
 } from '@/service/utilsFunction'
 import DatePicker from '@/components/DatePicker'
 import MessageAlert from '@/components/MessageAlert'
-import { format } from 'date-fns'
 
 function ProfileEditSection({ profileData }) {
   const {

@@ -20,7 +20,7 @@ import { isEmail } from '@/service/utilsFunction'
 import Recognition from '@/models/Recognition'
 import CustomLink from '@/components/CustomLink'
 import PasswordInput from '@/components/PasswordInput'
-import MessageAlert from '@/components/MessageAlert/MessageAlert'
+import MessageAlert from '@/components/MessageAlert'
 
 function LoginModel() {
   const navigate = useNavigate()

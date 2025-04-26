@@ -1,3 +1,3 @@
-import { Alert } from '@mui/material'
+import MessageAlert from './MessageAlert'
 
-export default Alert
+export default MessageAlert

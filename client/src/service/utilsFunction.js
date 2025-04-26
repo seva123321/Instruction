@@ -80,3 +80,26 @@ export const areTestsEqual = (test1, test2) => {
     return test1[key] === test2[key]
   })
 }
+
+export const secureStorage = {
+  set: (key, value) => {
+    try {
+      const encoded = btoa(encodeURIComponent(JSON.stringify(value)))
+      localStorage.setItem(key, encoded)
+    } catch (error) {
+      throw new Error('SecureStorage set error:', error)
+    }
+  },
+  get: (key) => {
+    try {
+      const encoded = localStorage.getItem(key)
+      if (!encoded) return null
+      return JSON.parse(decodeURIComponent(atob(encoded)))
+    } catch (error) {
+      throw new Error('SecureStorage get error:', error)
+    }
+  },
+  remove: (key) => {
+    localStorage.removeItem(key)
+  },
+}

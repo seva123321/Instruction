@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
@@ -5,12 +6,14 @@ import {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
-} from '../slices/userApi'
+  useCheckSessionMutation,
+} from '@/slices/userApi'
+import { secureStorage } from '@/service/utilsFunction'
 
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => secureStorage.get('user'))
   const [isInitialized, setIsInitialized] = useState(false)
 
   const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
@@ -23,41 +26,62 @@ export function AuthProvider({ children }) {
   ] = useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout, error: logoutError }] =
     useLogoutMutation()
+  const [checkSession] = useCheckSessionMutation()
 
   useEffect(() => {
-    const checkSession = () => {
-      const hasSession = document.cookie.includes('sessionid')
-      setUser(hasSession ? { isAuthenticated: true } : null)
-      setIsInitialized(true)
+    const verifySession = async () => {
+      try {
+        const { data } = await checkSession().unwrap()
+
+        if (data?.user) {
+          const userData = { ...data.user, isAuthenticated: true }
+          secureStorage.set('user', userData)
+          setUser(userData)
+        }
+      } catch (error) {
+        if (error?.data?.error !== 401) {
+          return
+        }
+        secureStorage.remove('user')
+        setUser(null)
+      } finally {
+        setIsInitialized(true)
+      }
     }
-    checkSession()
-  }, [])
+
+    verifySession()
+  }, [checkSession])
 
   const auth = useCallback(
     async (userData) => {
       try {
         const response = await postSignup(userData).unwrap()
+        secureStorage.set('user', response)
         setUser(response)
         return response
       } catch (error) {
-        return error
+        secureStorage.remove('user')
+        setUser(null)
+        throw error
       }
     },
     [postSignup]
   )
+
   const signIn = useCallback(
     async (authData) => {
       try {
-        let response = ''
-        if (authData.face_descriptor) {
-          response = await postFaceLogin(authData).unwrap()
-        } else {
-          response = await postLogin(authData).unwrap()
-        }
+        const response = authData.face_descriptor
+          ? await postFaceLogin(authData).unwrap()
+          : await postLogin(authData).unwrap()
+
+        secureStorage.set('user', response)
         setUser(response)
         return response
       } catch (error) {
-        return error
+        secureStorage.remove('user')
+        setUser(null)
+        throw error
       }
     },
     [postFaceLogin, postLogin]
@@ -65,11 +89,10 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(
     async (cb) => {
-      const result = await postLogout()
-      if (!result.error) {
-        setUser(null)
-        cb?.()
-      }
+      await postLogout().unwrap()
+      secureStorage.remove('user')
+      setUser(null)
+      cb?.()
     },
     [postLogout]
   )

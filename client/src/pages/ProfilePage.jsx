@@ -48,6 +48,7 @@ import {
   isPhoneNumber,
   formatPhoneNumber,
 } from '@/service/utilsFunction'
+import MessageAlert from '../components/MessageAlert/MessageAlert'
 
 function ProfilePage() {
   const theme = useTheme()
@@ -59,7 +60,7 @@ function ProfilePage() {
     isError: profileError,
   } = useGetProfileQuery()
   const [patchProfile] = usePatchProfileMutation()
-  const [submitError, setSubmitError] = useState(null)
+  const [submitMessage, setSubmitMessage] = useState(null)
 
   const {
     control,
@@ -100,13 +101,17 @@ function ProfilePage() {
 
   const onSubmit = async (data) => {
     try {
-      setSubmitError(null)
+      setSubmitMessage(null)
       const newData = {
         ...data,
         mobile_phone: data.mobile_phone.replaceAll('-', ''),
         birthday: data.birthday ? format(data.birthday, 'yyyy-MM-dd') : null,
       }
       await patchProfile(newData).unwrap()
+      setSubmitMessage({
+        text: 'Данные успешно обновлены!',
+        type: 'success',
+      })
     } catch (err) {
       if (err.data) {
         Object.entries(err.data).forEach(([fieldName, messages]) => {
@@ -116,7 +121,10 @@ function ProfilePage() {
           })
         })
       } else {
-        setSubmitError('Произошла ошибка при обновлении профиля')
+        setSubmitMessage({
+          text: 'Произошла ошибка при обновлении профиля',
+          type: 'error',
+        })
       }
     }
   }
@@ -218,10 +226,8 @@ function ProfilePage() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
       <Container maxWidth="md">
-        {submitError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {submitError}
-          </Alert>
+        {submitMessage && (
+          <MessageAlert message={submitMessage} sx={{ mb: 2 }} />
         )}
         <Slide in direction="up" timeout={300}>
           <Box>
@@ -803,7 +809,7 @@ function ProfilePage() {
                         variant="outlined"
                         error={!!errors.first_name}
                         helperText={errors.first_name?.message}
-                        InputProps={{
+                        slotProps={{
                           startAdornment: (
                             <InputAdornment position="start">
                               <PersonIcon color="action" />
@@ -879,7 +885,7 @@ function ProfilePage() {
                         variant="outlined"
                         error={!!errors.email}
                         helperText={errors.email?.message}
-                        InputProps={{
+                        slotProps={{
                           startAdornment: (
                             <InputAdornment position="start">
                               <EmailIcon
@@ -1011,7 +1017,7 @@ function ProfilePage() {
                         label="Должность"
                         fullWidth
                         variant="outlined"
-                        InputProps={{
+                        slotProps={{
                           startAdornment: (
                             <InputAdornment position="start">
                               <WorkIcon color="action" />

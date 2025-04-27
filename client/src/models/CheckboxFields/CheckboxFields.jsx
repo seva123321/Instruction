@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import {
   FormGroup,
@@ -47,7 +47,7 @@ function CheckboxFields({ agreements = [], id }) {
     return acc
   }, {})
 
-  const { register, handleSubmit, setValue, control, getValues, reset } =
+  const { register, handleSubmit, setValue, control, getValues, reset, watch } =
     useForm({
       defaultValues,
     })
@@ -68,6 +68,8 @@ function CheckboxFields({ agreements = [], id }) {
     defaultValue: false,
   })
 
+  const formValues = watch() // Следим за всеми значениями формы
+
   const hasCompliance = useMemo(
     () => agreements.some((item) => item.name === 'compliance'),
     [agreements]
@@ -79,6 +81,14 @@ function CheckboxFields({ agreements = [], id }) {
 
   const isSubmitValid =
     (!hasCompliance || complianceValue) && (!hasIsPassed || isPassedValue)
+
+  // Эффект для синхронизации состояния "Выбрать все"
+  useEffect(() => {
+    const allAgreementsChecked = agreements.every(
+      (item) => formValues[item.name] === true
+    )
+    setAllChecked(allAgreementsChecked)
+  }, [formValues, agreements])
 
   const handleReset = useCallback(() => {
     reset(defaultValues)
@@ -96,10 +106,9 @@ function CheckboxFields({ agreements = [], id }) {
         setIsSubmitting(true)
         setError(null)
 
-        const formValues = getValues()
         const submissionData = {
           instruction_id: id,
-          instruction_agreement: Object.entries(formValues).map(
+          instruction_agreement: Object.entries(getValues()).map(
             ([key, value]) => ({ [key]: value })
           ),
           face_descriptor: descriptor,
@@ -139,6 +148,10 @@ function CheckboxFields({ agreements = [], id }) {
                 checked={allChecked}
                 onChange={handleSelectAll}
                 size="medium"
+                indeterminate={
+                  !allChecked &&
+                  agreements.some((item) => formValues[item.name] === true)
+                }
               />
             }
             label={

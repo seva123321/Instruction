@@ -1,6 +1,9 @@
+import json
 import random
+import os
 
 from django.conf import settings
+from dotenv import load_dotenv
 import numpy as np
 from rest_framework import serializers
 
@@ -23,7 +26,11 @@ from api.models import (
     Badge,
     Rank,
 )
-from api.utils.utils import is_face_already_registered
+from api.utils.utils import (
+    decrypt_descriptor,
+    encrypt_descriptor,
+    is_face_already_registered
+)
 from api.utils.validators import normalize_phone_number
 from backend.constants import (
     MAX_LENGTH_FACE_DESCRIPTOR,
@@ -33,6 +40,14 @@ from backend.constants import (
     MAX_LENGTH_PHONE,
     MAX_LENGTH_PASSWORD,
 )
+
+load_dotenv()
+
+AES_TRANSPORT_KEY = os.getenv("AES_TRANSPORT_KEY")
+AES_STORAGE_KEY = os.getenv("AES_STORAGE_KEY")
+
+AES_TRANSPORT_KEY = AES_TRANSPORT_KEY.encode()
+AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -159,9 +174,7 @@ class SignUpSerializer(serializers.Serializer):
     mobile_phone = serializers.CharField(
         max_length=MAX_LENGTH_PHONE, required=True
     )
-    face_descriptor = serializers.ListField(
-        child=serializers.FloatField(), max_length=MAX_LENGTH_FACE_DESCRIPTOR
-    )
+    face_descriptor = serializers.DictField()
 
     def validate(self, data):
         errors = {}
@@ -192,23 +205,32 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_face_descriptor(self, value):
         try:
-            input_descriptor = np.array(value, dtype=np.float32)
-        except:
-            raise serializers.ValidationError(
-                "Неправильный формат дескриптора лица"
+            decrypted_descriptor = decrypt_descriptor(
+                value,
+                AES_TRANSPORT_KEY
+            )
+            input_descriptor = np.array(
+                decrypted_descriptor,
+                dtype=np.float32
             )
 
-        if len(input_descriptor) != 128:
-            raise serializers.ValidationError(
-                "Дескриптор лица должен содержать 128 элементов"
-            )
+            if len(input_descriptor) != 128:
+                raise serializers.ValidationError(
+                    "Дескриптор лица должен содержать 128 элементов"
+                )
 
-        if is_face_already_registered(input_descriptor):
-            raise serializers.ValidationError(
-                "Пользователь с таким дескриптором лица уже существует"
-            )
+            if is_face_already_registered(input_descriptor):
+                raise serializers.ValidationError(
+                    "Пользователь с таким дескриптором лица уже существует"
+                )
 
-        return value
+            return input_descriptor
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
+        except Exception as e:
+            raise serializers.ValidationError(
+                f"Неправильный формат дескриптора лица: {str(e)}"
+            )
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -234,18 +256,20 @@ class SignUpSerializer(serializers.Serializer):
         return normalized_phone
 
     def create(self, validated_data):
-        face_descriptor = validated_data.pop("face_descriptor")
-        try:
-            if not isinstance(face_descriptor, np.ndarray):
-                face_descriptor = np.array(face_descriptor, dtype=np.float32)
+        face_descriptor = validated_data.pop(
+            "face_descriptor"
+        )
 
-            validated_data["face_descriptor"] = str(face_descriptor.tolist())
+        try:
+            # Шифруем дескриптор для хранения
+            encrypted_descriptor = encrypt_descriptor(face_descriptor, AES_STORAGE_KEY)
+            validated_data["face_descriptor"] = json.dumps(encrypted_descriptor)
+
+            return User.objects.create_user(**validated_data)
         except Exception as e:
             raise serializers.ValidationError(
                 {"face_descriptor": f"Ошибка обработки дескриптора: {str(e)}"}
             )
-
-        return User.objects.create_user(**validated_data)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -333,9 +357,7 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         child=serializers.DictField(child=serializers.BooleanField()),
         required=True,
     )
-    face_descriptor = serializers.ListField(
-        child=serializers.FloatField(), write_only=True, required=True
-    )
+    face_descriptor = serializers.DictField(write_only=True, required=True)
 
     class Meta:
         model = InstructionResult
@@ -370,7 +392,10 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     def validate_face_descriptor(self, value):
         """Проверяем, что лицо соответствует зарегистрированному пользователю."""
         try:
-            input_descriptor = np.array(value, dtype=np.float32)
+            # Дешифруем дескриптор от клиента
+            decrypted_descriptor = decrypt_descriptor(value, AES_TRANSPORT_KEY)
+            input_descriptor = np.array(decrypted_descriptor, dtype=np.float32)
+
             if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:
                 raise serializers.ValidationError(
                     "Дескриптор лица должен содержать 128 элементов"
@@ -382,6 +407,8 @@ class InstructionResultSerializer(serializers.ModelSerializer):
                 )
 
             return input_descriptor
+        except ValueError as e:
+            raise serializers.ValidationError(str(e))
         except Exception as e:
             raise serializers.ValidationError(
                 f"Ошибка обработки дескриптора лица: {str(e)}"
@@ -398,19 +425,32 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        """Создаем запись о результате инструктажа с сохранением согласий."""
+        """Создаем запись о результате инструктажа."""
         request = self.context.get("request")
         agreements_data = validated_data.pop("instruction_agreement")
         face_descriptor = validated_data.pop("face_descriptor")
 
-        is_passed = any(
-            list(agreement.values())[0] for agreement in agreements_data
-        )
+        try:
+            user_descriptor_encrypted = json.loads(request.user.face_descriptor)
+            user_descriptor = np.array(
+                decrypt_descriptor(user_descriptor_encrypted, AES_STORAGE_KEY),
+                dtype=np.float32,
+            )
+
+            distance = np.linalg.norm(face_descriptor - user_descriptor)
+            if distance >= settings.FACE_MATCH_THRESHOLD:
+                raise serializers.ValidationError(
+                    {"face_descriptor": "Лицо не соответствует текущему пользователю"}
+                )
+        except Exception as e:
+            raise serializers.ValidationError(
+                {"face_descriptor": f"Ошибка верификации: {str(e)}"}
+            )
 
         instruction_result = InstructionResult.objects.create(
             user=request.user,
             instruction=validated_data["instruction"],
-            result=is_passed,
+            result=any(list(agreement.values())[0] for agreement in agreements_data),
         )
 
         agreement_instances = []

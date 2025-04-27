@@ -119,8 +119,9 @@ function CheckboxFields({ agreements = [], id }) {
   const handleSelectAll = (e) => {
     const { checked } = e.target
     setAllChecked(checked)
-    agreements.forEach((item) =>
-      setValue(item.name, checked, { shouldValidate: true })
+    agreements.forEach(
+      (item) => setValue(item.name, checked, { shouldValidate: true })
+      // eslint-disable-next-line function-paren-newline
     )
   }
 
@@ -163,10 +164,12 @@ function CheckboxFields({ agreements = [], id }) {
         btnIcon={<LinkedCameraIcon />}
         disabled={!isSubmitValid || isSubmitting}
         onFaceDescriptor={submitFormData}
-        onCameraError={(err) =>
-          handleError(
-            `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`
-          )
+        onCameraError={
+          (err) =>
+            handleError(
+              `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`
+            )
+          // eslint-disable-next-line react/jsx-curly-newline
         }
       />
 

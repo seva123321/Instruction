@@ -1,7 +1,7 @@
 /* eslint-disable indent */
 /* eslint-disable operator-linebreak */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Button,
@@ -35,13 +35,14 @@ function LoginModel() {
 
   const [faceDescriptor, setFaceDescriptor] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
-  const [errorsServer, setErrorsServer] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({})
   const { signIn, isLoading } = useAuth()
 
   const fromPage = location.state?.from?.pathname || '/instructions'
 
   const onSubmit = async (data) => {
     setErrorMessage(null)
+    setFieldErrors({})
     try {
       const authData = faceDescriptor
         ? { face_descriptor: faceDescriptor }
@@ -51,16 +52,17 @@ function LoginModel() {
           }
 
       const result = await signIn(authData)
-
-      if (result.status && !/^2/.test(String(result.status))) {
-        setErrorsServer(result.data.errors)
-      } else {
-        reset()
-        navigate(fromPage, { replace: true, state: result.data })
-      }
+      reset()
+      navigate(fromPage, { replace: true, state: result })
     } catch (error) {
+      if (error.data?.errors) {
+        setFieldErrors(error.data.errors)
+      }
       setErrorMessage({
-        text: error.message || 'Произошла непредвиденная ошибка',
+        text:
+          error.data?.detail ||
+          error.message ||
+          'Произошла непредвиденная ошибка',
         type: 'error',
       })
     }
@@ -68,14 +70,13 @@ function LoginModel() {
 
   const handleFaceDescriptor = async (data) => {
     setFaceDescriptor(data)
+    setFieldErrors({})
+    setErrorMessage(null)
 
     try {
-      const success = await signIn({ face_descriptor: data })
-
-      if (success) {
-        reset()
-        navigate(fromPage, { replace: true })
-      }
+      const result = await signIn({ face_descriptor: data })
+      reset()
+      navigate(fromPage, { replace: true, state: result })
     } catch (error) {
       setErrorMessage({
         text: 'Не удалось войти по лицу. Попробуйте пароль',
@@ -88,13 +89,8 @@ function LoginModel() {
   const handleSwitchToPassword = () => {
     setFaceDescriptor(null)
     setErrorMessage(null)
+    setFieldErrors({})
   }
-
-  useEffect(() => {
-    if (errorsServer?.admin) {
-      navigate(`${errorsServer?.admin}`, { replace: true })
-    }
-  }, [errorsServer, navigate])
 
   return (
     <div>
@@ -126,6 +122,7 @@ function LoginModel() {
                   marginBottom: 2,
                 }}
                 variant="outlined"
+                error={!!errors.email || !!fieldErrors.email}
               >
                 <InputLabel htmlFor="email">Логин (почта)</InputLabel>
                 <Controller
@@ -148,7 +145,7 @@ function LoginModel() {
                   )}
                 />
                 <FormHelperText error>
-                  {errors.email?.message || errorsServer?.email}
+                  {errors.email?.message || fieldErrors.email}
                 </FormHelperText>
               </FormControl>
 
@@ -158,7 +155,7 @@ function LoginModel() {
                 control={control}
                 errors={{
                   ...errors,
-                  password: errors.password || errorsServer?.password,
+                  password: errors.password || fieldErrors.password,
                 }}
                 watch={watch}
                 disabled={isLoading}
@@ -175,7 +172,7 @@ function LoginModel() {
               })
             }}
           />
-          <FormHelperText error>{errorsServer?.face_descriptor}</FormHelperText>
+          <FormHelperText error>{fieldErrors.face_descriptor}</FormHelperText>
 
           {faceDescriptor && (
             <Button

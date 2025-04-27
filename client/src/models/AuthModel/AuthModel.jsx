@@ -34,33 +34,68 @@ function AuthModel() {
     control,
   } = useForm({ mode: 'onBlur' })
 
-  const { auth, isLoading, error: authError } = useAuth()
+  const { auth, isLoading } = useAuth()
   const [faceDescriptor, setFaceDescriptor] = useState(null)
-  const [errorsServer, setErrorsServer] = useState(null)
+  const [serverErrors, setServerErrors] = useState({})
+  const [globalError, setGlobalError] = useState(null)
   const fromPage = location.state?.from?.pathname || '/instructions'
 
   const onSubmit = async (data) => {
-    if (!faceDescriptor) return
-
-    const userData = {
-      ...data,
-      mobile_phone: data.mobile_phone.replaceAll('-', ''),
-      face_descriptor: faceDescriptor,
+    if (!faceDescriptor) {
+      setGlobalError({
+        text: 'Необходимо пройти регистрацию лица',
+        type: 'error',
+      })
+      return
     }
-    delete userData.confirmPassword
 
-    const result = await auth(userData)
+    setGlobalError(null)
+    setServerErrors({})
 
-    if (result.status && !/^2/.test(String(result.status))) {
-      setErrorsServer(result.data)
-    } else {
+    try {
+      const userData = {
+        ...data,
+        mobile_phone: data.mobile_phone.replaceAll('-', ''),
+        face_descriptor: faceDescriptor,
+      }
+      delete userData.confirmPassword
+
+      const result = await auth(userData)
       reset()
-      navigate(fromPage, { replace: true, state: result.data })
+      navigate(fromPage, { replace: true, state: result })
+    } catch (error) {
+      if (error.data) {
+        // Обрабатываем ошибки в формате { field: [error1, error2] }
+        const formattedErrors = {}
+        Object.entries(error.data).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            formattedErrors[field] = messages.join(', ')
+          } else {
+            formattedErrors[field] = messages
+          }
+        })
+        setServerErrors(formattedErrors)
+      }
+
+      setGlobalError({
+        text:
+          error.data?.detail ||
+          error.message ||
+          'Ошибка регистрации. Попробуйте снова.',
+        type: 'error',
+      })
     }
   }
 
   const handleFaceDescriptor = (data) => {
     setFaceDescriptor(data)
+    setServerErrors((prev) => ({ ...prev, face_descriptor: null }))
+    setGlobalError(null)
+  }
+
+  // eslint-disable-next-line arrow-body-style
+  const getServerError = (fieldName) => {
+    return serverErrors[fieldName] || null
   }
 
   return (
@@ -92,6 +127,7 @@ function AuthModel() {
               marginBottom: 2,
             }}
             variant="outlined"
+            error={!!errors.first_name || !!getServerError('first_name')}
           >
             <InputLabel htmlFor="first_name">Имя</InputLabel>
             <Controller
@@ -118,7 +154,7 @@ function AuthModel() {
               )}
             />
             <FormHelperText error>
-              {errors.first_name?.message || errorsServer?.first_name?.at()}
+              {errors.first_name?.message || getServerError('first_name')}
             </FormHelperText>
           </FormControl>
 
@@ -129,6 +165,7 @@ function AuthModel() {
               marginBottom: 2,
             }}
             variant="outlined"
+            error={!!errors.last_name || !!getServerError('last_name')}
           >
             <InputLabel htmlFor="last_name">Фамилия</InputLabel>
             <Controller
@@ -154,17 +191,18 @@ function AuthModel() {
               )}
             />
             <FormHelperText error>
-              {errors.last_name?.message || errorsServer?.last_name?.at()}
+              {errors.last_name?.message || getServerError('last_name')}
             </FormHelperText>
           </FormControl>
 
-          {/* Поле для email */}
+          {/* Email */}
           <FormControl
             sx={{
               width: '100%',
               marginBottom: 2,
             }}
             variant="outlined"
+            error={!!errors.email || !!getServerError('email')}
           >
             <InputLabel htmlFor="email">Почта</InputLabel>
             <Controller
@@ -188,17 +226,18 @@ function AuthModel() {
               )}
             />
             <FormHelperText error>
-              {errors.email?.message || errorsServer?.email?.at()}
+              {errors.email?.message || getServerError('email')}
             </FormHelperText>
           </FormControl>
 
-          {/* Поле для телефона */}
+          {/* Телефон */}
           <FormControl
             sx={{
               width: '100%',
               marginBottom: 2,
             }}
             variant="outlined"
+            error={!!errors.mobile_phone || !!getServerError('mobile_phone')}
           >
             <InputLabel htmlFor="mobile_phone">Телефон</InputLabel>
             <Controller
@@ -226,7 +265,7 @@ function AuthModel() {
               )}
             />
             <FormHelperText error>
-              {errors.mobile_phone?.message || errorsServer?.mobile_phone?.at()}
+              {errors.mobile_phone?.message || getServerError('mobile_phone')}
             </FormHelperText>
           </FormControl>
 
@@ -235,7 +274,10 @@ function AuthModel() {
             name="password"
             label="Пароль"
             control={control}
-            errors={errors}
+            errors={{
+              ...errors,
+              password: errors.password || getServerError('password'),
+            }}
             watch={watch}
           />
 
@@ -244,32 +286,34 @@ function AuthModel() {
             name="confirmPassword"
             label="Повторите пароль"
             control={control}
-            errors={errors}
+            errors={{
+              ...errors,
+              confirmPassword:
+                errors.confirmPassword || getServerError('confirmPassword'),
+            }}
             watch={watch}
           />
 
           <Recognition
             onFaceDescriptor={handleFaceDescriptor}
             onCameraError={(err) => {
-              MessageAlert.show({
-                text: `Ошибка доступа к камере. ${err}`,
+              setGlobalError({
+                text: `Ошибка доступа к камере: ${err.message || 'Не удалось получить доступ'}`,
                 type: 'error',
               })
             }}
           />
           <FormHelperText error>
-            {errorsServer?.face_descriptor?.at()}
+            {getServerError('face_descriptor')}
           </FormHelperText>
 
-          {/* Отображение ошибок из провайдера */}
-          {authError && (
+          {globalError && (
             <MessageAlert
               message={{
-                text:
-                  authError.data?.message ||
-                  'Ошибка регистрации. Попробуйте снова.',
-                type: 'error',
+                text: globalError.text,
+                type: globalError.type,
               }}
+              clearErrors={() => setGlobalError(null)}
             />
           )}
 
@@ -280,7 +324,7 @@ function AuthModel() {
             fullWidth
             sx={{ mt: 2 }}
           >
-            {isLoading ? <CircularProgress /> : 'Зарегистрироваться'}
+            {isLoading ? <CircularProgress size={24} /> : 'Зарегистрироваться'}
           </Button>
         </Box>
       </form>

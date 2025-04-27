@@ -16,16 +16,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => secureStorage.get('user'))
   const [isInitialized, setIsInitialized] = useState(false)
 
-  const [postLogin, { isLoading: isLoadingLogin, error: loginError }] =
-    useLoginMutation()
-  const [postSignup, { isLoading: isLoadingSignup, error: signupError }] =
-    useSignUpMutation()
-  const [
-    postFaceLogin,
-    { isLoading: isLoadingFaceLogin, error: faceLoginError },
-  ] = useFaceLoginMutation()
-  const [postLogout, { isLoading: isLoadingLogout, error: logoutError }] =
-    useLogoutMutation()
+  const [postLogin, { isLoading: isLoadingLogin }] = useLoginMutation()
+  const [postSignup, { isLoading: isLoadingSignup }] = useSignUpMutation()
+  const [postFaceLogin, { isLoading: isLoadingFaceLogin }] =
+    useFaceLoginMutation()
+  const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
   const [checkSession] = useCheckSessionMutation()
 
   useEffect(() => {
@@ -39,7 +34,7 @@ export function AuthProvider({ children }) {
           setUser(userData)
         }
       } catch (error) {
-        if (error?.data?.error !== 401) {
+        if (error?.status !== 401 && error?.originalStatus !== 401) {
           return
         }
         secureStorage.remove('user')
@@ -109,7 +104,6 @@ export function AuthProvider({ children }) {
         isLoadingSignup ||
         isLoadingFaceLogin ||
         isLoadingLogout,
-      error: loginError || signupError || faceLoginError || logoutError,
     }),
     [
       user,
@@ -121,10 +115,6 @@ export function AuthProvider({ children }) {
       isLoadingSignup,
       isLoadingFaceLogin,
       isLoadingLogout,
-      loginError,
-      signupError,
-      faceLoginError,
-      logoutError,
     ]
   )
 

@@ -12,7 +12,7 @@ import { format, isSameMonth, isSameDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { Close, School, Quiz } from '@mui/icons-material'
 
-import TestResultsTooltip from '../TestResultsTooltip/TestResultsTooltip'
+import TestResultsTooltip from '@/components/TestResultsTooltip'
 
 function CalendarDay({
   day,
@@ -198,7 +198,7 @@ function CalendarDay({
         <Tooltip
           open={open}
           title={
-            <Paper sx={{ p: 2, maxWidth: 400 }}>
+            <Paper sx={dayStyles.mobileTooltip}>
               <Typography variant="subtitle1" gutterBottom color="primary">
                 {format(day, 'd MMMM yyyy', { locale: ru })}
               </Typography>

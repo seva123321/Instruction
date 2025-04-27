@@ -36,32 +36,8 @@ const GameStatsSection = memo(({ profileData }) => {
         boxShadow: isMobile ? 'none' : theme.shadows[10],
         position: 'relative',
         overflow: 'hidden',
-        '&:before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '30%',
-          height: '100%',
-          background: `linear-gradient(45deg, ${alpha(theme.palette.primary.main, 0.03)} 0%, transparent 100%)`,
-          zIndex: 0,
-        },
       }}
     >
-      {/* Декоративные элементы */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -50,
-          right: -50,
-          width: 200,
-          height: 200,
-          borderRadius: '50%',
-          background: `radial-gradient(${alpha(theme.palette.primary.main, 0.1)} 0%, transparent 70%)`,
-          zIndex: 0,
-        }}
-      />
-
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         <Typography
           variant="h5"

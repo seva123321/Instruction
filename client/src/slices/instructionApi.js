@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import API_CONFIG from '../config'
 import { getCsrfToken } from '../utils/cookies'
+import encryptWithAESGCM from '../service/cryptoAes'
 
 const instructionApi = createApi({
   reducerPath: 'instructionApi',
@@ -40,7 +41,10 @@ const instructionApi = createApi({
       query: (body) => ({
         url: 'instruction_results/',
         method: 'POST',
-        body,
+        body: {
+          ...body,
+          face_descriptor: encryptWithAESGCM(body.face_descriptor),
+        },
       }),
     }),
   }),

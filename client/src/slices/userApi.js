@@ -4,6 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 import API_CONFIG from '../config'
 import { getCsrfToken } from '../utils/cookies'
+import encryptWithAESGCM from '../service/cryptoAes'
 
 const userApi = createApi({
   reducerPath: 'userApi',
@@ -32,14 +33,19 @@ const userApi = createApi({
       query: (body) => ({
         url: 'auth/signup/',
         method: 'POST',
-        body,
+        body: {
+          ...body,
+          face_descriptor: encryptWithAESGCM(body.face_descriptor),
+        },
       }),
     }),
     faceLogin: build.mutation({
       query: (body) => ({
         url: 'auth/face_login/',
         method: 'POST',
-        body,
+        body: {
+          face_descriptor: encryptWithAESGCM(body.face_descriptor),
+        },
       }),
     }),
     logout: build.mutation({

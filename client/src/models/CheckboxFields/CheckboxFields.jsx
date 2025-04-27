@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import {
   FormGroup,
@@ -16,148 +16,122 @@ import Recognition from '@/models/Recognition'
 import CheckboxList from '@/components/CheckboxList'
 import { usePostInstructionResultsMutation } from '@/slices/instructionApi'
 
-function CheckboxFields({ agreements = [], id }) {
-  const defaultValues = useMemo(
-    () =>
-      (agreements || []).reduce((acc, item) => {
-        if (item && item.name) {
-          acc[item.name] = false
-        }
-        return acc
-      }, {}),
-    [agreements]
-  )
+const formContainerStyles = {
+  border: '1px solid',
+  borderColor: 'divider',
+  borderRadius: 2,
+  p: { xs: 2, sm: 3 },
+  mb: 3,
+  backgroundColor: 'background.paper',
+  boxShadow: 1,
+}
 
-  const { register, handleSubmit, setValue, control, getValues } = useForm({
-    defaultValues,
-  })
+const selectAllStyles = {
+  py: 1,
+  mb: 1,
+  borderBottom: '1px solid',
+  borderColor: 'divider',
+}
+
+const checkboxItemStyles = {
+  py: 1.5,
+  '&:not(:last-child)': {
+    borderBottom: '1px solid',
+    borderColor: 'divider',
+  },
+}
+
+function CheckboxFields({ agreements = [], id }) {
+  const defaultValues = agreements.reduce((acc, item) => {
+    if (item?.name) acc[item.name] = false
+    return acc
+  }, {})
+
+  const { register, handleSubmit, setValue, control, getValues, reset } =
+    useForm({
+      defaultValues,
+    })
+
   const [allChecked, setAllChecked] = useState(false)
-  const [faceDescriptor, setFaceDescriptor] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [postInstructionResults] = usePostInstructionResultsMutation()
-
-  const handleReset = useCallback(() => {
-    Object.keys(defaultValues).forEach((name) => {
-      setValue(name, false, { shouldDirty: false })
-    })
-    setAllChecked(false)
-    setFaceDescriptor(null)
-  }, [defaultValues, setValue])
 
   const complianceValue = useWatch({
     control,
     name: 'compliance',
     defaultValue: false,
   })
-
   const isPassedValue = useWatch({
     control,
     name: 'is_passed',
     defaultValue: false,
   })
 
-  // Проверяем существование нужных чекбоксов
-  const hasCompliance = agreements.some((item) => item.name === 'compliance')
-  const hasIsPassed = agreements.some((item) => item.name === 'is_passed')
+  const hasCompliance = useMemo(
+    () => agreements.some((item) => item.name === 'compliance'),
+    [agreements]
+  )
+  const hasIsPassed = useMemo(
+    () => agreements.some((item) => item.name === 'is_passed'),
+    [agreements]
+  )
 
   const isSubmitValid =
     (!hasCompliance || complianceValue) && (!hasIsPassed || isPassedValue)
+
+  const handleReset = useCallback(() => {
+    reset(defaultValues)
+    setAllChecked(false)
+    setError(null)
+  }, [defaultValues, reset])
+
+  const handleError = useCallback((message, type = 'error') => {
+    setError({ text: message, type })
+  }, [])
 
   const submitFormData = useCallback(
     async (descriptor = null) => {
       try {
         setIsSubmitting(true)
-        setErrorMessage(null)
+        setError(null)
 
-        // Получаем текущие значения формы
         const formValues = getValues()
-
         const submissionData = {
           instruction_id: id,
           instruction_agreement: Object.entries(formValues).map(
-            ([key, value]) => ({
-              [key]: value,
-            })
+            ([key, value]) => ({ [key]: value })
           ),
-          face_descriptor: descriptor || faceDescriptor,
+          face_descriptor: descriptor,
         }
 
         await postInstructionResults(submissionData).unwrap()
-
         handleReset()
-      } catch (error) {
-        setErrorMessage({
-          text: error.message || 'Произошла непредвиденная ошибка',
-          type: 'error',
-        })
+      } catch (err) {
+        handleError(err.message || 'Произошла непредвиденная ошибка')
       } finally {
         setIsSubmitting(false)
       }
     },
-    [getValues, id, faceDescriptor, handleReset, postInstructionResults]
+    [getValues, handleReset, handleError, id, postInstructionResults]
   )
-
-  const onSubmit = async () => {
-    await submitFormData()
-  }
 
   const handleSelectAll = (e) => {
     const { checked } = e.target
     setAllChecked(checked)
-    agreements.forEach((item) => {
+    agreements.forEach((item) =>
       setValue(item.name, checked, { shouldValidate: true })
-    })
-  }
-
-  const handleFaceDescriptor = async (data) => {
-    setFaceDescriptor(data)
-    await submitFormData(data)
-  }
-
-  const styles = {
-    formContainer: {
-      border: '1px solid',
-      borderColor: 'divider',
-      borderRadius: 2,
-      p: {
-        xs: 2,
-        sm: 3,
-      },
-      mb: 3,
-      backgroundColor: 'background.paper',
-      boxShadow: 1,
-    },
-    selectAll: {
-      py: 1,
-      mb: 1,
-      borderBottom: '1px solid',
-      borderColor: 'divider',
-    },
-    checkboxItem: {
-      py: 1.5,
-      '&:not(:last-child)': {
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      },
-    },
-    submitButton: {
-      mt: 3,
-      px: 4,
-      py: 1.5,
-      fontSize: '1rem',
-      fontWeight: 'bold',
-    },
+    )
   }
 
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit(onSubmit)}
-      sx={styles.formContainer}
+      onSubmit={handleSubmit(() => submitFormData())}
+      sx={formContainerStyles}
     >
       <FormGroup>
-        <Box sx={styles.selectAll}>
+        <Box sx={selectAllStyles}>
           <FormControlLabel
             control={
               <Checkbox
@@ -180,7 +154,7 @@ function CheckboxFields({ agreements = [], id }) {
           data={agreements}
           register={register}
           control={control}
-          sx={styles.checkboxItem}
+          sx={checkboxItemStyles}
         />
       </FormGroup>
 
@@ -188,18 +162,18 @@ function CheckboxFields({ agreements = [], id }) {
         buttonName="Подписать инструктаж"
         btnIcon={<LinkedCameraIcon />}
         disabled={!isSubmitValid || isSubmitting}
-        onFaceDescriptor={handleFaceDescriptor}
-        onCameraError={(err) => {
-          setErrorMessage({
-            text: `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`,
-            type: 'error',
-          })
-        }}
+        onFaceDescriptor={submitFormData}
+        onCameraError={(err) =>
+          handleError(
+            `Ошибка камеры: ${err.message || 'Не удалось получить доступ'}`
+          )
+        }
       />
-      {errorMessage && (
+
+      {error && (
         <Alert
-          severity={errorMessage.type}
-          onClose={() => setErrorMessage(null)}
+          severity={error.type}
+          onClose={() => setError(null)}
           sx={{
             position: 'fixed',
             bottom: 40,
@@ -209,7 +183,7 @@ function CheckboxFields({ agreements = [], id }) {
             zIndex: 1000,
           }}
         >
-          {errorMessage.text}
+          {error.text}
         </Alert>
       )}
     </Box>
@@ -223,6 +197,7 @@ CheckboxFields.propTypes = {
       text: PropTypes.string.isRequired,
     })
   ).isRequired,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 }
 
 export default CheckboxFields

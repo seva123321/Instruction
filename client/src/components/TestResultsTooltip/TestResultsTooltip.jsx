@@ -85,7 +85,7 @@ function TestResultsTooltip({ dayEvents }) {
                   Баллы:
                 </Typography>
                 <Typography variant="body2">
-                  {`${event.score}/балл${event.totalPoints}`}
+                  {`${event.score}/${event.totalPoints}`}
                 </Typography>
               </Box>
               <Box display="flex" alignItems="center">

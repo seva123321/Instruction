@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+import os
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
@@ -6,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, models
 from django.http import HttpResponse
 from drf_spectacular.utils import extend_schema
+from dotenv import load_dotenv
 import numpy as np
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -47,7 +50,17 @@ from api.serializers import (
     RatingSerializer,
 )
 from api.permissions import IsAdminPermission
+from api.utils.utils import decrypt_descriptor
 from backend.constants import ME
+
+
+load_dotenv()
+
+AES_TRANSPORT_KEY = os.getenv("AES_TRANSPORT_KEY")
+AES_STORAGE_KEY = os.getenv("AES_STORAGE_KEY")
+
+AES_TRANSPORT_KEY = AES_TRANSPORT_KEY.encode()
+AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
 
 
 @extend_schema(
@@ -252,23 +265,29 @@ class FaceLoginView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # 1. Получаем дескриптор лица из запроса
-        face_descriptor = request.data.get("face_descriptor")
-        if not face_descriptor or len(face_descriptor) != 128:
+        # 1. Получаем зашифрованный дескриптор из запроса
+        encrypted_data = request.data.get("face_descriptor")
+        if not encrypted_data or not all(
+            k in encrypted_data for k in ["iv", "ciphertext", "tag"]
+        ):
             return Response(
-                {
-                    "error": "Неправильный формат дескриптора"
-                    " - должно быть 128 элементов"
-                },
+                {"error": "Неправильный формат зашифрованного дескриптора"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 2. Преобразуем в numpy array
         try:
-            input_descriptor = np.array(face_descriptor, dtype=np.float32)
+            # 2. Дешифруем дескриптор
+            decrypted_descriptor = decrypt_descriptor(encrypted_data, AES_TRANSPORT_KEY)
+            input_descriptor = np.array(decrypted_descriptor, dtype=np.float32)
+
+            if len(input_descriptor) != 128:
+                return Response(
+                    {"error": "Дескриптор лица должен содержать 128 элементов"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Exception as e:
             return Response(
-                {"error": f"Неправильный формат дескриптора: {str(e)}"},
+                {"error": f"Ошибка дешифрования дескриптора: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -278,23 +297,19 @@ class FaceLoginView(APIView):
 
         for user in User.objects.exclude(face_descriptor__isnull=True):
             try:
-                # Преобразуем дескриптор из БД
+                # Дешифруем дескриптор из БД
+                stored_encrypted = json.loads(user.face_descriptor)
                 stored_descriptor = np.array(
-                    eval(user.face_descriptor), dtype=np.float32
+                    decrypt_descriptor(stored_encrypted, AES_STORAGE_KEY),
+                    dtype=np.float32,
                 )
 
-                # Проверяем размерность дескриптора
                 if stored_descriptor.shape != (128,):
-                    continue  # Пропускаем некорректные записи
+                    continue
 
-                # Вычисляем евклидово расстояние
                 distance = np.linalg.norm(input_descriptor - stored_descriptor)
 
-                # Проверяем пороговое значение
-                if (
-                    distance < min_distance
-                    and distance < settings.FACE_MATCH_THRESHOLD
-                ):
+                if distance < min_distance and distance < settings.FACE_MATCH_THRESHOLD:
                     min_distance = distance
                     best_match = user
 

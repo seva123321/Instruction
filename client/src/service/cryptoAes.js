@@ -1,6 +1,7 @@
 import forge from 'node-forge'
 
-const AES_KEY = 'ваш_32_байтный_ключ_шифрования_123!' // 32 байта!
+//'ваш_32_байтный_ключ_шифрования_123!' // 32 байта!
+const AES_KEY = import.meta.env.VITE_API_KEY
 
 const encryptWithAESGCM = (data) => {
   try {

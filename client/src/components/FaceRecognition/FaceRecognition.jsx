@@ -1,5 +1,5 @@
-/* eslint-disable operator-linebreak */
-
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-return-assign */
 import {
   useEffect,
   useRef,
@@ -15,6 +15,18 @@ import { Typography, Container, CircularProgress, Box } from '@mui/material'
 import VideoContainer from '@/components/VideoContainer'
 import MessageAlert from '@/components/MessageAlert'
 
+// Константы для конфигурации
+const MODEL_URL = '/modelFaceApi'
+const DETECTOR_OPTIONS = {
+  inputSize: 256,
+  scoreThreshold: 0.5,
+}
+const BLINK_CONFIG = {
+  cooldown: 500, // 0.5s между морганиями
+  earThreshold: 0.25, // Порог закрытого глаза
+  requiredCount: 2, // Количество морганий для завершения
+}
+
 const loadModelsOnce = (() => {
   let modelsLoaded = false
   let loadingPromise = null
@@ -25,26 +37,15 @@ const loadModelsOnce = (() => {
 
     loadingPromise = (async () => {
       try {
-        const MODEL_URL = '/modelFaceApi'
-        const loadOptions = {
-          fetch: (url, options) =>
-            fetch(url, { ...options, cache: 'force-cache' }),
-        }
-
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL, loadOptions),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri(
-            MODEL_URL,
-            loadOptions
-          ),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL, loadOptions),
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ])
-
         modelsLoaded = true
         return true
       } catch (error) {
-        console.error('Failed to load models:', error)
-        throw error
+        throw new Error(error.message)
       }
     })()
 
@@ -52,136 +53,43 @@ const loadModelsOnce = (() => {
   }
 })()
 
-const LIVENESS_ACTIONS = [
-  { text: 'Поверните голову влево', key: 'turnLeft' },
-  { text: 'Поверните голову вправо', key: 'turnRight' },
-  { text: 'Поверните голову влево и вправо', key: 'turnBoth' },
-]
-
-const THRESHOLDS = {
-  HEAD_TURN_ANGLE: 3, // Угол поворота головы в градусах
-  MIN_TURN_DURATION: 500, // Минимальное время удержания поворота (мс)
-  DESCRIPTORS_COUNT: 3, // Количество собираемых дескрипторов
-}
-
 const FaceRecognition = forwardRef(
   ({ onClose, onFaceDescriptor, onCameraError }, ref) => {
-    const videoRef = useRef(null)
-    const animationFrameRef = useRef(null)
+    // useState
     const [isLoadedModel, setIsLoadedModel] = useState(false)
-    const [isProcessing, setIsProcessing] = useState(false)
     const [message, setMessage] = useState({ text: '', type: '' })
     const [cameraPermissionGranted, setCameraPermissionGranted] =
       useState(false)
-    const [cameraSupported, setCameraSupported] = useState(true)
+    const [blinkCount, setBlinkCount] = useState(0)
+    // useRef
+    const videoRef = useRef(null)
+    const animationFrameRef = useRef(null)
+    const blinkCountRef = useRef(blinkCount)
     const descriptorsRef = useRef([])
-    const [currentAction, setCurrentAction] = useState(null)
-
     const detectorOptions = useRef(
       new faceapi.TinyFaceDetectorOptions({
-        inputSize: 256,
-        scoreThreshold: 0.5,
+        inputSize: DETECTOR_OPTIONS.inputSize,
+        scoreThreshold: DETECTOR_OPTIONS.scoreThreshold,
       })
     )
 
-    const actionState = useRef({
-      completed: false,
-      initialHeadAngle: null,
-      leftTurnCompleted: false,
-      rightTurnCompleted: false,
-      lastTurnTime: 0,
-    })
+    useEffect(() => {
+      blinkCountRef.current = blinkCount
+    }, [blinkCount])
 
-    // Инициализация случайного действия (поворот влево, вправо или оба)
-    const initializeAction = useCallback(() => {
-      const randomAction =
-        LIVENESS_ACTIONS[Math.floor(Math.random() * LIVENESS_ACTIONS.length)]
-      setCurrentAction(randomAction)
-      resetActionState()
+    // Рассчет коэффициента открытости глаза
+    const calculateEyeAspectRatio = useCallback((eyeLandmarks) => {
+      const [p0, p1, p2, p3, p4, p5] = eyeLandmarks.map((p) => ({
+        x: p._x,
+        y: p._y,
+      }))
+      const vertical =
+        (Math.hypot(p1.x - p5.x, p1.y - p5.y) +
+          Math.hypot(p2.x - p4.x, p2.y - p4.y)) /
+        2
+      const horizontal = Math.hypot(p0.x - p3.x, p0.y - p3.y)
+      return vertical / horizontal
     }, [])
-
-    const resetActionState = () => {
-      actionState.current = {
-        completed: false,
-        initialHeadAngle: null,
-        leftTurnCompleted: false,
-        rightTurnCompleted: false,
-        lastTurnTime: 0,
-      }
-    }
-
-    // Расчет угла поворота головы по landmarks
-    const calculateHeadAngle = useCallback((jawline) => {
-      const left = jawline[0]
-      const right = jawline[16]
-      const dx = right.x - left.x
-      const dy = right.y - left.y
-      return Math.atan2(dy, dx) * (180 / Math.PI) // Конвертируем в градусы
-    }, [])
-
-    // Проверка выполнения действия (поворот головы)
-    const checkActionCompletion = useCallback(
-      (landmarks) => {
-        const state = actionState.current
-        if (state.completed) return true
-
-        const jawline = landmarks.getJawOutline()
-        const currentAngle = calculateHeadAngle(jawline)
-        const now = Date.now()
-
-        // Инициализация начального угла
-        if (state.initialHeadAngle === null) {
-          state.initialHeadAngle = currentAngle
-          return false
-        }
-
-        const angleDiff = currentAngle - state.initialHeadAngle
-        const absAngleDiff = Math.abs(angleDiff)
-        console.log('absAngleDiff (degrees) > ', absAngleDiff)
-
-        // Проверка поворота влево
-        if (
-          angleDiff < -THRESHOLDS.HEAD_TURN_ANGLE &&
-          !state.leftTurnCompleted
-        ) {
-          if (now - state.lastTurnTime > THRESHOLDS.MIN_TURN_DURATION) {
-            state.leftTurnCompleted = true
-            state.lastTurnTime = now
-            console.log('Left turn completed')
-          }
-        }
-        // Проверка поворота вправо
-        else if (
-          angleDiff > THRESHOLDS.HEAD_TURN_ANGLE &&
-          !state.rightTurnCompleted
-        ) {
-          if (now - state.lastTurnTime > THRESHOLDS.MIN_TURN_DURATION) {
-            state.rightTurnCompleted = true
-            state.lastTurnTime = now
-            console.log('Right turn completed')
-          }
-        }
-
-        // Проверка завершения действия в зависимости от типа
-        switch (currentAction?.key) {
-          case 'turnLeft':
-            state.completed = state.leftTurnCompleted
-            break
-          case 'turnRight':
-            state.completed = state.rightTurnCompleted
-            break
-          case 'turnBoth':
-            state.completed =
-              state.leftTurnCompleted && state.rightTurnCompleted
-            break
-          default:
-            state.completed = false
-        }
-
-        return state.completed
-      },
-      [currentAction, calculateHeadAngle]
-    )
 
     const cleanupResources = useCallback(() => {
       if (videoRef.current?.srcObject) {
@@ -192,56 +100,12 @@ const FaceRecognition = forwardRef(
         cancelAnimationFrame(animationFrameRef.current)
         animationFrameRef.current = null
       }
-      setIsProcessing(false)
     }, [])
 
     const safeClose = useCallback(() => {
       cleanupResources()
       onClose?.()
     }, [cleanupResources, onClose])
-
-    const showErrorAndClose = useCallback(
-      (errorMessage) => {
-        setMessage({
-          text: errorMessage,
-          type: 'error',
-        })
-        setTimeout(safeClose, 1000)
-      },
-      [safeClose]
-    )
-
-    const checkCameraSupport = useCallback(async () => {
-      try {
-        if (!navigator.mediaDevices?.enumerateDevices) {
-          throw new Error('Camera API not supported')
-        }
-
-        const devices = await navigator.mediaDevices.enumerateDevices()
-        const hasCamera = devices.some((device) => device.kind === 'videoinput')
-        setCameraSupported(hasCamera)
-
-        if (!hasCamera) {
-          setMessage({
-            text: 'Ваше устройство не поддерживает камеру.',
-            type: 'warning',
-          })
-        }
-      } catch (error) {
-        setCameraSupported(false)
-        showErrorAndClose('Не удалось проверить поддержку камеры.')
-      }
-    }, [showErrorAndClose])
-
-    const loadModels = useCallback(async () => {
-      try {
-        setIsLoadedModel(false)
-        await loadModelsOnce()
-        setIsLoadedModel(true)
-      } catch (error) {
-        showErrorAndClose('Ошибка при загрузке моделей распознавания.')
-      }
-    }, [showErrorAndClose])
 
     const startVideo = useCallback(async () => {
       try {
@@ -253,123 +117,113 @@ const FaceRecognition = forwardRef(
             frameRate: { ideal: 24 },
           },
         })
-
         videoRef.current.srcObject = stream
         setCameraPermissionGranted(true)
-        setMessage({ text: '', type: '' })
       } catch (error) {
         if (error.name === 'NotAllowedError') {
-          const errorMessage =
-            'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
-          setMessage({ text: errorMessage, type: 'warning' })
-          onCameraError?.(new Error(errorMessage))
+          setMessage({
+            text: 'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.',
+            type: 'warning',
+          })
+          onCameraError?.(new Error('Camera access denied'))
         } else {
-          showErrorAndClose('Произошла ошибка при доступе к камере.')
+          setMessage({
+            text: 'Произошла ошибка при доступе к камере.',
+            type: 'error',
+          })
         }
       }
-    }, [onCameraError, showErrorAndClose])
+    }, [onCameraError])
 
     const averageDescriptors = useCallback((descriptors) => {
-      if (!descriptors || descriptors.length === 0) {
-        console.error('Получен пустой массив дескрипторов')
-        return null
-      }
+      if (!descriptors?.length) return null
 
-      const validDescriptors = descriptors.filter(
-        (desc) => desc && Array.isArray(desc) && desc.length === 128
-      )
+      const valid = descriptors.filter((d) => d?.length === 128)
+      if (!valid.length) return null
 
-      if (validDescriptors.length === 0) {
-        console.error('Нет валидных дескрипторов')
-        return null
-      }
+      const result = new Float32Array(128)
+      valid.forEach((d) => d.forEach((val, i) => (result[i] += val)))
+      result.forEach((val, i) => (result[i] = val / valid.length))
 
-      const averagedDescriptor = new Float32Array(128).fill(0)
-
-      validDescriptors.forEach((descriptor) => {
-        for (let i = 0; i < 128; i++) {
-          averagedDescriptor[i] += descriptor[i]
-        }
-      })
-
-      for (let i = 0; i < 128; i++) {
-        averagedDescriptor[i] /= validDescriptors.length
-      }
-
-      return Array.from(averagedDescriptor)
+      return Array.from(result)
     }, [])
 
     const handleVideoPlay = useCallback(async () => {
       const video = videoRef.current
       if (!video || video.videoWidth === 0) return
 
-      setIsProcessing(true)
-      resetActionState()
+      let lastBlinkTime = 0
 
       const processFrame = async () => {
         try {
           const detections = await faceapi
             .detectAllFaces(video, detectorOptions.current)
             .withFaceLandmarks(true)
-            .withFaceDescriptors()
+            .withFaceDescriptors() // Добавляем запрос дескрипторов
 
           if (detections.length === 0) {
             animationFrameRef.current = requestAnimationFrame(processFrame)
             return
           }
-          // debugger
+
           const detection = detections[0]
-          const actionCompleted = checkActionCompletion(detection.landmarks)
-          console.log('actionCompleted > ', actionCompleted)
 
-          if (actionCompleted) {
-            descriptorsRef.current.push(Array.from(detection.descriptor))
+          // Проверяем моргание
+          const { landmarks } = detection
+          const leftEAR = calculateEyeAspectRatio(landmarks.getLeftEye())
+          const rightEAR = calculateEyeAspectRatio(landmarks.getRightEye())
+          const avgEAR = (leftEAR + rightEAR) / 2
 
-            if (descriptorsRef.current.length >= THRESHOLDS.DESCRIPTORS_COUNT) {
-              const avgDescriptor = averageDescriptors(descriptorsRef.current)
-              onFaceDescriptor?.(avgDescriptor)
-              setMessage({ text: 'Проверка пройдена!', type: 'success' })
-              setTimeout(safeClose, 800)
-              return
+          if (avgEAR < BLINK_CONFIG.earThreshold) {
+            const now = Date.now()
+            if (now - lastBlinkTime > BLINK_CONFIG.cooldown) {
+              const newCount = blinkCountRef.current + 1
+              blinkCountRef.current = newCount
+              setBlinkCount(newCount)
+              lastBlinkTime = now
+
+              // Сохраняем дескриптор только при моргании
+              if (detection.descriptor) {
+                descriptorsRef.current.push(Array.from(detection.descriptor))
+              }
+
+              // Проверяем достижение нужного количества морганий
+              if (newCount >= BLINK_CONFIG.requiredCount) {
+                const avgDescriptor = averageDescriptors(descriptorsRef.current)
+                if (avgDescriptor) {
+                  onFaceDescriptor?.(avgDescriptor)
+                  setMessage({ text: 'Проверка пройдена!', type: 'success' })
+                  setTimeout(safeClose, 800)
+                  return
+                }
+              }
             }
           }
 
           animationFrameRef.current = requestAnimationFrame(processFrame)
         } catch (error) {
-          console.error('Ошибка обработки:', error)
-          showErrorAndClose('Ошибка обработки видео')
+          setMessage({ text: 'Ошибка обработки видео', type: 'error' })
+          // Продолжаем обработку несмотря на ошибку
+          animationFrameRef.current = requestAnimationFrame(processFrame)
         }
       }
 
       animationFrameRef.current = requestAnimationFrame(processFrame)
     }, [
       averageDescriptors,
-      checkActionCompletion,
       onFaceDescriptor,
       safeClose,
-      showErrorAndClose,
+      calculateEyeAspectRatio,
     ])
-
     const startRecognition = useCallback(async () => {
       try {
-        descriptorsRef.current = []
-        await checkCameraSupport()
-        if (!cameraSupported) throw new Error('Камера не поддерживается')
-
-        await loadModels()
+        await loadModelsOnce()
+        setIsLoadedModel(true)
         await startVideo()
-        initializeAction()
       } catch (error) {
-        showErrorAndClose(error.message)
+        setMessage({ text: error.message, type: 'error' })
       }
-    }, [
-      checkCameraSupport,
-      cameraSupported,
-      loadModels,
-      startVideo,
-      initializeAction,
-      showErrorAndClose,
-    ])
+    }, [startVideo])
 
     useImperativeHandle(ref, () => ({
       startRecognition,
@@ -381,6 +235,7 @@ const FaceRecognition = forwardRef(
       const video = videoRef.current
       video?.addEventListener('play', handleVideoPlay)
 
+      // eslint-disable-next-line consistent-return
       return () => {
         video?.removeEventListener('play', handleVideoPlay)
         cleanupResources()
@@ -424,14 +279,16 @@ const FaceRecognition = forwardRef(
           <>
             {message.text && <MessageAlert message={message} />}
 
-            {isProcessing && currentAction && (
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
-                <Typography variant="h6">
-                  Выполните действие: {currentAction.text}
-                </Typography>
-                <CircularProgress sx={{ color: 'white', mt: 2 }} />
-              </Box>
-            )}
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <CircularProgress size={20} color="white" />
+              <Typography variant="h5">Пожалуйста, снимите очки.</Typography>
+              <Typography variant="body1">
+                Лицо должно занимать не менее 30% кадра.
+              </Typography>
+              {/* <Typography variant="h6">
+                Снимите очки! Моргните 3 раза: {blinkCount}/3
+              </Typography> */}
+            </Box>
 
             <VideoContainer videoRef={videoRef} />
           </>

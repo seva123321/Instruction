@@ -1,6 +1,5 @@
 /* eslint-disable operator-linebreak */
 
-/* eslint-disable operator-linebreak */
 import {
   useEffect,
   useRef,
@@ -53,18 +52,30 @@ const loadModelsOnce = (() => {
   }
 })()
 
+const LIVENESS_ACTIONS = [
+  { text: 'Поверните голову влево', key: 'turnLeft' },
+  { text: 'Поверните голову вправо', key: 'turnRight' },
+  { text: 'Поверните голову влево и вправо', key: 'turnBoth' },
+]
+
+const THRESHOLDS = {
+  HEAD_TURN_ANGLE: 3, // Угол поворота головы в градусах
+  MIN_TURN_DURATION: 500, // Минимальное время удержания поворота (мс)
+  DESCRIPTORS_COUNT: 3, // Количество собираемых дескрипторов
+}
+
 const FaceRecognition = forwardRef(
-  ({ onClose, referenceDescriptor, onFaceDescriptor, onCameraError }, ref) => {
+  ({ onClose, onFaceDescriptor, onCameraError }, ref) => {
     const videoRef = useRef(null)
     const animationFrameRef = useRef(null)
     const [isLoadedModel, setIsLoadedModel] = useState(false)
     const [isProcessing, setIsProcessing] = useState(false)
     const [message, setMessage] = useState({ text: '', type: '' })
-    const [comparisonResult, setComparisonResult] = useState(null)
     const [cameraPermissionGranted, setCameraPermissionGranted] =
       useState(false)
     const [cameraSupported, setCameraSupported] = useState(true)
     const descriptorsRef = useRef([])
+    const [currentAction, setCurrentAction] = useState(null)
 
     const detectorOptions = useRef(
       new faceapi.TinyFaceDetectorOptions({
@@ -73,8 +84,106 @@ const FaceRecognition = forwardRef(
       })
     )
 
+    const actionState = useRef({
+      completed: false,
+      initialHeadAngle: null,
+      leftTurnCompleted: false,
+      rightTurnCompleted: false,
+      lastTurnTime: 0,
+    })
+
+    // Инициализация случайного действия (поворот влево, вправо или оба)
+    const initializeAction = useCallback(() => {
+      const randomAction =
+        LIVENESS_ACTIONS[Math.floor(Math.random() * LIVENESS_ACTIONS.length)]
+      setCurrentAction(randomAction)
+      resetActionState()
+    }, [])
+
+    const resetActionState = () => {
+      actionState.current = {
+        completed: false,
+        initialHeadAngle: null,
+        leftTurnCompleted: false,
+        rightTurnCompleted: false,
+        lastTurnTime: 0,
+      }
+    }
+
+    // Расчет угла поворота головы по landmarks
+    const calculateHeadAngle = useCallback((jawline) => {
+      const left = jawline[0]
+      const right = jawline[16]
+      const dx = right.x - left.x
+      const dy = right.y - left.y
+      return Math.atan2(dy, dx) * (180 / Math.PI) // Конвертируем в градусы
+    }, [])
+
+    // Проверка выполнения действия (поворот головы)
+    const checkActionCompletion = useCallback(
+      (landmarks) => {
+        const state = actionState.current
+        if (state.completed) return true
+
+        const jawline = landmarks.getJawOutline()
+        const currentAngle = calculateHeadAngle(jawline)
+        const now = Date.now()
+
+        // Инициализация начального угла
+        if (state.initialHeadAngle === null) {
+          state.initialHeadAngle = currentAngle
+          return false
+        }
+
+        const angleDiff = currentAngle - state.initialHeadAngle
+        const absAngleDiff = Math.abs(angleDiff)
+        console.log('absAngleDiff (degrees) > ', absAngleDiff)
+
+        // Проверка поворота влево
+        if (
+          angleDiff < -THRESHOLDS.HEAD_TURN_ANGLE &&
+          !state.leftTurnCompleted
+        ) {
+          if (now - state.lastTurnTime > THRESHOLDS.MIN_TURN_DURATION) {
+            state.leftTurnCompleted = true
+            state.lastTurnTime = now
+            console.log('Left turn completed')
+          }
+        }
+        // Проверка поворота вправо
+        else if (
+          angleDiff > THRESHOLDS.HEAD_TURN_ANGLE &&
+          !state.rightTurnCompleted
+        ) {
+          if (now - state.lastTurnTime > THRESHOLDS.MIN_TURN_DURATION) {
+            state.rightTurnCompleted = true
+            state.lastTurnTime = now
+            console.log('Right turn completed')
+          }
+        }
+
+        // Проверка завершения действия в зависимости от типа
+        switch (currentAction?.key) {
+          case 'turnLeft':
+            state.completed = state.leftTurnCompleted
+            break
+          case 'turnRight':
+            state.completed = state.rightTurnCompleted
+            break
+          case 'turnBoth':
+            state.completed =
+              state.leftTurnCompleted && state.rightTurnCompleted
+            break
+          default:
+            state.completed = false
+        }
+
+        return state.completed
+      },
+      [currentAction, calculateHeadAngle]
+    )
+
     const cleanupResources = useCallback(() => {
-      // Останавливаем видео и анимацию
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((track) => track.stop())
         videoRef.current.srcObject = null
@@ -88,7 +197,7 @@ const FaceRecognition = forwardRef(
 
     const safeClose = useCallback(() => {
       cleanupResources()
-      onClose()
+      onClose?.()
     }, [cleanupResources, onClose])
 
     const showErrorAndClose = useCallback(
@@ -97,7 +206,7 @@ const FaceRecognition = forwardRef(
           text: errorMessage,
           type: 'error',
         })
-        setTimeout(safeClose, 1000) // Закрываем через 1 секунду после показа ошибки
+        setTimeout(safeClose, 1000)
       },
       [safeClose]
     )
@@ -153,26 +262,12 @@ const FaceRecognition = forwardRef(
           const errorMessage =
             'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
           setMessage({ text: errorMessage, type: 'warning' })
-          onCameraError(new Error(errorMessage))
+          onCameraError?.(new Error(errorMessage))
         } else {
           showErrorAndClose('Произошла ошибка при доступе к камере.')
         }
       }
     }, [onCameraError, showErrorAndClose])
-
-    const stopVideo = useCallback(() => {
-      cleanupResources()
-    }, [cleanupResources])
-
-    const compareDescriptors = useCallback(
-      (descriptor1, descriptor2, threshold = 0.6) => {
-        if (!descriptor1 || !descriptor2) return null
-        return faceapi.euclideanDistance(descriptor1, descriptor2) < threshold
-          ? 'Это один и тот же человек!'
-          : 'Это разные люди!'
-      },
-      []
-    )
 
     const averageDescriptors = useCallback((descriptors) => {
       if (!descriptors || descriptors.length === 0) {
@@ -209,67 +304,31 @@ const FaceRecognition = forwardRef(
       if (!video || video.videoWidth === 0) return
 
       setIsProcessing(true)
-      let frameCount = 0
-      const maxFrames = 30
+      resetActionState()
 
       const processFrame = async () => {
         try {
-          frameCount++
-          if (frameCount > maxFrames) {
-            showErrorAndClose('Не удалось распознать лицо.')
-            return
-          }
-
           const detections = await faceapi
             .detectAllFaces(video, detectorOptions.current)
             .withFaceLandmarks(true)
             .withFaceDescriptors()
 
-          if (detections.length > 0 && detections[0].descriptor) {
-            const descriptor = detections[0].descriptor
+          if (detections.length === 0) {
+            animationFrameRef.current = requestAnimationFrame(processFrame)
+            return
+          }
+          // debugger
+          const detection = detections[0]
+          const actionCompleted = checkActionCompletion(detection.landmarks)
+          console.log('actionCompleted > ', actionCompleted)
 
-            if (
-              !Array.isArray(descriptor) &&
-              descriptor instanceof Float32Array
-            ) {
-              descriptorsRef.current.push(Array.from(descriptor))
-            } else if (Array.isArray(descriptor) && descriptor.length === 128) {
-              descriptorsRef.current.push(descriptor)
-            } else {
-              console.warn('Неверный формат дескриптора:', descriptor)
-            }
+          if (actionCompleted) {
+            descriptorsRef.current.push(Array.from(detection.descriptor))
 
-            if (descriptorsRef.current.length >= 3) {
-              const averagedDescriptor = averageDescriptors(
-                descriptorsRef.current
-              )
-
-              if (!averagedDescriptor) {
-                throw new Error('Не удалось создать усредненный дескриптор')
-              }
-
-              onFaceDescriptor(averagedDescriptor)
-
-              if (referenceDescriptor) {
-                if (
-                  !Array.isArray(referenceDescriptor) ||
-                  referenceDescriptor.length !== 128
-                ) {
-                  console.error(
-                    'Неверный формат эталонного дескриптора:',
-                    referenceDescriptor
-                  )
-                  throw new Error(
-                    'Эталонный дескриптор должен быть массивом из 128 чисел'
-                  )
-                }
-
-                setComparisonResult(
-                  compareDescriptors(averagedDescriptor, referenceDescriptor)
-                )
-              }
-
-              setMessage({ text: 'Лицо распознано!', type: 'success' })
+            if (descriptorsRef.current.length >= THRESHOLDS.DESCRIPTORS_COUNT) {
+              const avgDescriptor = averageDescriptors(descriptorsRef.current)
+              onFaceDescriptor?.(avgDescriptor)
+              setMessage({ text: 'Проверка пройдена!', type: 'success' })
               setTimeout(safeClose, 800)
               return
             }
@@ -278,16 +337,15 @@ const FaceRecognition = forwardRef(
           animationFrameRef.current = requestAnimationFrame(processFrame)
         } catch (error) {
           console.error('Ошибка обработки:', error)
-          showErrorAndClose(error.message || 'Ошибка обработки видео.')
+          showErrorAndClose('Ошибка обработки видео')
         }
       }
 
       animationFrameRef.current = requestAnimationFrame(processFrame)
     }, [
       averageDescriptors,
-      compareDescriptors,
+      checkActionCompletion,
       onFaceDescriptor,
-      referenceDescriptor,
       safeClose,
       showErrorAndClose,
     ])
@@ -296,23 +354,20 @@ const FaceRecognition = forwardRef(
       try {
         descriptorsRef.current = []
         await checkCameraSupport()
-
-        if (!cameraSupported) {
-          throw new Error('Камера не поддерживается устройством.')
-        }
+        if (!cameraSupported) throw new Error('Камера не поддерживается')
 
         await loadModels()
         await startVideo()
+        initializeAction()
       } catch (error) {
-        showErrorAndClose(
-          error.message || 'Произошла ошибка при запуске распознавания.'
-        )
+        showErrorAndClose(error.message)
       }
     }, [
       checkCameraSupport,
       cameraSupported,
       loadModels,
       startVideo,
+      initializeAction,
       showErrorAndClose,
     ])
 
@@ -369,23 +424,12 @@ const FaceRecognition = forwardRef(
           <>
             {message.text && <MessageAlert message={message} />}
 
-            {isProcessing && (
-              <Box sx={{ width: '100%', mt: 2 }}>
-                <CircularProgress
-                  sx={{ color: 'white', display: 'block', m: '0 auto' }}
-                />
-                <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
-                  {`Распознавание образа... (${descriptorsRef.current.length + 1}/3)`}
+            {isProcessing && currentAction && (
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Typography variant="h6">
+                  Выполните действие: {currentAction.text}
                 </Typography>
-              </Box>
-            )}
-
-            {comparisonResult && (
-              <Box>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Результат сравнения:
-                </Typography>
-                <Typography variant="body1">{comparisonResult}</Typography>
+                <CircularProgress sx={{ color: 'white', mt: 2 }} />
               </Box>
             )}
 

@@ -382,7 +382,7 @@ class Notification(models.Model):
             return (
                 f"{emojis['test']} *Новый результат теста!*\n"
                 f"🎮 Уровень: {self.employee.current_rank.name if self.employee.current_rank else 'Новичок'}\n"
-                f"📊 Очки: +{self.test_result.score * 10} XP\n"
+                f"📊 Очки: {'+' if self.test_result.is_passed else '-'}{self.test_result.score * 10} XP\n"
                 f"🧑💻 Сотрудник: {self.employee}\n"
                 f"📝 Тест: {self.test_result.test.name}\n"
                 f"🏅 Статус: {status_emoji} {'Пройден' if self.test_result.is_passed else 'Не пройден'}\n"
@@ -643,9 +643,6 @@ class TestResult(models.Model):
     total_points = models.IntegerField("Максимальный балл", default=0)
     start_time = models.DateTimeField("Время начала теста")
     completion_time = models.DateTimeField("Время завершения теста")
-    test_duration = models.IntegerField(
-        "Длительность теста (в секундах)", default=0
-    )
 
     class Meta:
         verbose_name = "Результат тестирования"
@@ -672,14 +669,17 @@ class TestResult(models.Model):
             notification.send_notification()
 
     def save(self, *args, **kwargs):
+        base_xp = self.score * 10
         if (
             self.is_passed and not self.pk
-        ):  # Только при первом успешном прохождении
-            base_xp = self.score * 10
+        ):
             time_bonus = max(
                 0, 100 - self.test_duration // 10
             )  # Бонус за скорость
             self.user.experience_points += base_xp + time_bonus
+            self.user.save()
+        else:
+            self.user.experience_points -= base_xp
             self.user.save()
         super().save(*args, **kwargs)
 

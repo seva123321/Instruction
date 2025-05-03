@@ -15,7 +15,7 @@ from api.views import (
     TestResultCreateView,
     NormativeLegislationViewSet,
     InstructionResultView,
-    NotificationViewSet,
+    GameSwiperView,
     RatingViewSet,
 )
 
@@ -28,7 +28,6 @@ router.register("knowladge/videos", VideoViewSet, basename="knowladge/videos")
 router.register(
     "knowladge/nlas", NormativeLegislationViewSet, basename="knowladge/nlas"
 )
-router.register(r"notifications", NotificationViewSet, basename="notification")
 
 router.register("users", UserViewSet, basename="users")
 auth_urls = [
@@ -46,5 +45,6 @@ urlpatterns = [
         name="instruction_results",
     ),
     path("test_results/", TestResultCreateView.as_view(), name="test_results"),
+    path("game/swiper/", GameSwiperView.as_view(), name="game_swiper"),
     path("", include(router.urls)),
 ]

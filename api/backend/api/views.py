@@ -31,6 +31,8 @@ from api.models import (
     NormativeLegislation,
     Notification,
     InstructionResult,
+    GameSwiper,
+    GameSwiperResult
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -46,12 +48,12 @@ from api.serializers import (
     NormativeLegislationSerializer,
     InstructionResultSerializer,
     InstructionResultGetSerializer,
-    NotificationSerializer,
     RatingSerializer,
+    GameSwiperSerializer
 )
 from api.permissions import IsAdminPermission
 from api.utils.utils import decrypt_descriptor
-from backend.constants import ME
+from backend.constants import LIMIT_GAME_SWIPER_QUESTIONS, ME
 
 
 load_dotenv()
@@ -450,7 +452,7 @@ class NormativeLegislationViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields = ("date", "title")
 
 
-@extend_schema(tags=["Tests"], description="Получение видео.")
+@extend_schema(tags=["Video"], description="Получение видео.")
 class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения видео."""
 
@@ -502,30 +504,23 @@ class InstructionResultView(APIView):
             )
 
 
-@extend_schema(
-    tags=["Notification"],
-    description="Получение, чтение уведомлений.",
-)
-class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = NotificationSerializer
+@extend_schema(tags=["Swiper"], description="Получение данных для свайпера.")
+class GameSwiperView(APIView):
+    """API для получения данных для свайпера."""
+
     permission_classes = (IsAuthenticated,)
 
-    def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
-
-    @action(detail=True, methods=["post"])
-    def mark_read(self, request, pk=None):
-        notification = self.get_object()
-        notification.is_read = True
-        notification.save()
-        return Response({"status": "marked as read"})
-
-    @action(detail=False, methods=["post"])
-    def mark_all_read(self, request):
-        Notification.objects.filter(user=request.user, is_read=False).update(
-            is_read=True
+    def get(self, request):
+        """Получение данных для свайпера."""
+        swipers = GameSwiper.objects.filter(
+            models.Q(position=self.request.user.position) | models.Q(position__isnull=True)
+        ).order_by('?')[:LIMIT_GAME_SWIPER_QUESTIONS]
+        serializer = GameSwiperSerializer(
+            swipers,
+            many=True,
+            context={"request": request}
         )
-        return Response({"status": "all marked as read"})
+        return Response(serializer.data)
 
 
 @staff_member_required

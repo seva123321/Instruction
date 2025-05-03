@@ -27,6 +27,8 @@ from .models import (
     UserBadge,
     Badge,
     Position,
+    GameSwiper,
+    GameSwiperResult
 )
 
 
@@ -174,6 +176,20 @@ class NormativeLegislationAdmin(admin.ModelAdmin):
     list_display = ("title", "date")
     search_fields = ("title", "description")
     list_filter = ("date",)
+
+
+@admin.register(GameSwiper)
+class GameSwiperAdmin(admin.ModelAdmin):
+    list_display = ('question', 'answer', 'position')
+    search_fields = ('question',)
+    list_filter = ('position',)
+
+
+@admin.register(GameSwiperResult)
+class GameSwiperResultAdmin(admin.ModelAdmin):
+    list_display = ('user', 'date', 'score')
+    search_fields = ('user__email', 'user__last_name', 'user__first_name')
+    list_filter = ('date',)
 
 
 def dashboard_callback(request, context):

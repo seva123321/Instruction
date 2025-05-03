@@ -767,7 +767,7 @@ class InstructionResult(models.Model):
     def save(self, *args, **kwargs):
         if (
             self.result and not self.pk
-        ):  # Только при первом успешном прохождении
+        ):
             self.user.experience_points += 50
             self.user.save()
         super().save(*args, **kwargs)
@@ -898,3 +898,49 @@ class DutySchedule(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.date} ({self.shift})"
+
+
+class GameSwiper(models.Model):
+    """Модель для игры Swiper."""
+
+    question = models.TextField("Вопрос",blank=True,null=True,)
+    answer = models.BooleanField("Ответ")
+    position = models.ForeignKey(
+        "Position",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Должность",
+        related_name="game_swipers",
+    )
+
+    class Meta:
+        verbose_name = "Игра Swiper"
+        verbose_name_plural = "Игры Swiper"
+
+    def __str__(self):
+        return f"{self.question} - {self.answer} "
+
+
+class GameSwiperResult(models.Model):
+    """Модель результатов игры Swiper."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="game_swiper_results",
+        verbose_name="Пользователь",
+    )
+    date = models.DateField("Дата игры", auto_now_add=True)
+    score = models.IntegerField("Очки", default=0)
+
+    class Meta:
+        verbose_name = "Результат игры Swiper"
+        verbose_name_plural = "Результаты игры Swiper"
+
+    def __str__(self):
+        return f"{self.user} - {self.date} ({self.score})"
+
+    def save(self, *args, **kwargs):
+        self.user.experience_points += self.score * 10
+        self.user.save()
+        super().save(*args, **kwargs)

@@ -25,6 +25,8 @@ from api.models import (
     Notification,
     Badge,
     Rank,
+    GameSwiper,
+    GameSwiperResult
 )
 from api.utils.utils import (
     decrypt_descriptor,
@@ -664,23 +666,9 @@ class NormativeLegislationSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class NotificationSerializer(serializers.ModelSerializer):
-    test_result = serializers.HyperlinkedRelatedField(
-        view_name="testresult-detail", read_only=True
-    )
-    instruction_result = serializers.HyperlinkedRelatedField(
-        view_name="instructionresult-detail", read_only=True
-    )
+class GameSwiperSerializer(serializers.ModelSerializer):
+    """Сериализатор для игры GameSwiper."""
 
     class Meta:
-        model = Notification
-        fields = (
-            "id",
-            "notification_type",
-            "created_at",
-            "is_read",
-            "test_result",
-            "instruction_result",
-            "employee",
-        )
-        read_only_fields = ("created_at",)
+        model = GameSwiper
+        fields = ("question", "answer")

@@ -5,11 +5,11 @@ from .models import TestResult, InstructionResult
 
 @receiver(post_save, sender=TestResult)
 def handle_test_result(sender, instance, created, **kwargs):
-    if created:  # Отправляем уведомление только при создании
+    if created:
         instance.create_notification()
 
 
 @receiver(post_save, sender=InstructionResult)
 def handle_instruction_result(sender, instance, created, **kwargs):
-    if created:  # Отправляем уведомление только при создании
+    if created:
         instance.create_notification()

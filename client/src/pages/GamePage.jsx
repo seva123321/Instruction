@@ -430,22 +430,3 @@ function GamePage() {
 }
 
 export default GamePage
-
-// import React from 'react'
-// import { Box } from '@mui/material'
-// import KnowBaseHeader from '@/components/KnowBaseHeader'
-// import SwiperGame from './SwiperGame'
-// import { useNavigate } from 'react-router-dom'
-
-// const GamePage = () => {
-//   const navigate = useNavigate()
-//   return (
-//     <Box>
-//       <KnowBaseHeader title="Игры" />
-//       <Box onClick={() => navigate('/game/swiper/')}>Свайпер</Box>
-//       <Box onClick={() => navigate('/game/qwiz/')}>Квиз</Box>
-//     </Box>
-//   )
-// }
-
-// export default GamePage

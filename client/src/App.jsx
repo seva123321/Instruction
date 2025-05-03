@@ -9,7 +9,7 @@ import TestOnePage from '@/models/TestOnePage'
 import { AuthProvider } from './hoc/AuthProvider'
 import RequireAuth from './hoc/RequireAuth'
 import GamePage from './pages/GamePage'
-import SwiperGame from './pages/SwiperGame'
+import SwiperGame from '@/models/SwiperGame'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))

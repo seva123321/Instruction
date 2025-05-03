@@ -330,7 +330,7 @@ function TestingPage() {
   if (fetchError && state.isOnline) return <ErrorMessage error={fetchError} />
 
   return (
-    <Box>
+    <Box sx={{ p: '3rem 8px' }}>
       {!state.isOnline && <OfflineIndicator />}
 
       <KnowBaseHeader title="Тестирование" />

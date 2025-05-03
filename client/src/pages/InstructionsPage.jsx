@@ -1,7 +1,7 @@
 /* eslint-disable indent */
 /* eslint-disable operator-linebreak */
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { useTheme } from '@mui/material/styles'
@@ -66,6 +66,16 @@ function InstructionsPage() {
         }))
       : null
 
+  const boxStyles = useMemo(
+    () => ({
+      [theme.breakpoints.down('sm')]: {
+        mt: 3,
+      },
+      padding: '3rem 0',
+    }),
+    [theme]
+  )
+
   if (isLoading) {
     return (
       <Box
@@ -86,13 +96,7 @@ function InstructionsPage() {
   }
 
   return (
-    <Box
-      sx={{
-        [theme.breakpoints.down('sm')]: {
-          mt: 3,
-        },
-      }}
-    >
+    <Box sx={boxStyles}>
       {tabs && <TabsWrapper tabs={tabs} centered useRouter />}
       <OneInstructionPage
         data={instructionToRender}

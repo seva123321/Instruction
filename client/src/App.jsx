@@ -10,6 +10,7 @@ import { AuthProvider } from './hoc/AuthProvider'
 import RequireAuth from './hoc/RequireAuth'
 import GamePage from './pages/GamePage'
 import SwiperGame from '@/models/SwiperGame'
+import QuizPage from './pages/QuizPage'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
@@ -148,7 +149,7 @@ function App() {
             path="game/quiz"
             element={
               <RequireAuth>
-                <SwiperGame />
+                <QuizPage />
               </RequireAuth>
             }
           />

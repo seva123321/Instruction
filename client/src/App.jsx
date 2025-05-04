@@ -7,6 +7,7 @@ import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
 
 import { AuthProvider } from './hoc/AuthProvider'
+import { GameProvider } from './hoc/GameProvider'
 import RequireAuth from './hoc/RequireAuth'
 import GamePage from './pages/GamePage'
 import SwiperGame from '@/models/SwiperGame'
@@ -133,7 +134,9 @@ function App() {
             path="game"
             element={
               <RequireAuth>
-                <GamePage />
+                <GameProvider>
+                  <GamePage />
+                </GameProvider>
               </RequireAuth>
             }
           />
@@ -141,7 +144,9 @@ function App() {
             path="game/swiper"
             element={
               <RequireAuth>
-                <SwiperGame />
+                <GameProvider>
+                  <SwiperGame />
+                </GameProvider>
               </RequireAuth>
             }
           />
@@ -149,7 +154,9 @@ function App() {
             path="game/quiz"
             element={
               <RequireAuth>
-                <QuizPage />
+                <GameProvider>
+                  <QuizPage />
+                </GameProvider>
               </RequireAuth>
             }
           />

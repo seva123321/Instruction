@@ -16,6 +16,7 @@ import {
   useGetGameSwiperQuery,
   usePostSwiperResultMutation,
 } from '../../slices/gameApi'
+import useGame from '../../hook/useGame'
 
 const TIME_LIMIT = 30
 
@@ -79,6 +80,13 @@ function SwiperGame() {
   const { data: questions, isLoading, isError } = useGetGameSwiperQuery()
   const [postSwiperResult] = usePostSwiperResultMutation()
   const endTimeRef = useRef(Date.now() + TIME_LIMIT * 1000)
+
+  const { hasMegaPower } = useGame()
+  useEffect(() => {
+    if (!hasMegaPower) {
+      navigate('/game/', { replace: true })
+    }
+  }, [hasMegaPower, navigate])
 
   useEffect(() => {
     // Определяем мобильное устройство

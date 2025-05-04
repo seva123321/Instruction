@@ -6,7 +6,7 @@ export const GameContext = createContext(null)
 
 export const GameProvider = ({ children }) => {
   const { data } = useGetGameQuery()
-  const hasMegaPower = data?.remainingMegaPowers > 0
+  const hasMegaPower = data?.remaining_mega_powers > 0
 
   return (
     <GameContext.Provider value={{ data, hasMegaPower }}>

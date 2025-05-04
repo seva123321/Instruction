@@ -10,7 +10,12 @@ import {
   Paper,
   LinearProgress,
   styled,
+  CircularProgress,
 } from '@mui/material'
+import {
+  useGetGameSwiperQuery,
+  usePostSwiperResultMutation,
+} from '../../slices/gameApi'
 
 const TIME_LIMIT = 30
 
@@ -58,17 +63,6 @@ const AnswerIndicator = styled(Box)(({ answer }) => ({
   transition: 'opacity 0.3s',
 }))
 
-const questions = [
-  { question: 'Вы любите React?', answer: true },
-  { question: 'Вам нравится Material UI?', answer: true },
-  { question: 'Вы часто используете свайпы?', answer: true },
-  { question: 'Вы разрабатываете мобильные приложения?', answer: false },
-  { question: 'Вам нравится это приложение?', answer: true },
-  { question: 'Вы предпочитаете функциональные компоненты?', answer: true },
-  { question: 'Вы используете TypeScript?', answer: true },
-  { question: 'Вам нравится работать с анимациями?', answer: false },
-]
-
 function SwiperGame() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [position, setPosition] = useState(0)
@@ -78,9 +72,13 @@ function SwiperGame() {
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [isCorrect, setIsCorrect] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [isPostedData, setPostedData] = useState(false)
   const timerRef = useRef(null)
   const cardRef = useRef(null)
   const navigate = useNavigate()
+  const { data: questions, isLoading, isError } = useGetGameSwiperQuery()
+  const [postSwiperResult] = usePostSwiperResultMutation()
+  const endTimeRef = useRef(Date.now() + TIME_LIMIT * 1000)
 
   useEffect(() => {
     // Определяем мобильное устройство
@@ -91,15 +89,38 @@ function SwiperGame() {
   }, [])
 
   useEffect(() => {
-    if (timeLeft > 0 && !gameOver) {
-      timerRef.current = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-    } else if (timeLeft <= 0) {
-      setGameOver(true)
+    // Функция обновления времени
+    const updateTimer = () => {
+      const now = Date.now()
+      const timeRemaining = Math.max(
+        0,
+        Math.floor((endTimeRef.current - now) / 1000)
+      )
+
+      setTimeLeft(timeRemaining)
+
+      if (timeRemaining <= 0) {
+        if (!isPostedData) {
+          setGameOver(true)
+          postSwiperResult({ score: correctAnswers })
+          setPostedData(true)
+        }
+      } else {
+        timerRef.current = requestAnimationFrame(updateTimer)
+      }
     }
-    return () => clearTimeout(timerRef.current)
-  }, [timeLeft, gameOver])
+
+    // Запускаем таймер
+    timerRef.current = requestAnimationFrame(updateTimer)
+
+    // Очистка
+    return () => {
+      cancelAnimationFrame(timerRef.current)
+    }
+  }, [postSwiperResult, correctAnswers, isPostedData])
 
   const nextQuestion = () => {
+    if (!questions?.length) return
     setCurrentIndex((prev) => (prev + 1) % questions.length)
     setPosition(0)
     setIsSwiping(false)
@@ -107,13 +128,12 @@ function SwiperGame() {
   }
 
   const handleSwipe = (dir) => {
+    if (!questions?.length) return
     const userAnswer = dir === 'right'
     const isAnswerCorrect = userAnswer === questions[currentIndex].answer
 
     setIsCorrect(isAnswerCorrect)
-    if (isAnswerCorrect) {
-      setCorrectAnswers(correctAnswers + 1)
-    }
+    setCorrectAnswers(correctAnswers + (isAnswerCorrect ? 1 : -1))
 
     // Анимация улетания карточки
     setPosition(dir === 'right' ? window.innerWidth : -window.innerWidth)
@@ -122,7 +142,7 @@ function SwiperGame() {
 
   const handlers = useSwipeable({
     onSwiping: (e) => {
-      if (!isMobile) return 
+      if (!isMobile) return
       if (!isSwiping) setIsSwiping(true)
       setPosition(e.deltaX)
     },
@@ -134,7 +154,7 @@ function SwiperGame() {
         setIsSwiping(false)
       }
     },
-    trackMouse: false, 
+    trackMouse: false,
     preventDefaultTouchmoveEvent: true,
   })
 
@@ -142,16 +162,6 @@ function SwiperGame() {
     if (isSwiping) return
     handleSwipe(answer ? 'right' : 'left')
   }
-
-  // const restartGame = () => {
-  //   setTimeLeft(TIME_LIMIT)
-  //   setCorrectAnswers(0)
-  //   setCurrentIndex(0)
-  //   setGameOver(false)
-  //   setPosition(0)
-  //   setIsSwiping(false)
-  //   setIsCorrect(null)
-  // }
 
   // Стили для карточек
   const currentCardStyle = {
@@ -170,7 +180,38 @@ function SwiperGame() {
     zIndex: 1,
   }
 
-  const nextQuestionIndex = (currentIndex + 1) % questions.length
+  const nextQuestionIndex = questions?.length
+    ? (currentIndex + 1) % questions.length
+    : 0
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: '70vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    )
+  }
+  if (isError) return <div>Ошибка загрузки данных</div>
+  if (!questions || !questions.length)
+    return (
+      <Typography
+        variant="h6"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        Нет вопросов
+      </Typography>
+    )
 
   return (
     <Box
@@ -193,7 +234,7 @@ function SwiperGame() {
             Время вышло!
           </Typography>
           <Typography variant="h6" gutterBottom>
-            {`Правильных ответов: ${correctAnswers}`}
+            {`Правильных ответов: ${Math.max(0, correctAnswers)}`}
           </Typography>
           <Button
             variant="contained"
@@ -209,7 +250,7 @@ function SwiperGame() {
         <>
           <Box sx={{ width: '100%', mb: 2 }}>
             <Typography variant="body1" align="center" gutterBottom>
-              {`Осталось: ${timeLeft} сек | Правильных ответов: ${correctAnswers}`}
+              {`Осталось: ${timeLeft} сек | Правильных ответов: ${Math.max(0, correctAnswers)}`}
             </Typography>
             <LinearProgress
               variant="determinate"

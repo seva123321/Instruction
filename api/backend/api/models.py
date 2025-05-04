@@ -20,6 +20,15 @@ from backend.constants import (
     MAX_LENGTH_PASSING_SCORE,
     MIN_LENGTH_PASSING_SCORE,
     MAX_LENGTH_TYPE_QUESTION,
+    INSTRUCTION_SCORE,
+    MAX_LENGTH_TELEGRAM_CHAT_ID,
+    MAX_LENGTH_BADGE,
+    MAX_LENGTH_RANK,
+    MAX_NOTIFICATION_TYPE,
+    MAX_NOTIFICATION_ERROR,
+    TEST_SCORE,
+    MAX_NAME_SHIFT,
+    POWER_OF_USER
 )
 
 
@@ -125,9 +134,15 @@ class User(AbstractUser):
         related_name="subordinates",
     )
     telegram_chat_id = models.CharField(
-        "Telegram Chat ID", max_length=255, blank=True, null=True
+        "Telegram Chat ID",
+        max_length=MAX_LENGTH_TELEGRAM_CHAT_ID,
+        blank=True,
+        null=True
     )
-    experience_points = models.IntegerField("Очки опыта", default=0)
+    experience_points = models.IntegerField(
+        "Очки опыта",
+        default=0
+    )
     current_rank = models.ForeignKey(
         "Rank",
         on_delete=models.SET_NULL,
@@ -148,11 +163,9 @@ class User(AbstractUser):
         return f"{self.last_name} {self.first_name}"
 
     def save(self, *args, **kwargs):
-        # Нормализация номера телефона
         if self.mobile_phone:
             self.mobile_phone = normalize_phone_number(self.mobile_phone)
 
-        # Флаг для проверки изменений
         update_ranks_and_badges = False
         if self.pk:
             original = User.objects.get(pk=self.pk)
@@ -164,13 +177,14 @@ class User(AbstractUser):
         else:
             update_ranks_and_badges = True
 
-        # Первое сохранение
         super().save(*args, **kwargs)
 
-        # Обновление рангов и значков при изменении
         if update_ranks_and_badges:
             self._update_rank()
             self._assign_badges()
+
+        if not PowerOfUser.objects.filter(user=self).exists():
+            PowerOfUser.objects.create(user=self, power=POWER_OF_USER)
 
     def _update_rank(self):
         """Обновление звания пользователя"""
@@ -204,7 +218,7 @@ class User(AbstractUser):
 class Badge(models.Model):
     """Модель значков сотрудников."""
 
-    name = models.CharField("Название", max_length=100)
+    name = models.CharField("Название", max_length=MAX_LENGTH_BADGE)
     description = models.TextField("Описание")
     icon = models.ImageField("Иконка", upload_to="badges/", blank=True)
     required_count = models.IntegerField(
@@ -247,7 +261,7 @@ class UserBadge(models.Model):
 class Rank(models.Model):
     """Модель званий сотрудников."""
 
-    name = models.CharField("Название", max_length=50)
+    name = models.CharField("Название", max_length=MAX_LENGTH_RANK)
     required_points = models.IntegerField("Требуемые очки")
     icon = models.ImageField("Иконка", upload_to="ranks/", blank=True)
     position = models.ForeignKey(
@@ -307,7 +321,7 @@ class Notification(models.Model):
         "User", on_delete=models.CASCADE, verbose_name="Сотрудник"
     )
     notification_type = models.CharField(
-        "Тип уведомления", max_length=20, choices=NotificationType.choices
+        "Тип уведомления", max_length=MAX_NOTIFICATION_TYPE, choices=NotificationType.choices
     )
     is_read = models.BooleanField("Прочитано", default=False)
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
@@ -321,7 +335,7 @@ class Notification(models.Model):
     )
     is_sent = models.BooleanField("Отправлено", default=False)
     error = models.CharField(
-        "Ошибка отправки", max_length=255, null=True, blank=True
+        "Ошибка отправки", max_length=MAX_NOTIFICATION_ERROR, null=True, blank=True
     )
 
     class Meta:
@@ -643,6 +657,9 @@ class TestResult(models.Model):
     total_points = models.IntegerField("Максимальный балл", default=0)
     start_time = models.DateTimeField("Время начала теста")
     completion_time = models.DateTimeField("Время завершения теста")
+    test_duration = models.IntegerField(
+        "Длительность теста (в секундах)", default=0
+    )
 
     class Meta:
         verbose_name = "Результат тестирования"
@@ -665,17 +682,16 @@ class TestResult(models.Model):
                 test_result=self,
             )
 
-            # Отправляем уведомление в Телеграмм
             notification.send_notification()
 
     def save(self, *args, **kwargs):
-        base_xp = self.score * 10
+        base_xp = self.score * TEST_SCORE
         if (
             self.is_passed and not self.pk
         ):
             time_bonus = max(
                 0, 100 - self.test_duration // 10
-            )  # Бонус за скорость
+            )
             self.user.experience_points += base_xp + time_bonus
             self.user.save()
         else:
@@ -753,7 +769,6 @@ class InstructionResult(models.Model):
 
     def create_notification(self):
         if self.user.supervisor:
-            # Создаем уведомление
             notification = Notification.objects.create(
                 user=self.user.supervisor,
                 employee=self.user,
@@ -761,14 +776,13 @@ class InstructionResult(models.Model):
                 instruction_result=self,
             )
 
-            # Отправляем уведомление в Телеграмм
             notification.send_notification()
 
     def save(self, *args, **kwargs):
         if (
             self.result and not self.pk
         ):
-            self.user.experience_points += 50
+            self.user.experience_points += INSTRUCTION_SCORE
             self.user.save()
         super().save(*args, **kwargs)
 
@@ -858,7 +872,7 @@ class NormativeLegislation(models.Model):
 class Shift(models.Model):
     """Модель рабочих смен с временными интервалами."""
 
-    name = models.CharField("Название смены", max_length=50)
+    name = models.CharField("Название смены", max_length=MAX_NAME_SHIFT)
     start_time = models.TimeField("Время начала")
     end_time = models.TimeField("Время окончания")
 
@@ -941,6 +955,28 @@ class GameSwiperResult(models.Model):
         return f"{self.user} - {self.date} ({self.score})"
 
     def save(self, *args, **kwargs):
-        self.user.experience_points += self.score * 10
-        self.user.save()
+        self.user.experience_points += self.score * 4
+        PowerOfUser.objects.filter(
+            user=self.user
+        ).update(power=models.F('power') - 1)
+        self.user.save(update_fields=["experience_points"])
         super().save(*args, **kwargs)
+
+
+class PowerOfUser(models.Model):
+    """Модель силы пользователя."""
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="power_of_user",
+        verbose_name="Пользователь",
+    )
+    power = models.IntegerField("МегаСила", default=0)
+
+    class Meta:
+        verbose_name = "Сила пользователя"
+        verbose_name_plural = "Сила пользователей"
+
+    def __str__(self):
+        return f"{self.user} - {self.power}"

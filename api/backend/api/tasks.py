@@ -8,6 +8,7 @@ import logging
 from telegram import Bot
 
 from .models import DutySchedule, User
+from backend.constants import POWER_OF_USER
 
 
 logger = logging.getLogger(__name__)
@@ -51,11 +52,13 @@ def send_game_notification():
     users = User.objects.filter(
         telegram_chat_id__isnull=False,
         role="user"
-    )
+    ).select_related("power_of_user")
     try:
         for user in users:
+            user.power_of_user.power = POWER_OF_USER
+            user.power_of_user.save()
             message = (f'🎮 Внимание ⚠️, {user.first_name},\n'
-                       f'📊 Твои *МЕГАСИЛЫ* восстановлены! 🏗️\n'
+                       f'💪 Твои *МЕГАСИЛЫ* восстановлены! 🆙✅\n'
                        '💥 Попробуй их в игре! 💥\n')
             async_to_sync(_send_message)(message, user.telegram_chat_id)
     except Exception as e:

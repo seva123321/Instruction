@@ -13,7 +13,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 
-from api.views import export_to_excel
+from api.utils.utils import export_to_excel
 
 urlpatterns = [
     path("admin/export/excel/", export_to_excel, name="export_excel"),

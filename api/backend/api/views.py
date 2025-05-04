@@ -47,7 +47,13 @@ from api.serializers import (
 )
 from api.permissions import IsAdminPermission
 from api.utils.utils import decrypt_descriptor
-from backend.constants import LIMIT_GAME_SWIPER_QUESTIONS, ME, POWER_OF_USER
+from backend.constants import (
+    GAME_HOUR,
+    GAME_MINUTE,
+    LIMIT_GAME_SWIPER_QUESTIONS,
+    ME,
+    POWER_OF_USER
+)
 
 
 load_dotenv()
@@ -562,5 +568,7 @@ class PowerOfUserView(APIView):
         data = {
             "remaining_mega_powers": power_of_user.power,
             "total_daily_mega_powers": POWER_OF_USER,
+            "hours": GAME_HOUR,
+            "minutes": GAME_MINUTE,
         }
         return Response(data, status=status.HTTP_200_OK)

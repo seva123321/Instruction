@@ -672,3 +672,13 @@ class GameSwiperSerializer(serializers.ModelSerializer):
     class Meta:
         model = GameSwiper
         fields = ("question", "answer")
+
+class GameSwiperResultSerializer(serializers.ModelSerializer):
+    """Сериализатор для результатов игры GameSwiper."""
+
+    class Meta:
+        model = GameSwiperResult
+        fields = ("score",)
+        extra_kwargs = {
+            "score": {"required": True},
+        }

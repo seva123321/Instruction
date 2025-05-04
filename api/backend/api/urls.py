@@ -16,7 +16,9 @@ from api.views import (
     NormativeLegislationViewSet,
     InstructionResultView,
     GameSwiperView,
+    GameSwiperResultView,
     RatingViewSet,
+    PowerOfUserView
 )
 
 router = DefaultRouter()
@@ -45,6 +47,8 @@ urlpatterns = [
         name="instruction_results",
     ),
     path("test_results/", TestResultCreateView.as_view(), name="test_results"),
+    path("game/", PowerOfUserView.as_view(), name="power_of_user"),
     path("game/swiper/", GameSwiperView.as_view(), name="game_swiper"),
+    path("game/swiper_result/", GameSwiperResultView.as_view(), name="swiper_result"),
     path("", include(router.urls)),
 ]

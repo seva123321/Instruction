@@ -1,4 +1,4 @@
-import React from 'react'
+import { memo } from 'react'
 import { Box, Typography, Paper, Grid, Avatar } from '@mui/material'
 
 function CalendarLegend({ theme }) {
@@ -37,4 +37,4 @@ function CalendarLegend({ theme }) {
   )
 }
 
-export default CalendarLegend
+export default memo(CalendarLegend)

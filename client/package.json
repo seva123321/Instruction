@@ -49,6 +49,9 @@
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@mui/x-date-pickers": "^7.28.3",
+    "@react-three/cannon": "^6.6.0",
+    "@react-three/drei": "^10.0.7",
+    "@react-three/fiber": "^9.1.2",
     "@reduxjs/toolkit": "^2.6.1",
     "date-fns": "^2.30.0",
     "face-api.js": "^0.22.2",
@@ -62,6 +65,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.3.0",
     "react-swipeable": "^7.0.2",
-    "react-window": "^1.8.11"
+    "react-window": "^1.8.11",
+    "three": "^0.176.0"
   }
 }

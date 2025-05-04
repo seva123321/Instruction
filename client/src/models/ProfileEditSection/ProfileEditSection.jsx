@@ -411,25 +411,41 @@ function ProfileEditSection({ profileData }) {
             gap: 3,
           }}
         >
-          <Controller
-            name="position"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Должность"
-                fullWidth
-                variant="outlined"
-                slotProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <WorkIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            )}
-          />
+          <Box>
+            <Controller
+              name="position"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Должность"
+                  fullWidth
+                  variant="outlined"
+                  disabled
+                  slotProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <WorkIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              )}
+            />
+            <Box
+              component="span"
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: 'text.secondary',
+                fontSize: '12px',
+              }}
+            >
+              <InfoIcon fontSize="inherit" color="disabled" />
+              неизменяемое поле
+            </Box>
+          </Box>
 
           <Controller
             name="birthday"

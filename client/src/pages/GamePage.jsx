@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Typography,
@@ -11,13 +11,15 @@ import {
   styled,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-// import { styled } from '@mui/system'
-import ConstructionIcon from '@mui/icons-material/Construction'
-import BoltIcon from '@mui/icons-material/Bolt'
-import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
-import FactoryIcon from '@mui/icons-material/Factory'
-
+import {
+  Construction as ConstructionIcon,
+  Bolt as BoltIcon,
+  LocalFireDepartment as LocalFireDepartmentIcon,
+  Factory as FactoryIcon,
+} from '@mui/icons-material'
 import KnowBaseHeader from '@/components/KnowBaseHeader'
+import { useGetGameQuery } from '@/slices/gameApi'
+import useGame from '@/hook/useGame'
 
 // Стилизованные компоненты
 const IndustrialCard = styled(Paper)(({ theme }) => ({
@@ -62,128 +64,70 @@ const GameIconWrapper = styled(Box)(() => ({
 
 function GamePage() {
   const navigate = useNavigate()
-  const [megaPowers, setMegaPowers] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [timeToReset, setTimeToReset] = useState('')
-  const [message, setMessage] = useState()
+  const [message, setMessage] = useState(null)
   const [showAlert, setShowAlert] = useState(false)
-  // Загрузка данных с сервера
-  useEffect(() => {
-    const fetchMegaPowers = async () => {
-      try {
-        setLoading(true)
-
-        // Проверяем текущую дату
-        const today = new Date().toDateString()
-        const lastUpdatedDate = localStorage.getItem(
-          'megapowersLastUpdatedDate'
-        )
-
-        // Если последнее обновление было не сегодня - очищаем кэш
-        if (lastUpdatedDate !== today) {
-          localStorage.removeItem('megapowersData')
-          localStorage.removeItem('megapowersLastUpdated')
-        }
-
-        // Проверяем кэш (только если обновление было сегодня)
-        const lastUpdated = localStorage.getItem('megapowersLastUpdated')
-        if (
-          lastUpdated &&
-          Date.now() - lastUpdated < 5 * 60 * 1000 &&
-          lastUpdatedDate === today
-        ) {
-          const cached = localStorage.getItem('megapowersData')
-          if (cached) {
-            setMegaPowers(JSON.parse(cached))
-            setLoading(false)
-            return
-          }
-        }
-        // ДАННЫЕ с СЕРВЕРА
-        // Тестовые данные (замените на реальный запрос) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        const dataTest = {
-          remainingMegaPowers: 5,
-          totalDailyMegaPowers: 8,
-          games: {
-            swiper: {
-              lastPlayed: new Date().toISOString(),
-              playsToday: 3,
-            },
-            quiz: {
-              lastPlayed: new Date().toISOString(),
-              playsToday: 2,
-            },
-          },
-          lastUpdated: new Date().toISOString(), // Добавляем метку времени с сервера
-        }
-
-        // const response = await fetch('/api/user/megapowers');
-        // if (!response.ok) throw new Error('Ошибка загрузки мегасил');
-        // const data = await response.json();
-        const data = dataTest
-
-        setMegaPowers(data)
-
-        // Кэшируем данные с указанием даты
-        localStorage.setItem('megapowersData', JSON.stringify(data))
-        localStorage.setItem('megapowersLastUpdated', Date.now())
-        localStorage.setItem('megapowersLastUpdatedDate', today)
-      } catch (err) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchMegaPowers()
-
-    // Проверяем обновление каждую минуту (на случай смены даты)
-    const interval = setInterval(fetchMegaPowers, 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+  const { data: megaPowers, isLoading, isError } = useGame()
 
   // Расчет времени до обновления мегасил
   useEffect(() => {
-    if (!megaPowers) return
+    if (
+      !megaPowers ||
+      megaPowers.hours === undefined ||
+      megaPowers.minutes === undefined
+    ) {
+      return
+    }
 
     const calculateTimeToReset = () => {
       const now = new Date()
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      tomorrow.setHours(0, 0, 0, 0) // Обновление в полночь
+      const mskTime = new Date(
+        now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
+      )
 
-      const diff = tomorrow - now
+      // Устанавливаем время сброса по Москве
+      const resetTime = new Date(mskTime)
+      resetTime.setHours(megaPowers.hours, megaPowers.minutes, 0, 0)
+
+      // Если текущее время больше времени сброса, устанавливаем на следующий день
+      if (mskTime > resetTime) {
+        resetTime.setDate(resetTime.getDate() + 1)
+      }
+
+      const diff = resetTime - mskTime
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
 
-      setTimeToReset(`${hours}ч ${minutes}м`)
+      setTimeToReset(
+        `${String(hours).padStart(2, '0')}ч ${String(minutes).padStart(2, '0')}м`
+      )
     }
 
     calculateTimeToReset()
     const timer = setInterval(calculateTimeToReset, 60000) // Обновляем каждую минуту
 
-    // eslint-disable-next-line consistent-return
     return () => clearInterval(timer)
   }, [megaPowers])
 
   // Эффект для автоматического скрытия сообщения
-  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (showAlert) {
-      const timer = setTimeout(() => {
-        setShowAlert(false)
-      }, 5000) // Скрываем сообщение через 5 секунд
+      const timer = setTimeout(() => setShowAlert(false), 5000)
       return () => clearTimeout(timer)
     }
   }, [showAlert])
 
-  // Отрисовка молний (мегасил)
-  const renderMegaPowerBolts = () => {
-    if (!megaPowers) return null
+  // Значения по умолчанию
+  const {
+    remaining_mega_powers: remainingMegaPowers = 0,
+    total_daily_mega_powers: totalDailyMegaPowers = 0,
+    hours = 0,
+    minutes = 0,
+  } = megaPowers || {}
 
+  // Отрисовка молний (мегасил)
+  const renderMegaPowerBolts = useMemo(() => {
     const bolts = []
-    const { remainingMegaPowers, totalDailyMegaPowers } = megaPowers
 
     // Активные мегасилы
     for (let i = 0; i < remainingMegaPowers; i++) {
@@ -200,13 +144,13 @@ function GamePage() {
     }
 
     return bolts
-  }
+  }, [remainingMegaPowers, totalDailyMegaPowers])
 
   // Обработчик клика по игре
   const handleGameClick = (gamePath) => {
-    if (!megaPowers || megaPowers.remainingMegaPowers <= 0) {
+    if (!megaPowers || megaPowers.remaining_mega_powers <= 0) {
       setMessage({
-        text: `Вы израсходовали все мегасилы на сегодня!\nНовые мегасилы появятся через: ${timeToReset}`,
+        text: `Вы израсходовали все мегасилы на сегодня!\nНовые мегасилы появятся через: ${timeToReset}.`,
         type: 'warning',
       })
       setShowAlert(true)
@@ -215,7 +159,7 @@ function GamePage() {
     navigate(gamePath)
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box
         sx={{
@@ -230,7 +174,7 @@ function GamePage() {
     )
   }
 
-  if (error) {
+  if (isError) {
     return (
       <Box
         sx={{
@@ -242,7 +186,7 @@ function GamePage() {
         }}
       >
         <Typography color="error" sx={{ mb: 2 }}>
-          {`Ошибка: #${error}`}
+          {`Ошибка: ${error?.data?.message || error?.message || 'Неизвестная ошибка'}`}
         </Typography>
         <Button
           variant="contained"
@@ -302,14 +246,17 @@ function GamePage() {
               maxWidth: '600px',
             }}
           >
-            <Alert severity="warning" onClose={() => setShowAlert(false)}>
-              {message.text}
+            <Alert
+              severity={message?.type || 'warning'}
+              onClose={() => setShowAlert(false)}
+            >
+              {message?.text || ''}
             </Alert>
           </Box>
         )}
 
         <Tooltip
-          title={`Осталось ${megaPowers?.remainingMegaPowers || 0} из ${megaPowers?.totalDailyMegaPowers || 0} мегасил`}
+          title={`Осталось ${remainingMegaPowers} из ${totalDailyMegaPowers} мегасил`}
           arrow
         >
           <Box
@@ -323,9 +270,9 @@ function GamePage() {
               mb: 2,
             }}
           >
-            {renderMegaPowerBolts()}
+            {renderMegaPowerBolts}
             <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              {`${megaPowers?.remainingMegaPowers || 0}/${megaPowers?.totalDailyMegaPowers || 0}`}
+              {`${remainingMegaPowers}/${totalDailyMegaPowers}`}
             </Typography>
 
             <Box
@@ -338,7 +285,7 @@ function GamePage() {
               }}
             >
               <Typography variant="caption">
-                {`Обновление через: ${timeToReset}`}
+                {`Обновление через: ${timeToReset || '00ч 00м'}`}
               </Typography>
             </Box>
           </Box>
@@ -411,19 +358,21 @@ function GamePage() {
           </IndustrialBadge>
         </Box>
 
-        <Box
-          sx={{
-            mt: 4,
-            p: 2,
-            background: 'rgba(255, 255, 255, 0.7)',
-            borderRadius: '12px',
-            borderLeft: '4px solid #ff9800',
-          }}
-        >
-          <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-            &quot;Мегасилы обновляются в полночь. Используй их с умом!&quot;
-          </Typography>
-        </Box>
+        {megaPowers && (
+          <Box
+            sx={{
+              mt: 4,
+              p: 2,
+              background: 'rgba(255, 255, 255, 0.7)',
+              borderRadius: '12px',
+              borderLeft: '4px solid #ff9800',
+            }}
+          >
+            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+              {`Мегасилы обновляются в ${megaPowers.hours} ч. ${megaPowers.minutes} мин. по Москве. Используй их с умом!`}
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   )

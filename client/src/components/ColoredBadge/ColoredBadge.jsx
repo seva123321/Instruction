@@ -1,4 +1,4 @@
-import React from 'react'
+import { memo } from 'react'
 import Badge from '@mui/material/Badge'
 import { styled } from '@mui/material/styles'
 
@@ -41,4 +41,4 @@ function ColoredBadge({ mark }) {
   )
 }
 
-export default ColoredBadge
+export default memo(ColoredBadge)

@@ -1,6 +1,5 @@
-/* eslint-disable operator-linebreak */
-
-/* eslint-disable operator-linebreak */
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-return-assign */
 import {
   useEffect,
   useRef,
@@ -16,6 +15,18 @@ import { Typography, Container, CircularProgress, Box } from '@mui/material'
 import VideoContainer from '@/components/VideoContainer'
 import MessageAlert from '@/components/MessageAlert'
 
+// Константы для конфигурации
+const MODEL_URL = '/modelFaceApi'
+const DETECTOR_OPTIONS = {
+  inputSize: 256,
+  scoreThreshold: 0.5,
+}
+const BLINK_CONFIG = {
+  cooldown: 500, // 0.5s между морганиями
+  earThreshold: 0.25, // Порог закрытого глаза
+  requiredCount: 2, // Количество морганий для завершения
+}
+
 const loadModelsOnce = (() => {
   let modelsLoaded = false
   let loadingPromise = null
@@ -26,26 +37,15 @@ const loadModelsOnce = (() => {
 
     loadingPromise = (async () => {
       try {
-        const MODEL_URL = '/modelFaceApi'
-        const loadOptions = {
-          fetch: (url, options) =>
-            fetch(url, { ...options, cache: 'force-cache' }),
-        }
-
         await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL, loadOptions),
-          faceapi.nets.faceLandmark68TinyNet.loadFromUri(
-            MODEL_URL,
-            loadOptions
-          ),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL, loadOptions),
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ])
-
         modelsLoaded = true
         return true
       } catch (error) {
-        console.error('Failed to load models:', error)
-        throw error
+        throw new Error(error.message)
       }
     })()
 
@@ -54,27 +54,44 @@ const loadModelsOnce = (() => {
 })()
 
 const FaceRecognition = forwardRef(
-  ({ onClose, referenceDescriptor, onFaceDescriptor, onCameraError }, ref) => {
-    const videoRef = useRef(null)
-    const animationFrameRef = useRef(null)
+  ({ onClose, onFaceDescriptor, onCameraError }, ref) => {
+    // useState
     const [isLoadedModel, setIsLoadedModel] = useState(false)
-    const [isProcessing, setIsProcessing] = useState(false)
     const [message, setMessage] = useState({ text: '', type: '' })
-    const [comparisonResult, setComparisonResult] = useState(null)
     const [cameraPermissionGranted, setCameraPermissionGranted] =
       useState(false)
-    const [cameraSupported, setCameraSupported] = useState(true)
+    const [blinkCount, setBlinkCount] = useState(0)
+    // useRef
+    const videoRef = useRef(null)
+    const animationFrameRef = useRef(null)
+    const blinkCountRef = useRef(blinkCount)
     const descriptorsRef = useRef([])
-
     const detectorOptions = useRef(
       new faceapi.TinyFaceDetectorOptions({
-        inputSize: 256,
-        scoreThreshold: 0.5,
+        inputSize: DETECTOR_OPTIONS.inputSize,
+        scoreThreshold: DETECTOR_OPTIONS.scoreThreshold,
       })
     )
 
+    useEffect(() => {
+      blinkCountRef.current = blinkCount
+    }, [blinkCount])
+
+    // Рассчет коэффициента открытости глаза
+    const calculateEyeAspectRatio = useCallback((eyeLandmarks) => {
+      const [p0, p1, p2, p3, p4, p5] = eyeLandmarks.map((p) => ({
+        x: p._x,
+        y: p._y,
+      }))
+      const vertical =
+        (Math.hypot(p1.x - p5.x, p1.y - p5.y) +
+          Math.hypot(p2.x - p4.x, p2.y - p4.y)) /
+        2
+      const horizontal = Math.hypot(p0.x - p3.x, p0.y - p3.y)
+      return vertical / horizontal
+    }, [])
+
     const cleanupResources = useCallback(() => {
-      // Останавливаем видео и анимацию
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((track) => track.stop())
         videoRef.current.srcObject = null
@@ -83,56 +100,12 @@ const FaceRecognition = forwardRef(
         cancelAnimationFrame(animationFrameRef.current)
         animationFrameRef.current = null
       }
-      setIsProcessing(false)
     }, [])
 
     const safeClose = useCallback(() => {
       cleanupResources()
-      onClose()
+      onClose?.()
     }, [cleanupResources, onClose])
-
-    const showErrorAndClose = useCallback(
-      (errorMessage) => {
-        setMessage({
-          text: errorMessage,
-          type: 'error',
-        })
-        setTimeout(safeClose, 1000) // Закрываем через 1 секунду после показа ошибки
-      },
-      [safeClose]
-    )
-
-    const checkCameraSupport = useCallback(async () => {
-      try {
-        if (!navigator.mediaDevices?.enumerateDevices) {
-          throw new Error('Camera API not supported')
-        }
-
-        const devices = await navigator.mediaDevices.enumerateDevices()
-        const hasCamera = devices.some((device) => device.kind === 'videoinput')
-        setCameraSupported(hasCamera)
-
-        if (!hasCamera) {
-          setMessage({
-            text: 'Ваше устройство не поддерживает камеру.',
-            type: 'warning',
-          })
-        }
-      } catch (error) {
-        setCameraSupported(false)
-        showErrorAndClose('Не удалось проверить поддержку камеры.')
-      }
-    }, [showErrorAndClose])
-
-    const loadModels = useCallback(async () => {
-      try {
-        setIsLoadedModel(false)
-        await loadModelsOnce()
-        setIsLoadedModel(true)
-      } catch (error) {
-        showErrorAndClose('Ошибка при загрузке моделей распознавания.')
-      }
-    }, [showErrorAndClose])
 
     const startVideo = useCallback(async () => {
       try {
@@ -144,177 +117,113 @@ const FaceRecognition = forwardRef(
             frameRate: { ideal: 24 },
           },
         })
-
         videoRef.current.srcObject = stream
         setCameraPermissionGranted(true)
-        setMessage({ text: '', type: '' })
       } catch (error) {
         if (error.name === 'NotAllowedError') {
-          const errorMessage =
-            'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.'
-          setMessage({ text: errorMessage, type: 'warning' })
-          onCameraError(new Error(errorMessage))
+          setMessage({
+            text: 'Доступ к камере отклонён. Пожалуйста, разрешите доступ к камере.',
+            type: 'warning',
+          })
+          onCameraError?.(new Error('Camera access denied'))
         } else {
-          showErrorAndClose('Произошла ошибка при доступе к камере.')
+          setMessage({
+            text: 'Произошла ошибка при доступе к камере.',
+            type: 'error',
+          })
         }
       }
-    }, [onCameraError, showErrorAndClose])
-
-    const stopVideo = useCallback(() => {
-      cleanupResources()
-    }, [cleanupResources])
-
-    const compareDescriptors = useCallback(
-      (descriptor1, descriptor2, threshold = 0.6) => {
-        if (!descriptor1 || !descriptor2) return null
-        return faceapi.euclideanDistance(descriptor1, descriptor2) < threshold
-          ? 'Это один и тот же человек!'
-          : 'Это разные люди!'
-      },
-      []
-    )
+    }, [onCameraError])
 
     const averageDescriptors = useCallback((descriptors) => {
-      if (!descriptors || descriptors.length === 0) {
-        console.error('Получен пустой массив дескрипторов')
-        return null
-      }
+      if (!descriptors?.length) return null
 
-      const validDescriptors = descriptors.filter(
-        (desc) => desc && Array.isArray(desc) && desc.length === 128
-      )
+      const valid = descriptors.filter((d) => d?.length === 128)
+      if (!valid.length) return null
 
-      if (validDescriptors.length === 0) {
-        console.error('Нет валидных дескрипторов')
-        return null
-      }
+      const result = new Float32Array(128)
+      valid.forEach((d) => d.forEach((val, i) => (result[i] += val)))
+      result.forEach((val, i) => (result[i] = val / valid.length))
 
-      const averagedDescriptor = new Float32Array(128).fill(0)
-
-      validDescriptors.forEach((descriptor) => {
-        for (let i = 0; i < 128; i++) {
-          averagedDescriptor[i] += descriptor[i]
-        }
-      })
-
-      for (let i = 0; i < 128; i++) {
-        averagedDescriptor[i] /= validDescriptors.length
-      }
-
-      return Array.from(averagedDescriptor)
+      return Array.from(result)
     }, [])
 
     const handleVideoPlay = useCallback(async () => {
       const video = videoRef.current
       if (!video || video.videoWidth === 0) return
 
-      setIsProcessing(true)
-      let frameCount = 0
-      const maxFrames = 30
+      let lastBlinkTime = 0
 
       const processFrame = async () => {
         try {
-          frameCount++
-          if (frameCount > maxFrames) {
-            showErrorAndClose('Не удалось распознать лицо.')
-            return
-          }
-
           const detections = await faceapi
             .detectAllFaces(video, detectorOptions.current)
             .withFaceLandmarks(true)
-            .withFaceDescriptors()
+            .withFaceDescriptors() // Добавляем запрос дескрипторов
 
-          if (detections.length > 0 && detections[0].descriptor) {
-            const descriptor = detections[0].descriptor
+          if (detections.length === 0) {
+            animationFrameRef.current = requestAnimationFrame(processFrame)
+            return
+          }
 
-            if (
-              !Array.isArray(descriptor) &&
-              descriptor instanceof Float32Array
-            ) {
-              descriptorsRef.current.push(Array.from(descriptor))
-            } else if (Array.isArray(descriptor) && descriptor.length === 128) {
-              descriptorsRef.current.push(descriptor)
-            } else {
-              console.warn('Неверный формат дескриптора:', descriptor)
-            }
+          const detection = detections[0]
 
-            if (descriptorsRef.current.length >= 3) {
-              const averagedDescriptor = averageDescriptors(
-                descriptorsRef.current
-              )
+          // Проверяем моргание
+          const { landmarks } = detection
+          const leftEAR = calculateEyeAspectRatio(landmarks.getLeftEye())
+          const rightEAR = calculateEyeAspectRatio(landmarks.getRightEye())
+          const avgEAR = (leftEAR + rightEAR) / 2
 
-              if (!averagedDescriptor) {
-                throw new Error('Не удалось создать усредненный дескриптор')
+          if (avgEAR < BLINK_CONFIG.earThreshold) {
+            const now = Date.now()
+            if (now - lastBlinkTime > BLINK_CONFIG.cooldown) {
+              const newCount = blinkCountRef.current + 1
+              blinkCountRef.current = newCount
+              setBlinkCount(newCount)
+              lastBlinkTime = now
+
+              // Сохраняем дескриптор только при моргании
+              if (detection.descriptor) {
+                descriptorsRef.current.push(Array.from(detection.descriptor))
               }
 
-              onFaceDescriptor(averagedDescriptor)
-
-              if (referenceDescriptor) {
-                if (
-                  !Array.isArray(referenceDescriptor) ||
-                  referenceDescriptor.length !== 128
-                ) {
-                  console.error(
-                    'Неверный формат эталонного дескриптора:',
-                    referenceDescriptor
-                  )
-                  throw new Error(
-                    'Эталонный дескриптор должен быть массивом из 128 чисел'
-                  )
+              // Проверяем достижение нужного количества морганий
+              if (newCount >= BLINK_CONFIG.requiredCount) {
+                const avgDescriptor = averageDescriptors(descriptorsRef.current)
+                if (avgDescriptor) {
+                  onFaceDescriptor?.(avgDescriptor)
+                  setMessage({ text: 'Проверка пройдена!', type: 'success' })
+                  setTimeout(safeClose, 800)
+                  return
                 }
-
-                setComparisonResult(
-                  compareDescriptors(averagedDescriptor, referenceDescriptor)
-                )
               }
-
-              setMessage({ text: 'Лицо распознано!', type: 'success' })
-              setTimeout(safeClose, 800)
-              return
             }
           }
 
           animationFrameRef.current = requestAnimationFrame(processFrame)
         } catch (error) {
-          console.error('Ошибка обработки:', error)
-          showErrorAndClose(error.message || 'Ошибка обработки видео.')
+          setMessage({ text: 'Ошибка обработки видео', type: 'error' })
+          // Продолжаем обработку несмотря на ошибку
+          animationFrameRef.current = requestAnimationFrame(processFrame)
         }
       }
 
       animationFrameRef.current = requestAnimationFrame(processFrame)
     }, [
       averageDescriptors,
-      compareDescriptors,
       onFaceDescriptor,
-      referenceDescriptor,
       safeClose,
-      showErrorAndClose,
+      calculateEyeAspectRatio,
     ])
-
     const startRecognition = useCallback(async () => {
       try {
-        descriptorsRef.current = []
-        await checkCameraSupport()
-
-        if (!cameraSupported) {
-          throw new Error('Камера не поддерживается устройством.')
-        }
-
-        await loadModels()
+        await loadModelsOnce()
+        setIsLoadedModel(true)
         await startVideo()
       } catch (error) {
-        showErrorAndClose(
-          error.message || 'Произошла ошибка при запуске распознавания.'
-        )
+        setMessage({ text: error.message, type: 'error' })
       }
-    }, [
-      checkCameraSupport,
-      cameraSupported,
-      loadModels,
-      startVideo,
-      showErrorAndClose,
-    ])
+    }, [startVideo])
 
     useImperativeHandle(ref, () => ({
       startRecognition,
@@ -326,6 +235,7 @@ const FaceRecognition = forwardRef(
       const video = videoRef.current
       video?.addEventListener('play', handleVideoPlay)
 
+      // eslint-disable-next-line consistent-return
       return () => {
         video?.removeEventListener('play', handleVideoPlay)
         cleanupResources()
@@ -369,25 +279,16 @@ const FaceRecognition = forwardRef(
           <>
             {message.text && <MessageAlert message={message} />}
 
-            {isProcessing && (
-              <Box sx={{ width: '100%', mt: 2 }}>
-                <CircularProgress
-                  sx={{ color: 'white', display: 'block', m: '0 auto' }}
-                />
-                <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
-                  {`Распознавание образа... (${descriptorsRef.current.length + 1}/3)`}
-                </Typography>
-              </Box>
-            )}
-
-            {comparisonResult && (
-              <Box>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Результат сравнения:
-                </Typography>
-                <Typography variant="body1">{comparisonResult}</Typography>
-              </Box>
-            )}
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <CircularProgress size={20} color="white" />
+              <Typography variant="h5">Пожалуйста, снимите очки.</Typography>
+              <Typography variant="body1">
+                Лицо должно занимать не менее 30% кадра.
+              </Typography>
+              {/* <Typography variant="h6">
+                Снимите очки! Моргните 3 раза: {blinkCount}/3
+              </Typography> */}
+            </Box>
 
             <VideoContainer videoRef={videoRef} />
           </>

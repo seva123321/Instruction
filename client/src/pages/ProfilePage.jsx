@@ -46,7 +46,7 @@ function ProfilePage() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-      <Container maxWidth="md">
+      <Container maxWidth="md" sx={{ p: '3rem 0' }}>
         <Slide in direction="up" timeout={300}>
           <Box>
             <GameStatsSection profileData={profileData} />

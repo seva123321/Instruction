@@ -51,6 +51,7 @@ export function AuthProvider({ children }) {
     async (userData) => {
       try {
         const response = await postSignup(userData).unwrap()
+        console.log('Cookies after signup:', document.cookie)
         secureStorage.set('user', response)
         setUser(response)
         return response

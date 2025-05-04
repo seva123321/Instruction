@@ -1,6 +1,13 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable operator-linebreak */
-import { useState, useEffect, useMemo, useCallback, memo } from 'react'
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo,
+  Fragment,
+} from 'react'
 import {
   Table,
   TableBody,
@@ -225,7 +232,7 @@ const MobileUserRow = memo(
     }, [user.experience_points, user.next_rank])
 
     return (
-      <>
+      <Fragment style={{ padding: '3rem 0' }}>
         <StyledTableRow
           className={globalRank <= 3 ? `top-3 rank-${globalRank}` : ''}
           isCurrentUser={isCurrentUser}
@@ -295,7 +302,7 @@ const MobileUserRow = memo(
           </MobileTableCell>
         </StyledTableRow>
         {expandedUser === user.id && <ExpandedRow user={user} isMobile />}
-      </>
+      </Fragment>
     )
   }
 )

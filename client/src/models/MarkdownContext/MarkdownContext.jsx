@@ -260,7 +260,6 @@ const MarkdownContext = memo(({ markdown, header }) => {
   const location = useLocation()
   const updateTimeoutRef = useRef(null)
   const lastHeadingRef = useRef(null)
-
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
   const markdownComponents = useMemo(
@@ -280,22 +279,25 @@ const MarkdownContext = memo(({ markdown, header }) => {
     dispatch(toggleMobileOpen(true))
   }, [dispatch])
 
-  const scrollToHeading = (id) => {
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current)
-    }
+  const scrollToHeading = useCallback(
+    (id) => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
 
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-      window.history.replaceState(null, null, `#${id}`)
-      dispatch(setCurrentHeading(id))
-      lastHeadingRef.current = id
-    }
-  }
+      const element = document.getElementById(id)
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+        window.history.replaceState(null, null, `#${id}`)
+        dispatch(setCurrentHeading(id))
+        lastHeadingRef.current = id
+      }
+    },
+    [dispatch]
+  )
 
   const updateCurrentHeading = useCallback(
     (id) => {

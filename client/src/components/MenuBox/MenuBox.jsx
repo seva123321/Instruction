@@ -28,6 +28,7 @@ import {
   Login as LoginIcon,
   SmartDisplay as SmartDisplayIcon,
   ImportContacts as ImportContactsIcon,
+  SportsEsports as SportsEsportsIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material'
@@ -185,7 +186,6 @@ export default function MenuBox() {
       </Box>
       <Divider />
 
-      {/* Остальной код меню без изменений */}
       <List component="nav">
         <ListItemButton
           component={CustomLink}
@@ -282,6 +282,23 @@ export default function MenuBox() {
             </ListItemButtonSubMenu>
           </List>
         </Collapse>
+        <ListItemButton
+          component={CustomLink}
+          to="/game"
+          open={isDrawerOpen}
+          onClick={handleMobileItemClick}
+        >
+          <ListItemIcon open={isDrawerOpen}>
+            <Tooltip title="Игры" placement="right">
+              <SportsEsportsIcon />
+            </Tooltip>
+          </ListItemIcon>
+          <ListItemText
+            open={isDrawerOpen}
+            ismobile={isMobile.toString()}
+            primary="Игры"
+          />
+        </ListItemButton>
 
         <Divider />
 

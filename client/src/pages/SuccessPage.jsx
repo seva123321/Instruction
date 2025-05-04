@@ -16,7 +16,7 @@ const tabs = [
 
 function SuccessPage() {
   return (
-    <div>
+    <div style={{ padding: '3rem 8px' }}>
       <Box mb={3}>
         <TabsWrapper tabs={tabs} centered useRouter />
       </Box>

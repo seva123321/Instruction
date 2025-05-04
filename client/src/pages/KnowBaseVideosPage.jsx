@@ -177,7 +177,7 @@ function KnowBaseVideosPage() {
   }
 
   return (
-    <Container sx={{ p: 0 }} maxWidth="lg">
+    <Container sx={{ p: '3rem 8px' }} maxWidth="lg">
       <KnowBaseHeader title="Видеоматериалы" />
 
       {/* Панель поиска и фильтров */}

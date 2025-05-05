@@ -972,7 +972,14 @@ class PowerOfUser(models.Model):
         related_name="power_of_user",
         verbose_name="Пользователь",
     )
-    power = models.IntegerField("МегаСила", default=0)
+    power = models.IntegerField(
+        "МегаСила",
+        default=0,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(POWER_OF_USER),
+        ],
+    )
 
     class Meta:
         verbose_name = "Сила пользователя"

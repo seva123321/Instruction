@@ -159,8 +159,8 @@ class SignUpView(APIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            # Используем serializer.save() вместо прямого создания
             user = serializer.save()
+            login(request, user)
         except IntegrityError as e:
             error_messages = {
                 "api_user_email": {

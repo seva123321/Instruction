@@ -1,9 +1,10 @@
-import datetime
+import base64
 import json
 import os
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
+from django.core.cache import cache
 from django.db import IntegrityError, models
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -58,10 +59,7 @@ from backend.constants import (
 
 load_dotenv()
 
-AES_TRANSPORT_KEY = os.getenv("AES_TRANSPORT_KEY")
 AES_STORAGE_KEY = os.getenv("AES_STORAGE_KEY")
-
-AES_TRANSPORT_KEY = AES_TRANSPORT_KEY.encode()
 AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
 
 
@@ -260,6 +258,20 @@ class LoginView(APIView):
             )
 
 
+class GenerateAESKeyView(APIView):
+    """Ручка для генерации временного AES-ключа."""
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        raw_key = os.urandom(32)
+        key_id = os.urandom(16).hex()
+
+        cache.set(key_id, raw_key, timeout=30)
+
+        encoded_key = base64.b64encode(raw_key).decode('utf-8')
+        return Response({"key_id": key_id, "key": encoded_key})
+
+
 @extend_schema(tags=["LoginFace"], description="Аутентификация по лицу.")
 class FaceLoginView(APIView):
     """Аутентификация по лицу"""
@@ -267,7 +279,6 @@ class FaceLoginView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # 1. Получаем зашифрованный дескриптор из запроса
         encrypted_data = request.data.get("face_descriptor")
         if not encrypted_data or not all(
             k in encrypted_data for k in ["iv", "ciphertext", "tag"]
@@ -278,8 +289,14 @@ class FaceLoginView(APIView):
             )
 
         try:
-            # 2. Дешифруем дескриптор
-            decrypted_descriptor = decrypt_descriptor(encrypted_data, AES_TRANSPORT_KEY)
+            encoded_key = cache.get(request.data.get("key_id"))
+            if not encoded_key:
+                return Response(
+                    {"error": "Ключ истёк или не существует"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            decrypted_descriptor = decrypt_descriptor(encrypted_data, encoded_key)
             input_descriptor = np.array(decrypted_descriptor, dtype=np.float32)
 
             if len(input_descriptor) != 128:

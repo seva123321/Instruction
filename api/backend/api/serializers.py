@@ -1,8 +1,10 @@
+import base64
 import json
 import random
 import os
 
 from django.conf import settings
+from django.core.cache import cache
 from dotenv import load_dotenv
 import numpy as np
 from rest_framework import serializers
@@ -45,10 +47,7 @@ from backend.constants import (
 
 load_dotenv()
 
-AES_TRANSPORT_KEY = os.getenv("AES_TRANSPORT_KEY")
 AES_STORAGE_KEY = os.getenv("AES_STORAGE_KEY")
-
-AES_TRANSPORT_KEY = AES_TRANSPORT_KEY.encode()
 AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
 
 
@@ -207,9 +206,15 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_face_descriptor(self, value):
         try:
+            encoded_key = cache.get(value.data.get("key_id"))
+            if not encoded_key:
+                raise serializers.ValidationError(
+                    "Ключ шифрования истёк или не существует"
+                )
+
             decrypted_descriptor = decrypt_descriptor(
                 value,
-                AES_TRANSPORT_KEY
+                encoded_key
             )
             input_descriptor = np.array(
                 decrypted_descriptor,
@@ -394,8 +399,12 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     def validate_face_descriptor(self, value):
         """Проверяем, что лицо соответствует зарегистрированному пользователю."""
         try:
-            # Дешифруем дескриптор от клиента
-            decrypted_descriptor = decrypt_descriptor(value, AES_TRANSPORT_KEY)
+            encoded_key = cache.get(value.data.get("key_id"))
+            if not encoded_key:
+                raise serializers.ValidationError(
+                    "Ключ шифрования истёк или не существует"
+                )
+            decrypted_descriptor = decrypt_descriptor(value, encoded_key)
             input_descriptor = np.array(decrypted_descriptor, dtype=np.float32)
 
             if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:

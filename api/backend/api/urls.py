@@ -18,7 +18,8 @@ from api.views import (
     GameSwiperView,
     GameSwiperResultView,
     RatingViewSet,
-    PowerOfUserView
+    PowerOfUserView,
+    GenerateAESKeyView
 )
 
 router = DefaultRouter()
@@ -41,6 +42,7 @@ auth_urls = [
 
 urlpatterns = [
     path("auth/", include(auth_urls)),
+    path("generate_key/", GenerateAESKeyView.as_view(), name="generate_key"),
     path(
         "instruction_results/",
         InstructionResultView.as_view(),

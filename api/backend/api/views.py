@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
 from django.db import IntegrityError, models
-from django.db.models import OuterRef, Subquery, JSONField, Func, Value, Prefetch
+from django.db.models import Prefetch
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from dotenv import load_dotenv
@@ -68,20 +68,21 @@ AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
     tags=["User"],
     description="Получение, создание, изменение и удаление пользователей.",
 )
-class UserViewSet(ModelViewSet):
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для операций с пользователями."""
 
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminPermission,)
-    http_method_names = ("get", "post", "patch", "delete")
 
     def get_queryset(self):
         """Оптимизация запросов к БД."""
         if self.action == "profile":
-            return (User.objects
-                    .prefetch_related("badges__badge")
-                    .select_related("current_rank"))
-        return User.objects.all()
+            return (
+                User.objects.prefetch_related("badges__badge")
+                .select_related("current_rank")
+                .prefetch_related("groups", "user_permissions__content_type")
+            )
+        return User.objects.prefetch_related("groups", "user_permissions__content_type")
 
     def get_serializer_class(self):
         """Определяем сериализатор в зависимости от действия."""

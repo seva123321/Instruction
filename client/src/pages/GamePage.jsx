@@ -4,48 +4,86 @@ import {
   Typography,
   Button,
   Paper,
-  Badge,
   CircularProgress,
   Tooltip,
   Alert,
   styled,
 } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import StarIcon from '@mui/icons-material/Star'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Construction as ConstructionIcon,
   Bolt as BoltIcon,
   LocalFireDepartment as LocalFireDepartmentIcon,
   Factory as FactoryIcon,
 } from '@mui/icons-material'
+
 import KnowBaseHeader from '@/components/KnowBaseHeader'
 import { useGetGameQuery } from '@/slices/gameApi'
 import useGame from '@/hook/useGame'
 
 // Стилизованные компоненты
-const IndustrialCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(4),
-  margin: theme.spacing(2),
-  borderRadius: '16px',
-  background: 'linear-gradient(145deg, #f5f5f5, #e0e0e0)',
-  boxShadow: '5px 5px 15px #2e89d761, -5px -5px 15px #4555ed33',
-  cursor: 'pointer',
+const IndustrialBadgeWrapper = styled(Box)(({ theme }) => ({
+  position: 'relative',
   transition: 'all 0.3s ease',
   '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow:
-      '8px 8px 20px rgba(42, 109, 177, 0.72), -8px -8px 20px rgba(37, 57, 231, 0.2)',
+    transform: 'translateY(-3px)',
+    '& .MuiBadge-badge': {
+      boxShadow: theme.shadows[4],
+    },
   },
 }))
 
-const IndustrialBadge = styled(Badge)(() => ({
-  '& .MuiBadge-badge': {
-    right: 98,
-    top: 32,
-    padding: '0 8px',
-    backgroundColor: '#ff5722',
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: '0.8rem',
+const BadgeLabel = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: -8,
+  right: 12,
+  backgroundColor: theme.palette.error.main,
+  color: 'white',
+  padding: '4px 12px',
+  borderRadius: '16px',
+  fontSize: '0.75rem',
+  fontWeight: 'bold',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  zIndex: 1,
+  '&.technical': {
+    backgroundColor: theme.palette.primary.main,
+  },
+}))
+
+// Обновленный IndustrialCard с анимацией
+const IndustrialCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(4),
+  borderRadius: '16px',
+  background: 'linear-gradient(145deg, #f5f5f5, #e0e0e0)',
+  boxShadow: '5px 5px 15px rgba(46, 137, 215, 0.38)',
+  cursor: 'pointer',
+  transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: `
+      0 6px 20px rgba(42, 109, 177, 0.72),
+      0 3px 10px rgba(37, 57, 231, 0.2)
+    `,
+    '& $GameIconWrapper': {
+      transform: 'rotate(5deg) scale(1.05)',
+    },
+  },
+}))
+
+const GameLink = styled(Link)(({ theme }) => ({
+  display: 'block',
+  margin: '8px 0',
+  color: theme.palette.primary.main,
+  textDecoration: 'none',
+  fontWeight: 500,
+  '&:hover': {
+    textDecoration: 'underline',
   },
 }))
 
@@ -57,17 +95,46 @@ const GameIconWrapper = styled(Box)(() => ({
   alignItems: 'center',
   justifyContent: 'center',
   margin: '0 auto 20px',
-  background: 'linear-gradient(145deg, #ff9800, #f57c00)',
   color: 'white',
-  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+  transition: 'all 0.3s ease',
 }))
+
+// Компонент кликабельного рейтинга
+function LevelRating() {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 2 }}>
+      <Typography variant="body2" color="text.secondary">
+        Уровни:
+      </Typography>
+      {[1, 2, 3].map((level) => (
+        <Link
+          key={level}
+          to={`fire_safety?level=${level}`}
+          style={{ display: 'flex' }}
+        >
+          <Tooltip title={`${level} уровень`}>
+            <StarIcon
+              sx={{
+                color: '#ffb400',
+                fontSize: '1.5rem',
+                '&:hover': { transform: 'scale(1.2)' },
+                transition: 'transform 0.2s',
+              }}
+            />
+          </Tooltip>
+        </Link>
+      ))}
+    </Box>
+  )
+}
 
 function GamePage() {
   const navigate = useNavigate()
   const [timeToReset, setTimeToReset] = useState('')
   const [message, setMessage] = useState(null)
   const [showAlert, setShowAlert] = useState(false)
-  const { data: megaPowers, isLoading, isError } = useGame()
+  const { data: megaPowers, isLoading, isError, error } = useGame()
 
   // Расчет времени до обновления мегасил
   useEffect(() => {
@@ -106,10 +173,12 @@ function GamePage() {
     calculateTimeToReset()
     const timer = setInterval(calculateTimeToReset, 60000) // Обновляем каждую минуту
 
+    // eslint-disable-next-line consistent-return
     return () => clearInterval(timer)
   }, [megaPowers])
 
   // Эффект для автоматического скрытия сообщения
+  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (showAlert) {
       const timer = setTimeout(() => setShowAlert(false), 5000)
@@ -121,8 +190,6 @@ function GamePage() {
   const {
     remaining_mega_powers: remainingMegaPowers = 0,
     total_daily_mega_powers: totalDailyMegaPowers = 0,
-    hours = 0,
-    minutes = 0,
   } = megaPowers || {}
 
   // Отрисовка молний (мегасил)
@@ -186,7 +253,7 @@ function GamePage() {
         }}
       >
         <Typography color="error" sx={{ mb: 2 }}>
-          {`Ошибка: ${error?.data?.message || error?.message || 'Неизвестная ошибка'}`}
+          {`Ошибка: ${error?.message || 'Неизвестная ошибка'}`}
         </Typography>
         <Button
           variant="contained"
@@ -308,54 +375,115 @@ function GamePage() {
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-            gap: 3,
+            gap: 4,
+            padding: 2,
           }}
         >
-          <IndustrialBadge badgeContent="ГОРЯЧАЯ СМЕНА" color="error">
+          {/* Первая карточка - Свайпер */}
+          <IndustrialBadgeWrapper>
+            <BadgeLabel>Горячая смена</BadgeLabel>
             <IndustrialCard onClick={() => handleGameClick('swiper')}>
-              <GameIconWrapper>
+              <GameIconWrapper
+                sx={{
+                  background: 'linear-gradient(145deg, #ff9800, #f57c00)',
+                }}
+              >
                 <FactoryIcon sx={{ fontSize: 40 }} />
               </GameIconWrapper>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 1, fontWeight: 'bold', textAlign: 'center' }}
+              >
                 СВАЙПЕР
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
+                  textAlign: 'center',
+                  minHeight: '3em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 Быстрые ответы на производственные вопросы
               </Typography>
-              <Button
-                variant="contained"
-                color="warning"
-                startIcon={<ConstructionIcon />}
-                fullWidth
-              >
-                В цех
-              </Button>
+              <Box sx={{ mt: 'auto' }}>
+                <Button
+                  variant="contained"
+                  color="warning"
+                  startIcon={<ConstructionIcon />}
+                  fullWidth
+                  sx={{
+                    bgcolor: '#ff9800',
+                    '&:hover': { bgcolor: '#f57c00' },
+                    fontWeight: 'bold',
+                    py: 1.5,
+                  }}
+                >
+                  В цех
+                </Button>
+              </Box>
             </IndustrialCard>
-          </IndustrialBadge>
+          </IndustrialBadgeWrapper>
 
-          <IndustrialBadge badgeContent="ТЕХНИЧЕСКИЙ ОТДЕЛ">
-            <IndustrialCard onClick={() => handleGameClick('quiz')}>
+          {/* Вторая карточка - Квиз */}
+          <IndustrialBadgeWrapper>
+            <BadgeLabel className="technical">Технический отдел</BadgeLabel>
+            <IndustrialCard>
               <GameIconWrapper
-                sx={{ background: 'linear-gradient(145deg, #2196f3, #1976d2)' }}
+                sx={{
+                  background: 'linear-gradient(145deg, #2196f3, #1976d2)',
+                }}
               >
                 <BoltIcon sx={{ fontSize: 40 }} />
               </GameIconWrapper>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 1, fontWeight: 'bold', textAlign: 'center' }}
+              >
                 ТЕМАТИЧЕСКИЙ КВИЗ
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Проверь свои знания в тематической викторине
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<BoltIcon />}
-                fullWidth
-              >
-                К испытаниям
-              </Button>
+
+              <Box sx={{ mb: 2 }}>
+                <GameLink to="fire_safety?game=1&level=1">
+                  <Box display="flex" alignItems="center">
+                    <LocalFireDepartmentIcon color="error" sx={{ mr: 1 }} />
+                    Пожарная безопасность
+                  </Box>
+                </GameLink>
+                <LevelRating />
+              </Box>
+
+              {/* <Box sx={{ mb: 2 }}>
+                <GameLink to="fire_safety?game=2&level=1">
+                  <Box display="flex" alignItems="center">
+                    <FlashOnIcon color="warning" sx={{ mr: 1 }} />
+                    Электро-безопасность
+                  </Box>
+                </GameLink>
+                <LevelRating />
+              </Box> */}
+
+              <Box sx={{ mt: 'auto' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<BoltIcon />}
+                  fullWidth
+                  sx={{
+                    fontWeight: 'bold',
+                    py: 1.5,
+                    background: 'linear-gradient(145deg, #2196f3, #1976d2)',
+                  }}
+                >
+                  К испытаниям
+                </Button>
+              </Box>
             </IndustrialCard>
-          </IndustrialBadge>
+          </IndustrialBadgeWrapper>
         </Box>
 
         {megaPowers && (

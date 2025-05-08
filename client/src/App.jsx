@@ -11,7 +11,6 @@ import { AuthProvider } from './hoc/AuthProvider'
 import { GameProvider } from './hoc/GameProvider'
 import RequireAuth from './hoc/RequireAuth'
 import GamePage from './pages/GamePage'
-import QuizPage from './pages/QuizPage'
 import GamePageRouter from './pages/GamePageRouter'
 import { QuizPageProvider } from './hoc/QuizPageProvider'
 

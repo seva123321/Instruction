@@ -26,6 +26,7 @@ from api.models import (
     InstructionAgreementResult,
     Notification,
     Badge,
+    UserBadge,
     Rank,
     GameSwiper,
     GameSwiperResult
@@ -98,6 +99,15 @@ class BadgeSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "description", "required_count", "icon")
 
 
+class UserBadgeSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели UserBadge."""
+    badge = BadgeSerializer()
+
+    class Meta:
+        model = UserBadge
+        fields = ("badge",)
+
+
 class RankSerializer(serializers.ModelSerializer):
     """Сериализатор для званий пользователя."""
 
@@ -143,14 +153,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return default_rank
 
 
-class RatingSerializer(UserProfileSerializer):
+class RatingSerializer(UserSerializer, UserProfileSerializer):
     """Сериализатор для рейтинга пользователей."""
 
+    badges = UserBadgeSerializer(many=True)
+
     class Meta(UserSerializer.Meta):
-        fields = tuple(
-            field
-            for field in UserProfileSerializer.Meta.fields
-            if field not in {"mobile_phone", "role"}
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "middle_name",
+            "birthday",
+            "position",
+            "experience_points",
+            "current_rank",
+            "badges",
         )
 
 

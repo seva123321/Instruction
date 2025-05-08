@@ -128,19 +128,16 @@ class UserViewSet(ModelViewSet):
 class RatingViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения рейтинга пользователей."""
 
-    queryset = User.objects.all()
     serializer_class = RatingSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (SearchFilter,)
-    search_fields = ("last_name",)
     http_method_names = ("get",)
 
     def get_queryset(self):
         """Оптимизация запросов к БД."""
         return (
-            super()
-            .get_queryset()
-            .prefetch_related("badges__badge", "current_rank")
+            User.objects
+            .prefetch_related("badges__badge")
+            .select_related("current_rank", "position")
             .order_by("-experience_points")
         )
 

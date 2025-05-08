@@ -120,20 +120,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для расширенного профиля пользователя."""
 
     current_rank = serializers.SerializerMethodField()
-    badges = serializers.SerializerMethodField()
+    badges = UserBadgeSerializer(many=True)
     position = serializers.StringRelatedField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ("badges",)
         extra_kwargs = {**UserSerializer.Meta.extra_kwargs}
-
-    def get_badges(self, obj):
-        """Получаем список значков пользователя через промежуточную модель."""
-        return BadgeSerializer(
-            Badge.objects.filter(userbadge__user=obj),
-            many=True,
-            context=self.context,
-        ).data
 
     def get_current_rank(self, obj):
         if obj.current_rank:

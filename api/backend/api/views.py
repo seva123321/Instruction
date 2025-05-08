@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
 from django.db import IntegrityError, models
+from django.db.models import Prefetch
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from dotenv import load_dotenv
@@ -13,7 +14,6 @@ import numpy as np
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import SearchFilter
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -23,6 +23,7 @@ from api.models import (
     User,
     Instruction,
     Tests,
+    TestResult,
     Video,
     NormativeLegislation,
     InstructionResult,
@@ -67,22 +68,21 @@ AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
     tags=["User"],
     description="Получение, создание, изменение и удаление пользователей.",
 )
-class UserViewSet(ModelViewSet):
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для операций с пользователями."""
 
-    queryset = User.objects.all()
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminPermission,)
-    filter_backends = (SearchFilter,)
-    search_fields = ("last_name",)
-    http_method_names = ("get", "post", "patch", "delete")
 
     def get_queryset(self):
         """Оптимизация запросов к БД."""
-        queryset = super().get_queryset()
         if self.action == "profile":
-            return queryset.prefetch_related("badges__badge", "current_rank")
-        return queryset
+            return (
+                User.objects.prefetch_related("badges__badge")
+                .select_related("current_rank")
+                .prefetch_related("groups", "user_permissions__content_type")
+            )
+        return User.objects.prefetch_related("groups", "user_permissions__content_type")
 
     def get_serializer_class(self):
         """Определяем сериализатор в зависимости от действия."""
@@ -100,6 +100,12 @@ class UserViewSet(ModelViewSet):
     def profile(self, request):
         """Представление профиля текущего пользователя."""
         user = request.user
+
+        user = (
+            User.objects.select_related("current_rank")
+            .prefetch_related("badges__badge")
+            .get(id=user.id)
+        )
 
         if request.method == "GET":
             serializer = self.get_serializer(user)
@@ -128,19 +134,16 @@ class UserViewSet(ModelViewSet):
 class RatingViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения рейтинга пользователей."""
 
-    queryset = User.objects.all()
     serializer_class = RatingSerializer
     permission_classes = (IsAuthenticated,)
-    filter_backends = (SearchFilter,)
-    search_fields = ("last_name",)
     http_method_names = ("get",)
 
     def get_queryset(self):
         """Оптимизация запросов к БД."""
         return (
-            super()
-            .get_queryset()
-            .prefetch_related("badges__badge", "current_rank")
+            User.objects
+            .prefetch_related("badges__badge")
+            .select_related("current_rank", "position")
             .order_by("-experience_points")
         )
 
@@ -413,9 +416,6 @@ class InstructionViewSet(viewsets.ReadOnlyModelViewSet):
 class TestViewSet(viewsets.ReadOnlyModelViewSet):
     """Представление для получения тестов."""
 
-    queryset = Tests.objects.prefetch_related(
-        "questions", "questions__answers", "questions__reference_link"
-    ).all()
     serializer_class = TestSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -426,12 +426,22 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return TestSerializer
 
     def get_queryset(self):
-        user_position = self.request.user.position
-        return Tests.objects.filter(
-            models.Q(position=user_position) | models.Q(position__isnull=True)
-        ).prefetch_related(
-            "questions", "questions__answers", "questions__reference_link"
+        user = self.request.user
+        test_results_prefetch = Prefetch(
+            "test_results",
+            queryset=TestResult.objects.all(),
+            to_attr="all_test_results",
         )
+        return (Tests.objects.filter(
+            models.Q(position=user.position) | models.Q(position__isnull=True)
+        ).select_related(
+        "position"
+        ).prefetch_related(
+            "questions",
+            "questions__answers",
+            "questions__reference_link",
+            test_results_prefetch,
+        ))
 
 
 @extend_schema(
@@ -491,7 +501,9 @@ class InstructionResultView(APIView):
 
     def get(self, request):
         """Получение результатов инструктажа для текущего пользователя."""
-        instruction_results = InstructionResult.objects.filter(
+        instruction_results = InstructionResult.objects.select_related(
+            "instruction",
+        ).filter(
             user=request.user
         ).order_by("-date")
 

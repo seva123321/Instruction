@@ -1,4 +1,3 @@
-import base64
 import json
 import random
 import os
@@ -26,6 +25,7 @@ from api.models import (
     InstructionAgreementResult,
     Notification,
     Badge,
+    UserBadge,
     Rank,
     GameSwiper,
     GameSwiperResult
@@ -98,6 +98,15 @@ class BadgeSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "description", "required_count", "icon")
 
 
+class UserBadgeSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели UserBadge."""
+    badge = BadgeSerializer()
+
+    class Meta:
+        model = UserBadge
+        fields = ("badge",)
+
+
 class RankSerializer(serializers.ModelSerializer):
     """Сериализатор для званий пользователя."""
 
@@ -110,20 +119,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """Сериализатор для расширенного профиля пользователя."""
 
     current_rank = serializers.SerializerMethodField()
-    badges = serializers.SerializerMethodField()
+    badges = UserBadgeSerializer(many=True)
     position = serializers.StringRelatedField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ("badges",)
         extra_kwargs = {**UserSerializer.Meta.extra_kwargs}
-
-    def get_badges(self, obj):
-        """Получаем список значков пользователя через промежуточную модель."""
-        return BadgeSerializer(
-            Badge.objects.filter(userbadge__user=obj),
-            many=True,
-            context=self.context,
-        ).data
 
     def get_current_rank(self, obj):
         if obj.current_rank:
@@ -143,14 +144,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return default_rank
 
 
-class RatingSerializer(UserProfileSerializer):
+class RatingSerializer(UserSerializer, UserProfileSerializer):
     """Сериализатор для рейтинга пользователей."""
 
+    badges = UserBadgeSerializer(many=True)
+
     class Meta(UserSerializer.Meta):
-        fields = tuple(
-            field
-            for field in UserProfileSerializer.Meta.fields
-            if field not in {"mobile_phone", "role"}
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "middle_name",
+            "birthday",
+            "position",
+            "experience_points",
+            "current_rank",
+            "badges",
         )
 
 
@@ -595,15 +605,13 @@ class BaseTestSerializer(serializers.ModelSerializer):
     test_results = serializers.SerializerMethodField()
 
     def get_test_results(self, obj):
-        """Общий метод для получения результатов теста"""
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return TestResultSerializer(
-                obj.test_results.filter(user=request.user),
-                many=True,
-                context=self.context,
-            ).data
-        return []
+        """Возвращает данные результатов теста для текущего пользователя"""
+        user = self.context["request"].user
+        user_results = [
+            result for result in getattr(obj, "all_test_results", [])
+            if result.user_id == user.id
+        ]
+        return TestResultSerializer(user_results, many=True, context=self.context).data
 
 
 class TestListSerializer(BaseTestSerializer):
@@ -641,23 +649,27 @@ class TestSerializer(BaseTestSerializer):
 
     def get_questions(self, obj):
         """Метод для получения вопросов теста"""
-        questions = obj.questions.all()
 
-        limit = getattr(settings, "TEST_QUESTIONS_LIMIT")
-        if limit:
-            questions = questions.order_by("?")[:limit]
+        if not hasattr(self, "_cached_questions"):
+            limit = getattr(settings, "TEST_QUESTIONS_LIMIT")
+            questions = obj.questions.prefetch_related(
+                "answers", "reference_link"
+            ).order_by("?")[:limit]
 
-        question_context = self.context.copy()
-        question_context["test_is_control"] = obj.test_is_control
+            question_context = self.context.copy()
+            question_context["test_is_control"] = obj.test_is_control
 
-        return QuestionSerializer(
-            questions, many=True, context=question_context
-        ).data
+            self._cached_questions = QuestionSerializer(
+                questions, many=True, context=question_context
+            ).data
+
+        return self._cached_questions
 
     def get_total_points(self, obj):
         """Вычисляем сумму баллов выбранных вопросов"""
-        questions = self.get_questions(obj)
-        return sum(q["points"] for q in questions)
+        if not hasattr(self, "_cached_questions"):
+            self._cached_questions = self.get_questions(obj)
+        return sum(q["points"] for q in self._cached_questions)
 
 
 class VideoSerializer(serializers.ModelSerializer):

@@ -100,11 +100,13 @@ class User(AbstractUser):
         max_length=MAX_LENGTH_POSITION,
         blank=True,
         null=True,
+        db_index=True,
     )
     email = models.EmailField(
         "Электронная почта",
         unique=True,
         max_length=MAX_LENGTH_EMAIL_ADDRESS,
+        db_index=True
     )
     mobile_phone = models.CharField(
         "Мобильный телефон",
@@ -141,7 +143,8 @@ class User(AbstractUser):
     )
     experience_points = models.IntegerField(
         "Очки опыта",
-        default=0
+        default=0,
+        db_index=True
     )
     current_rank = models.ForeignKey(
         "Rank",
@@ -466,6 +469,7 @@ class Instruction(models.Model):
         blank=True,
         verbose_name="Должность",
         related_name="instructions",
+        db_index=True,
     )
 
     class Meta:
@@ -504,6 +508,7 @@ class Tests(models.Model):
     )
     test_is_control = models.BooleanField(
         "Тест является контрольным",
+        db_index=True
     )
     passing_score = models.IntegerField(
         "Проходной балл",
@@ -519,6 +524,7 @@ class Tests(models.Model):
         blank=True,
         verbose_name="Должность",
         related_name="tests",
+        db_index=True,
     )
 
     class Meta:
@@ -636,6 +642,7 @@ class TestResult(models.Model):
         verbose_name="Пользователь",
         blank=True,
         null=True,
+        db_index=True,
     )
     test = models.ForeignKey(
         Tests,
@@ -644,6 +651,7 @@ class TestResult(models.Model):
         verbose_name="Тест",
         blank=True,
         null=True,
+        db_index=True,
     )
     is_passed = models.BooleanField("Тест пройден", default=False)
     mark = models.FloatField(
@@ -738,6 +746,7 @@ class InstructionResult(models.Model):
         verbose_name="Пользователь",
         blank=True,
         null=True,
+        db_index=True,
     )
     instruction = models.ForeignKey(
         Instruction,
@@ -746,6 +755,7 @@ class InstructionResult(models.Model):
         verbose_name="Инструктаж",
         blank=True,
         null=True,
+        db_index=True,
     )
     result = models.BooleanField(
         "Прошёл инструктаж",
@@ -926,6 +936,7 @@ class GameSwiper(models.Model):
         blank=True,
         verbose_name="Должность",
         related_name="game_swipers",
+        db_index=True,
     )
 
     class Meta:
@@ -943,6 +954,7 @@ class GameSwiperResult(models.Model):
         on_delete=models.CASCADE,
         related_name="game_swiper_results",
         verbose_name="Пользователь",
+        db_index=True,
     )
     date = models.DateField("Дата игры", auto_now_add=True)
     score = models.IntegerField("Очки", default=0)

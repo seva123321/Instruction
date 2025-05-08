@@ -8,6 +8,7 @@ import {
   Tooltip,
   Alert,
   styled,
+  useMediaQuery,
 } from '@mui/material'
 import StarIcon from '@mui/icons-material/Star'
 import { Link, useNavigate } from 'react-router-dom'
@@ -135,6 +136,7 @@ function GamePage() {
   const [message, setMessage] = useState(null)
   const [showAlert, setShowAlert] = useState(false)
   const { data: megaPowers, isLoading, isError, error } = useGame()
+  const isMobile = useMediaQuery('(max-width:600px)')
 
   // Расчет времени до обновления мегасил
   useEffect(() => {
@@ -330,7 +332,7 @@ function GamePage() {
             sx={{
               background: 'white',
               borderRadius: '12px',
-              p: 2,
+              p: isMobile ? 1 : 2,
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               minWidth: '120px',
               display: 'inline-block',
@@ -448,7 +450,7 @@ function GamePage() {
               </Typography>
 
               <Box sx={{ mb: 2 }}>
-                <GameLink to="fire_safety?game=1&level=1">
+                <GameLink to="fire_safety?level=1">
                   <Box display="flex" alignItems="center">
                     <LocalFireDepartmentIcon color="error" sx={{ mr: 1 }} />
                     Пожарная безопасность

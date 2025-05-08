@@ -1,4 +1,3 @@
-import base64
 import json
 import random
 import os
@@ -606,15 +605,13 @@ class BaseTestSerializer(serializers.ModelSerializer):
     test_results = serializers.SerializerMethodField()
 
     def get_test_results(self, obj):
-        """Общий метод для получения результатов теста"""
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            return TestResultSerializer(
-                obj.test_results.filter(user=request.user),
-                many=True,
-                context=self.context,
-            ).data
-        return []
+        """Возвращает данные результатов теста для текущего пользователя"""
+        user = self.context["request"].user
+        user_results = [
+            result for result in getattr(obj, "all_test_results", [])
+            if result.user_id == user.id
+        ]
+        return TestResultSerializer(user_results, many=True, context=self.context).data
 
 
 class TestListSerializer(BaseTestSerializer):

@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 
 import Enterprise1 from '@/assets/img/enterprise1.jpg'
 
-function NotFoundPage() {
+function NotFoundPage({ to = '/auth/login' }) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
@@ -104,7 +104,7 @@ function NotFoundPage() {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            to="/auth/login"
+            to={to}
           >
             На главную
           </Link>

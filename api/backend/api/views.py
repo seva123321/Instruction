@@ -499,7 +499,9 @@ class InstructionResultView(APIView):
 
     def get(self, request):
         """Получение результатов инструктажа для текущего пользователя."""
-        instruction_results = InstructionResult.objects.filter(
+        instruction_results = InstructionResult.objects.select_related(
+            "instruction",
+        ).filter(
             user=request.user
         ).order_by("-date")
 

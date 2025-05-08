@@ -649,23 +649,27 @@ class TestSerializer(BaseTestSerializer):
 
     def get_questions(self, obj):
         """Метод для получения вопросов теста"""
-        questions = obj.questions.all()
 
-        limit = getattr(settings, "TEST_QUESTIONS_LIMIT")
-        if limit:
-            questions = questions.order_by("?")[:limit]
+        if not hasattr(self, "_cached_questions"):
+            limit = getattr(settings, "TEST_QUESTIONS_LIMIT")
+            questions = obj.questions.prefetch_related(
+                "answers", "reference_link"
+            ).order_by("?")[:limit]
 
-        question_context = self.context.copy()
-        question_context["test_is_control"] = obj.test_is_control
+            question_context = self.context.copy()
+            question_context["test_is_control"] = obj.test_is_control
 
-        return QuestionSerializer(
-            questions, many=True, context=question_context
-        ).data
+            self._cached_questions = QuestionSerializer(
+                questions, many=True, context=question_context
+            ).data
+
+        return self._cached_questions
 
     def get_total_points(self, obj):
         """Вычисляем сумму баллов выбранных вопросов"""
-        questions = self.get_questions(obj)
-        return sum(q["points"] for q in questions)
+        if not hasattr(self, "_cached_questions"):
+            self._cached_questions = self.get_questions(obj)
+        return sum(q["points"] for q in self._cached_questions)
 
 
 class VideoSerializer(serializers.ModelSerializer):

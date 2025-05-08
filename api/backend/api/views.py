@@ -430,14 +430,16 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
             queryset=TestResult.objects.all(),
             to_attr="all_test_results",
         )
-        return Tests.objects.filter(
+        return (Tests.objects.filter(
             models.Q(position=user.position) | models.Q(position__isnull=True)
+        ).select_related(
+        "position"
         ).prefetch_related(
             "questions",
             "questions__answers",
             "questions__reference_link",
             test_results_prefetch,
-        )
+        ))
 
 
 @extend_schema(

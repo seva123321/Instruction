@@ -24,7 +24,21 @@ const gameApi = createApi({
       providesTags: ['game'],
     }),
     getGameQuiz: build.query({
-      query: () => 'game/quiz/',
+      query: ({ gameType, level }) => `game/${gameType}?level=${level}/`,
+      //`game/fire_safety?level=1/`
+    }),
+    getModel: build.query({
+      query: (modelPath) => ({
+        url: `static/${modelPath}`,
+        responseHandler: async (response) => {
+          if (!response.ok) throw new Error('Model loading failed')
+          return response.blob()
+        },
+        // Отключаем обработку JSON, так как ожидаем blob
+        headers: { Accept: '*/*' },
+      }),
+      // Долгий срок кэширования для моделей (1 день)
+      keepUnusedDataFor: 86400,
     }),
     getGameSwiper: build.query({
       query: () => 'game/swiper/',
@@ -44,6 +58,7 @@ export const {
   useGetGameQuery,
   useGetGameSwiperQuery,
   useGetGameQuizQuery,
+  useGetModelQuery,
   usePostSwiperResultMutation,
 } = gameApi
 export default gameApi

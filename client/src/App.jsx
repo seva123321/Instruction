@@ -5,13 +5,14 @@ import Layout from '@/components/Layout'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
+import SwiperGame from '@/models/SwiperGame'
 
 import { AuthProvider } from './hoc/AuthProvider'
 import { GameProvider } from './hoc/GameProvider'
 import RequireAuth from './hoc/RequireAuth'
 import GamePage from './pages/GamePage'
-import SwiperGame from '@/models/SwiperGame'
-import QuizPage from './pages/QuizPage'
+import GamePageRouter from './pages/GamePageRouter'
+import { QuizPageProvider } from './hoc/QuizPageProvider'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
@@ -151,12 +152,12 @@ function App() {
             }
           />
           <Route
-            path="game/quiz"
+            path="game/:gameType" // fire_safety
             element={
               <RequireAuth>
-                <GameProvider>
-                  <QuizPage />
-                </GameProvider>
+                <QuizPageProvider>
+                  <GamePageRouter />
+                </QuizPageProvider>
               </RequireAuth>
             }
           />

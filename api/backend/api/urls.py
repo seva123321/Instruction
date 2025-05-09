@@ -54,7 +54,7 @@ urlpatterns = [
     path("game/", PowerOfUserView.as_view(), name="power_of_user"),
     path("game/swiper/", GameSwiperView.as_view(), name="game_swiper"),
     path("game/swiper_result/", GameSwiperResultView.as_view(), name="swiper_result"),
-    path("game/fire_safety/", FireSafetyQuizView.as_view(), name="fire_safety_quiz"),
+    path("game/fire_safety", FireSafetyQuizView.as_view(), name="fire_safety_quiz"),
     path("models/<str:filename>", SendGlobView.as_view(), name="send_glob"),
     path("", include(router.urls)),
 ]

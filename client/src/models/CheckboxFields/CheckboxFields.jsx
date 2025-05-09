@@ -15,6 +15,7 @@ import PropTypes from 'prop-types'
 import Recognition from '@/models/Recognition'
 import CheckboxList from '@/components/CheckboxList'
 import { usePostInstructionResultsMutation } from '@/slices/instructionApi'
+import { useGetAesKeyQuery } from '@/slices/userApi'
 
 const formContainerStyles = {
   border: '1px solid',
@@ -56,6 +57,11 @@ function CheckboxFields({ agreements = [], id }) {
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [postInstructionResults] = usePostInstructionResultsMutation()
+  const {
+    data: aesKey,
+    isError: isErrorAes,
+    refetch: refetchAesKey,
+  } = useGetAesKeyQuery()
 
   const complianceValue = useWatch({
     control,
@@ -113,8 +119,17 @@ function CheckboxFields({ agreements = [], id }) {
           ),
           face_descriptor: descriptor,
         }
+        const { data: currentAesKey } = await refetchAesKey()
 
-        await postInstructionResults(submissionData).unwrap()
+        if (!currentAesKey) {
+          throw new Error('AES key not available')
+        }
+
+        const response = await postInstructionResults({
+          submissionData,
+          aesKey: currentAesKey,
+        }).unwrap()
+
         handleReset()
       } catch (err) {
         handleError(err.message || 'Произошла непредвиденная ошибка')

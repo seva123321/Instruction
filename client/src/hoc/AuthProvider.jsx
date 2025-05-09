@@ -6,6 +6,7 @@ import {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
+  useGetAesKeyQuery,
 } from '@/slices/userApi'
 import { secureStorage } from '@/service/utilsFunction'
 
@@ -20,6 +21,11 @@ export function AuthProvider({ children }) {
   const [postFaceLogin, { isLoading: isLoadingFaceLogin }] =
     useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
+  const {
+    data: aesKey,
+    isError: isErrorAes,
+    refetch: refetchAesKey,
+  } = useGetAesKeyQuery()
 
   const hasSessionCookie = useCallback(() => {
     return document.cookie
@@ -49,7 +55,16 @@ export function AuthProvider({ children }) {
   const auth = useCallback(
     async (userData) => {
       try {
-        const response = await postSignup(userData).unwrap()
+        const { data: currentAesKey } = await refetchAesKey()
+        if (!currentAesKey) {
+          throw new Error('AES key not available')
+        }
+
+        const response = await postSignup({
+          userData,
+          aesKey: currentAesKey,
+        }).unwrap()
+
         secureStorage.set('user', response)
         setUser(response)
         return response
@@ -65,9 +80,26 @@ export function AuthProvider({ children }) {
   const signIn = useCallback(
     async (authData) => {
       try {
-        const response = authData.face_descriptor
-          ? await postFaceLogin(authData).unwrap()
-          : await postLogin(authData).unwrap()
+        // const response = authData.face_descriptor
+        //   ? await postFaceLogin(authData).unwrap()
+        //   : await postLogin(authData).unwrap()
+        let response
+        if (authData.face_descriptor) {
+          const { data: currentAesKey } = await refetchAesKey()
+
+          if (!currentAesKey) {
+            throw new Error('AES key not available')
+          }
+
+          console.log('aesKey AuthProvider > ', currentAesKey)
+
+          response = await postFaceLogin({
+            face_descriptor: authData.face_descriptor,
+            aesKey: currentAesKey,
+          }).unwrap()
+        } else {
+          response = await postLogin(authData).unwrap()
+        }
 
         secureStorage.set('user', response)
         setUser(response)
@@ -78,7 +110,7 @@ export function AuthProvider({ children }) {
         throw error
       }
     },
-    [postFaceLogin, postLogin]
+    [postFaceLogin, postLogin, refetchAesKey]
   )
 
   const signOut = useCallback(

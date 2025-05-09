@@ -366,7 +366,7 @@ class FaceLoginView(APIView):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-
+@extend_schema(tags=["Logout"], description="Выход из сестемы.")
 class LogoutView(APIView):
     """Представление для выхода из системы"""
 
@@ -600,3 +600,63 @@ class PowerOfUserView(APIView):
             "minutes": GAME_MINUTE,
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+data_quiz = {
+      'question':
+        'Задайте правильную последовательность использования порошкового огнетушителя',
+      'answer': [
+        'stamp_fire-extinguisher',
+        'safety_pin_fire-extinguisher',
+        'hose_fire-extinguisher',
+        'handle_bottom_fire-extinguisher',
+      ],
+      'warning':
+        'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
+      'model_path': '/models/fire_extinguisher_powder.glb',
+      'part_tooltips': {
+        'safety_pin': 'Предохранительная чека',
+        'stamp': 'Пломба',
+        'hose': 'Шланг',
+        'handle_bottom': 'Ручка активации',
+      },
+      'animation_sequence': [
+        'safety_pin_fire-extinguisher',
+        'stamp_fire-extinguisher',
+        'hose_fire-extinguisher',
+        'handle_bottom_fire-extinguisher',
+      ],
+    }
+
+@extend_schema(tags=["FireSafetyQuiz"], description="Получение данных о квизе.")
+class FireSafetyQuizView(APIView):
+    """Получение данных для викторины."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Получение данных для викторины."""
+        level = request.GET.get("level")
+        if level == "1":
+            return Response(data_quiz, status=status.HTTP_200_OK)
+        return Response({"error": "Уровень не поддерживается"})
+
+
+@extend_schema(tags=["SendGlob"], description="Отправляет модель glb.")
+class SendGlobView(APIView):
+    """Отправляет модель glb."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, filename):
+        """Отправляет модель glb."""
+        model_path = os.path.join(settings.STATIC_ROOT, 'models', filename)
+        try:
+            with open(model_path, 'rb') as file:
+                glb_data = file.read()
+            return Response(glb_data, content_type='application/octet-stream')
+        except FileNotFoundError:
+            return Response(
+                {"error": "Модель не найдена"},
+                status=status.HTTP_404_NOT_FOUND,
+            )

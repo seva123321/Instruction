@@ -6,7 +6,6 @@ import {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
-  useCheckSessionMutation,
 } from '@/slices/userApi'
 import { secureStorage } from '@/service/utilsFunction'
 
@@ -21,37 +20,36 @@ export function AuthProvider({ children }) {
   const [postFaceLogin, { isLoading: isLoadingFaceLogin }] =
     useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
-  const [checkSession] = useCheckSessionMutation()
 
+  const hasSessionCookie = useCallback(() => {
+    return document.cookie
+      .split(';')
+      .some((cookie) => cookie.trim().startsWith('sessionid='))
+  }, [])
+
+  // Проверяем авторизацию при загрузке
   useEffect(() => {
-    const verifySession = async () => {
-      try {
-        const { data } = await checkSession().unwrap()
+    const verifyAuth = async () => {
+      const storedUser = secureStorage.get('user')
 
-        if (data?.user) {
-          const userData = { ...data.user, isAuthenticated: true }
-          secureStorage.set('user', userData)
-          setUser(userData)
-        }
-      } catch (error) {
-        if (error?.status !== 401 && error?.originalStatus !== 401) {
-          return
-        }
+      // Если пользователь в хранилище и есть кука sessionid → считаем авторизованным
+      if (storedUser && hasSessionCookie()) {
+        setUser(storedUser)
+      } else {
         secureStorage.remove('user')
         setUser(null)
-      } finally {
-        setIsInitialized(true)
       }
+
+      setIsInitialized(true)
     }
 
-    verifySession()
-  }, [checkSession])
+    verifyAuth()
+  }, [hasSessionCookie])
 
   const auth = useCallback(
     async (userData) => {
       try {
         const response = await postSignup(userData).unwrap()
-        console.log('Cookies after signup:', document.cookie)
         secureStorage.set('user', response)
         setUser(response)
         return response
@@ -96,6 +94,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       user,
+      isAuthenticated: !!user,
       auth,
       signIn,
       signOut,

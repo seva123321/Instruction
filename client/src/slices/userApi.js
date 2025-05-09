@@ -58,19 +58,6 @@ const userApi = createApi({
       query: () => 'users/profile/',
       providesTags: ['Profile'],
     }),
-    checkSession: build.mutation({
-      query: () => ({
-        url: 'users/profile/',
-        method: 'GET',
-      }),
-      // для единообразного формата
-      transformResponse: (response) => {
-        return { user: response, isAuthenticated: true }
-      },
-      transformErrorResponse: (response) => {
-        return { error: response.status }
-      },
-    }),
     patchProfile: build.mutation({
       query: (body) => ({
         url: 'users/profile/',
@@ -103,7 +90,6 @@ export const {
   useFaceLoginMutation,
   useLogoutMutation,
   useGetProfileQuery,
-  useCheckSessionMutation,
   usePatchProfileMutation,
   useGetRatingQuery,
 } = userApi

@@ -164,17 +164,20 @@ const ExpandedRow = memo(({ user, isMobile }) => (
               Награды:
             </Typography>
             <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-              {user.badges.slice(0, 3).map((badge) => (
-                <Tooltip key={badge.id} title={badge.description}>
+              {user.badges.slice(0, 3).map((badgeObj) => (
+                <Tooltip
+                  key={badgeObj.badge.id}
+                  title={badgeObj.badge.description}
+                >
                   <RankBadge
                     avatar={
                       <Avatar
-                        src={badge.icon}
-                        alt={badge.name}
+                        src={badgeObj.badge.icon}
+                        alt={badgeObj.badge.name}
                         sx={{ width: 18, height: 18 }}
                       />
                     }
-                    label={badge.name}
+                    label={badgeObj.badge.name}
                     variant="outlined"
                     size="small"
                   />
@@ -184,8 +187,8 @@ const ExpandedRow = memo(({ user, isMobile }) => (
                 <Tooltip
                   title={
                     <>
-                      {user.badges.slice(3).map((badge) => (
-                        <div key={badge.id}>{badge.name}</div>
+                      {user.badges.slice(3).map((badgeObj) => (
+                        <div key={badgeObj.badge.id}>{badgeObj.badge.name}</div>
                       ))}
                     </>
                   }
@@ -402,11 +405,19 @@ const DesktopUserRow = memo(
           </TableCell>
           <TableCell sx={{ minWidth: 200 }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {user.badges?.slice(0, 3).map((badge) => (
-                <Tooltip key={badge.id} title={badge.description}>
+              {user.badges?.slice(0, 3).map((badgeObj) => (
+                <Tooltip
+                  key={badgeObj.badge.id}
+                  title={badgeObj.badge.description}
+                >
                   <RankBadge
-                    avatar={<Avatar src={badge.icon} alt={badge.name} />}
-                    label={badge.name}
+                    avatar={
+                      <Avatar
+                        src={badgeObj.badge.icon}
+                        alt={badgeObj.badge.name}
+                      />
+                    }
+                    label={badgeObj.badge.name}
                     variant="outlined"
                     size="small"
                   />
@@ -416,8 +427,8 @@ const DesktopUserRow = memo(
                 <Tooltip
                   title={
                     <>
-                      {user.badges.slice(3).map((badge) => (
-                        <div key={badge.id}>{badge.name}</div>
+                      {user.badges.slice(3).map((badgeObj) => (
+                        <div key={badgeObj.badge.id}>{badgeObj.badge.name}</div>
                       ))}
                     </>
                   }

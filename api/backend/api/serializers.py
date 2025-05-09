@@ -216,7 +216,7 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_face_descriptor(self, value):
         try:
-            encoded_key = cache.get(value.data.get("key_id"))
+            encoded_key = cache.get(value.get("key_id"))
             if not encoded_key:
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"
@@ -409,7 +409,7 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     def validate_face_descriptor(self, value):
         """Проверяем, что лицо соответствует зарегистрированному пользователю."""
         try:
-            encoded_key = cache.get(value.data.get("key_id"))
+            encoded_key = cache.get(value.get("key_id"))
             if not encoded_key:
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"

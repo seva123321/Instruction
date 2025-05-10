@@ -156,7 +156,7 @@ class SignUpView(APIView):
 
     def post(self, request):
         """Создает нового пользователя."""
-        serializer = SignUpSerializer(data=request.data)
+        serializer = SignUpSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         try:
@@ -269,7 +269,7 @@ class GenerateAESKeyView(APIView):
         raw_key = os.urandom(32)
         key_id = os.urandom(16).hex()
 
-        cache.set(key_id, raw_key, timeout=30)
+        cache.set(key_id, raw_key, timeout=300)
 
         encoded_key = base64.b64encode(raw_key).decode('utf-8')
         return Response({"key_id": key_id, "key": encoded_key})

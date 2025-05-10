@@ -58,7 +58,7 @@ export const {
   useGetGameQuery,
   useGetGameSwiperQuery,
   useGetGameQuizQuery,
-  useGetModelQuery,
+  useLazyGetModelQuery,
   usePostSwiperResultMutation,
 } = gameApi
 export default gameApi

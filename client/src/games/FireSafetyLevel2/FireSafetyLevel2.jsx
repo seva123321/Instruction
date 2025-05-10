@@ -19,14 +19,14 @@ import {
 import * as THREE from 'three'
 import { Box } from '@mui/material'
 
-import PowderExtinguisher from './PowderExtinguisher'
-import FirePlane from '../CustomFire'
+import Scene2 from './Scene2'
+// import FirePlane from '../CustomFire'
 
 const CAMERA_HEIGHT_MULTIPLIER = 1.2
 const CAMERA_DISTANCE_MULTIPLIER = 2.5
 const MOBILE_CAMERA_DISTANCE_MULTIPLIER = 3
 
-const FireSafetyLevel1 = forwardRef((props, ref) => {
+const FireSafetyLevel2 = forwardRef((props, ref) => {
   const [isMobile, setIsMobile] = useState(false)
   const [cameraSettings, setCameraSettings] = useState({
     position: [0, 5, 10],
@@ -125,13 +125,12 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
     calculateCameraPosition()
   }, [isMobile, mounted])
 
-
   const [isExtinguishing, setIsExtinguishing] = useState(false)
-  
+
   const handleExtinguish = () => {
     setIsExtinguishing(true)
   }
-  
+
   const handleFireExtinguished = () => {
     console.log('Огонь полностью потушен!')
   }
@@ -195,19 +194,14 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
             <meshStandardMaterial color="#f5f5f5" roughness={0.8} />
           </mesh>
 
-          <PowderExtinguisher
+          <Scene2
             ref={extinguisherRef}
             position={[0, 0, 0]}
             scale={0.6}
             isMobile={isMobile}
           />
-          <FirePlane
-            position={[0, 0.5, 0]}
-            isExtinguishing={isExtinguishing}
-            onExtinguished={handleFireExtinguished}
-          />
-          {/* <button onClick={handleExtinguish}>Начать тушение</button> */}
 
+          {/* <button onClick={handleExtinguish}>Начать тушение</button> */}
 
           <OrbitControls
             ref={controls}
@@ -222,4 +216,10 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
   )
 })
 
-export default FireSafetyLevel1
+export default FireSafetyLevel2
+
+// function FireSafetyLevel2() {
+//   return <div>FireSafetyLevel2</div>
+// }
+
+// export default FireSafetyLevel2

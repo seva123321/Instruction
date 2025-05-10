@@ -19,6 +19,7 @@ from api.models import User
 load_dotenv()
 
 AES_STORAGE_KEY = os.getenv("AES_STORAGE_KEY")
+AES_STORAGE_KEY = AES_STORAGE_KEY.encode()
 
 
 def is_face_already_registered(input_descriptor):

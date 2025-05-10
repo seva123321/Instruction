@@ -260,7 +260,7 @@ class LoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-
+@extend_schema(tags=["GenerateAESKey"], description="Получение ключа для шифрования дескриптора.")
 class GenerateAESKeyView(APIView):
     """Ручка для генерации временного AES-ключа."""
     permission_classes = (AllowAny,)

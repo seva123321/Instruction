@@ -276,6 +276,7 @@ export default PowderExtinguisher
 // } from 'react'
 // import * as THREE from 'three'
 // import useQuizPage from '@/hook/useQuizPage'
+// import { useLazyGetModelQuery } from '../../slices/gameApi'
 
 // const PowderExtinguisher = forwardRef((props, ref) => {
 //   const group = useRef()

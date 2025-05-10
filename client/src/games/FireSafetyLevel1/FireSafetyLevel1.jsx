@@ -20,6 +20,7 @@ import * as THREE from 'three'
 import { Box } from '@mui/material'
 
 import PowderExtinguisher from './PowderExtinguisher'
+import FirePlane from '../CustomFire'
 
 const CAMERA_HEIGHT_MULTIPLIER = 1.2
 const CAMERA_DISTANCE_MULTIPLIER = 2.5

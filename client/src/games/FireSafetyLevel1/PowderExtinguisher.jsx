@@ -24,6 +24,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
     animation_sequence: animationSequence,
     answer: answerServer,
   } = useMemo(() => gameData, [gameData])
+  console.log('modelPath', modelPath)
 
   const { scene, animations } = useGLTF(modelPath)
   const { actions } = useAnimations(animations, group)

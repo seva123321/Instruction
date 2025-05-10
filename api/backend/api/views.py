@@ -155,7 +155,7 @@ class SignUpView(APIView):
 
     def post(self, request):
         """Создает нового пользователя."""
-        serializer = SignUpSerializer(data=request.data, context={"request": request})
+        serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         try:
@@ -259,7 +259,7 @@ class LoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-@extend_schema(tags=["GenerateAESKey"], description="Получение ключа для шифрования дескриптора.")
+
 class GenerateAESKeyView(APIView):
     """Ручка для генерации временного AES-ключа."""
     permission_classes = (AllowAny,)
@@ -268,7 +268,7 @@ class GenerateAESKeyView(APIView):
         raw_key = os.urandom(32)
         key_id = os.urandom(16).hex()
 
-        cache.set(key_id, raw_key, timeout=300)
+        cache.set(key_id, raw_key, timeout=30)
 
         encoded_key = base64.b64encode(raw_key).decode('utf-8')
         return Response({"key_id": key_id, "key": encoded_key})

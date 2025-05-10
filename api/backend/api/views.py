@@ -156,7 +156,7 @@ class SignUpView(APIView):
 
     def post(self, request):
         """Создает нового пользователя."""
-        serializer = SignUpSerializer(data=request.data)
+        serializer = SignUpSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         try:

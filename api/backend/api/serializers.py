@@ -1,3 +1,4 @@
+import base64
 import json
 import random
 import os
@@ -198,17 +199,6 @@ class SignUpSerializer(serializers.Serializer):
                 "Пользователь с таким номером телефона уже существует"
             )
 
-        try:
-            input_descriptor = np.array(
-                data["face_descriptor"], dtype=np.float32
-            )
-            if is_face_already_registered(input_descriptor):
-                errors["face_descriptor"] = (
-                    "Пользователь с таким лицом уже существует"
-                )
-        except Exception as e:
-            errors["face_descriptor"] = str(e)
-
         if errors:
             raise serializers.ValidationError(errors)
 
@@ -216,12 +206,13 @@ class SignUpSerializer(serializers.Serializer):
 
     def validate_face_descriptor(self, value):
         try:
-            encoded_key = cache.get(value.get("key_id"))
+            request = self.context.get("request")
+            encoded_key = cache.get(request.data.get("key_id"))
             if not encoded_key:
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"
                 )
-
+            encoded_key = base64.b64decode(encoded_key)
             decrypted_descriptor = decrypt_descriptor(
                 value,
                 encoded_key
@@ -409,7 +400,9 @@ class InstructionResultSerializer(serializers.ModelSerializer):
     def validate_face_descriptor(self, value):
         """Проверяем, что лицо соответствует зарегистрированному пользователю."""
         try:
-            encoded_key = cache.get(value.get("key_id"))
+            request = self.context.get("request")
+            encoded_key = cache.get(request.data.get("key_id"))
+            encoded_key = base64.b64decode(encoded_key)
             if not encoded_key:
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"

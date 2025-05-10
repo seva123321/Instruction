@@ -212,7 +212,6 @@ class SignUpSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"
                 )
-            encoded_key = base64.b64decode(encoded_key)
             decrypted_descriptor = decrypt_descriptor(
                 value,
                 encoded_key
@@ -255,7 +254,6 @@ class SignUpSerializer(serializers.Serializer):
                 "Номер телефона должен быть в формате +79999999999, 89999999999 или 79999999999"
             )
 
-        # Проверяем уникальность
         if User.objects.filter(mobile_phone=normalized_phone).exists():
             raise serializers.ValidationError(
                 "Пользователь с таким номером телефона уже существует"
@@ -269,7 +267,6 @@ class SignUpSerializer(serializers.Serializer):
         )
 
         try:
-            # Шифруем дескриптор для хранения
             encrypted_descriptor = encrypt_descriptor(face_descriptor, AES_STORAGE_KEY)
             validated_data["face_descriptor"] = json.dumps(encrypted_descriptor)
 
@@ -315,7 +312,7 @@ class InstructionSerializer(serializers.ModelSerializer):
 
     instruction_agreement = (
         serializers.SerializerMethodField()
-    )  # Изменяем на метод
+    )
     type_of_instruction = TypeOfInstructionSerializer(read_only=True)
 
     class Meta:
@@ -402,7 +399,6 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         try:
             request = self.context.get("request")
             encoded_key = cache.get(request.data.get("key_id"))
-            encoded_key = base64.b64decode(encoded_key)
             if not encoded_key:
                 raise serializers.ValidationError(
                     "Ключ шифрования истёк или не существует"

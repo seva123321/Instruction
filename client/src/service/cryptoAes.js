@@ -1,16 +1,16 @@
 import forge from 'node-forge'
 
-const AES_KEY = import.meta.env.VITE_API_KEY
-
-const encryptWithAESGCM = (data) => {
+const encryptWithAESGCM = (data, aesKey) => {
   try {
+    const decodedAesKey = atob(aesKey)
+
     // 1. Проверка входных данных
     if (!Array.isArray(data) || data.length !== 128) {
       throw new Error('Face descriptor должен быть массивом из 128 чисел')
     }
 
     // 2. Правильное преобразование строкового ключа в бинарный формат
-    const keyStr = AES_KEY.padEnd(32, '0').slice(0, 32)
+    const keyStr = decodedAesKey // 32б
     const keyBytes = forge.util.createBuffer(keyStr, 'raw')
 
     // 3. Генерируем IV (12 байт для GCM)

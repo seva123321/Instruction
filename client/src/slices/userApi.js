@@ -30,46 +30,48 @@ const userApi = createApi({
       }),
     }),
     signUp: build.mutation({
-      query: (body) => ({
-        url: 'auth/signup/',
-        method: 'POST',
-        body: {
-          ...body,
-          face_descriptor: encryptWithAESGCM(body.face_descriptor),
-        },
-      }),
+      query: (body) => {
+        return {
+          url: 'auth/signup/',
+          method: 'POST',
+          body: {
+            ...body.userData,
+            face_descriptor: encryptWithAESGCM(
+              body.userData.face_descriptor,
+              body.aesKey.key
+            ),
+            key_id: body.aesKey.key_id,
+          },
+        }
+      },
     }),
     faceLogin: build.mutation({
       query: (body) => ({
         url: 'auth/face_login/',
         method: 'POST',
         body: {
-          face_descriptor: encryptWithAESGCM(body.face_descriptor),
+          face_descriptor: encryptWithAESGCM(
+            body.face_descriptor,
+            body.aesKey.key
+          ),
+          key_id: body.aesKey.key_id,
         },
+        fetchFn: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
       }),
     }),
+
     logout: build.mutation({
       query: () => ({
         url: 'auth/logout/',
         method: 'POST',
       }),
     }),
+    getAesKey: build.query({
+      query: () => 'generate_key/',
+    }),
     getProfile: build.query({
       query: () => 'users/profile/',
       providesTags: ['Profile'],
-    }),
-    checkSession: build.mutation({
-      query: () => ({
-        url: 'users/profile/',
-        method: 'GET',
-      }),
-      // для единообразного формата
-      transformResponse: (response) => {
-        return { user: response, isAuthenticated: true }
-      },
-      transformErrorResponse: (response) => {
-        return { error: response.status }
-      },
     }),
     patchProfile: build.mutation({
       query: (body) => ({
@@ -102,8 +104,8 @@ export const {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
+  useLazyGetAesKeyQuery,
   useGetProfileQuery,
-  useCheckSessionMutation,
   usePatchProfileMutation,
   useGetRatingQuery,
 } = userApi

@@ -301,8 +301,8 @@ const GameStatsSection = memo(({ profileData }) => {
 
             {profileData?.badges?.length ? (
               <Grid container spacing={2}>
-                {profileData.badges.map((badge) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={badge.id}>
+                {profileData.badges.map((badgeObj) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={badgeObj.badge.id}>
                     <Card
                       sx={{
                         height: '100%',
@@ -325,7 +325,7 @@ const GameStatsSection = memo(({ profileData }) => {
                           pb: 4,
                         }}
                       >
-                        {badge.icon ? (
+                        {badgeObj.badge.icon ? (
                           <Box
                             sx={{
                               width: 80,
@@ -342,8 +342,8 @@ const GameStatsSection = memo(({ profileData }) => {
                           >
                             <Box
                               component="img"
-                              src={badge.icon}
-                              alt={badge.name}
+                              src={badgeObj.badge.icon}
+                              alt={badgeObj.badge.name}
                               sx={{
                                 width: 50,
                                 height: 50,
@@ -388,17 +388,17 @@ const GameStatsSection = memo(({ profileData }) => {
                                   : theme.palette.warning.dark,
                             }}
                           >
-                            {badge.name}
+                            {badgeObj.badge.name}
                           </Typography>
                           <Typography
                             variant="body2"
                             color="text.secondary"
                             sx={{ mt: 0.5 }}
                           >
-                            {badge.description}
+                            {badgeObj.badge.description}
                           </Typography>
                           <Chip
-                            label={`${badge.required_count} очков`}
+                            label={`${badgeObj.badge.required_count} очков`}
                             size="small"
                             sx={{
                               mt: 1.5,

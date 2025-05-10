@@ -42,8 +42,12 @@ const instructionApi = createApi({
         url: 'instruction_results/',
         method: 'POST',
         body: {
-          ...body,
-          face_descriptor: encryptWithAESGCM(body.face_descriptor),
+          ...body.submissionData,
+          face_descriptor: encryptWithAESGCM(
+            body.submissionData.face_descriptor,
+            body.aesKey.key
+          ),
+          key_id: body.aesKey.key_id,
         },
       }),
     }),

@@ -1,12 +1,12 @@
 /* eslint-disable operator-linebreak */
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   useSignUpMutation,
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
-  useGetAesKeyQuery,
+  useLazyGetAesKeyQuery, // Изменяем на lazy версию
 } from '@/slices/userApi'
 import { secureStorage } from '@/service/utilsFunction'
 
@@ -21,11 +21,10 @@ export function AuthProvider({ children }) {
   const [postFaceLogin, { isLoading: isLoadingFaceLogin }] =
     useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
-  const {
-    data: aesKey,
-    isError: isErrorAes,
-    refetch: refetchAesKey,
-  } = useGetAesKeyQuery()
+
+  // Используем lazy запрос для получения ключа по требованию
+  const [fetchAesKey, { data: aesKey, isError: isErrorAes }] =
+    useLazyGetAesKeyQuery()
 
   const hasSessionCookie = useCallback(() => {
     return document.cookie
@@ -33,12 +32,10 @@ export function AuthProvider({ children }) {
       .some((cookie) => cookie.trim().startsWith('sessionid='))
   }, [])
 
-  // Проверяем авторизацию при загрузке
   useEffect(() => {
     const verifyAuth = async () => {
       const storedUser = secureStorage.get('user')
 
-      // Если пользователь в хранилище и есть кука sessionid → считаем авторизованным
       if (storedUser && hasSessionCookie()) {
         setUser(storedUser)
       } else {
@@ -55,7 +52,8 @@ export function AuthProvider({ children }) {
   const auth = useCallback(
     async (userData) => {
       try {
-        const { data: currentAesKey } = await refetchAesKey()
+        // Запрашиваем свежий ключ перед регистрацией
+        const { data: currentAesKey } = await fetchAesKey()
         if (!currentAesKey) {
           throw new Error('AES key not available')
         }
@@ -74,24 +72,19 @@ export function AuthProvider({ children }) {
         throw error
       }
     },
-    [postSignup]
+    [postSignup, fetchAesKey]
   )
 
   const signIn = useCallback(
     async (authData) => {
       try {
-        // const response = authData.face_descriptor
-        //   ? await postFaceLogin(authData).unwrap()
-        //   : await postLogin(authData).unwrap()
         let response
         if (authData.face_descriptor) {
-          const { data: currentAesKey } = await refetchAesKey()
-
+          // Запрашиваем свежий ключ перед входом по лицу
+          const { data: currentAesKey } = await fetchAesKey()
           if (!currentAesKey) {
             throw new Error('AES key not available')
           }
-
-          console.log('aesKey AuthProvider > ', currentAesKey)
 
           response = await postFaceLogin({
             face_descriptor: authData.face_descriptor,
@@ -110,7 +103,7 @@ export function AuthProvider({ children }) {
         throw error
       }
     },
-    [postFaceLogin, postLogin, refetchAesKey]
+    [postFaceLogin, postLogin, fetchAesKey]
   )
 
   const signOut = useCallback(

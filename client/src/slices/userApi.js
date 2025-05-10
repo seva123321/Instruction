@@ -104,7 +104,7 @@ export const {
   useLoginMutation,
   useFaceLoginMutation,
   useLogoutMutation,
-  useGetAesKeyQuery,
+  useLazyGetAesKeyQuery,
   useGetProfileQuery,
   usePatchProfileMutation,
   useGetRatingQuery,

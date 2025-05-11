@@ -370,6 +370,7 @@ class FaceLoginView(APIView):
 @extend_schema(tags=["Logout"], description="Выход из сестемы.")
 class LogoutView(APIView):
     """Представление для выхода из системы"""
+    permission_classes = (AllowAny,)
 
     permission_classes = (AllowAny,)
 

@@ -1,15 +1,26 @@
-import useScrollTrigger from '@mui/material/useScrollTrigger'
-import Fade from '@mui/material/Fade'
-import Box from '@mui/material/Box'
-import { Slide } from '@mui/material'
+import { useEffect, useState } from 'react'
+import { Slide, Box, Fade, useScrollTrigger } from '@mui/material'
 
 export function ScrollTop(props) {
   const { children } = props
-
+  const [visible, setVisible] = useState(false)
   const trigger = useScrollTrigger({
     disableHysteresis: true,
     threshold: 100,
   })
+
+  useEffect(() => {
+    if (trigger) {
+      setVisible(true)
+      const timer = setTimeout(() => {
+        setVisible(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+
+    setVisible(false)
+    return () => {}
+  }, [trigger])
 
   const handleClick = (event) => {
     const anchor = (event.target.ownerDocument || document).querySelector(
@@ -18,18 +29,22 @@ export function ScrollTop(props) {
 
     if (anchor) {
       anchor.scrollIntoView({
-        behavior: 'smooth', // Добавляем плавную прокрутку
+        behavior: 'smooth',
         block: 'center',
       })
     }
   }
 
   return (
-    <Fade in={trigger}>
+    <Fade in={visible}>
       <Box
         onClick={handleClick}
         role="presentation"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
       >
         {children}
       </Box>

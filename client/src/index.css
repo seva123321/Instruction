@@ -14,15 +14,34 @@ html {
 }
 
 body {
-  /* width: 100vw; */
   height: 100vh;
   background-color: #f1fcff;
   font-family: 'Roboto', 'TT Lakes Compressed', sans-serif;
-  /* color: #1b1c21; */
-  /* font-family: 'Open Sans'; */
 }
 
 :root {
   --color-bg: #235bb4;
   --color-active: #0c326f;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .MuiButton-root {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+
+  .MuiFormControlLabel-root {
+    padding: 12px;
+  }
+
+  .MuiRadio-root {
+    padding: 12px !important;
+  }
+}
+
+/* Улучшение для iOS */
+@supports (-webkit-touch-callout: none) {
+  .question-card {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

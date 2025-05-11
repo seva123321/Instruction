@@ -975,6 +975,28 @@ class GameSwiperResult(models.Model):
         super().save(*args, **kwargs)
 
 
+class QuizResult(models.Model):
+    """Модель результатов квиза."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="quiz_results",
+        verbose_name="Пользователь",
+        db_index=True,
+    )
+    date = models.DateField("Дата квиза", auto_now_add=True)
+    result = models.BooleanField("Результат квиза", default=False)
+
+    class Meta:
+        verbose_name = "Результат квиза"
+        verbose_name_plural = "Результаты квиза"
+
+    def __str__(self):
+        return f"{self.user} - {self.date} ({self.result})"
+
+
+
 class PowerOfUser(models.Model):
     """Модель силы пользователя."""
 

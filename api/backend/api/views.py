@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
 from django.db import IntegrityError, models
 from django.db.models import Prefetch
-from django.http import FileResponse
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from dotenv import load_dotenv
@@ -45,7 +44,8 @@ from api.serializers import (
     InstructionResultGetSerializer,
     RatingSerializer,
     GameSwiperSerializer,
-    GameSwiperResultSerializer
+    GameSwiperResultSerializer,
+    QuizResultSerializer
 )
 from api.permissions import IsAdminPermission
 from api.utils.utils import decrypt_descriptor
@@ -604,7 +604,7 @@ class PowerOfUserView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-data_quiz = {
+data_quiz_level_1 = {
       'question':
         'Задайте правильную последовательность использования порошкового огнетушителя',
       'answer': [
@@ -629,6 +629,33 @@ data_quiz = {
         'handle_bottom_fire-extinguisher',
       ],
     }
+data_quiz_level_2 = {
+      'question':
+        'Выберите оптимальный способ тушения пожара. Обратите внимание на очаг возгорания.',
+      'answer': ['cylinder_co2_fire-extinguisher'],
+      'warning': 'Результатом является первый клик или таб по предмету.',
+      'model_path': '/models/scene_last4.10.glb',
+      'part_tooltips': {
+        'safety_pin': 'Предохранительная чека',
+        'stamp': 'Пломба',
+        'hose': 'Шланг',
+        'handle_bottom': 'Ручка активации',
+        'fire_secur_indicator': 'Кнопка пожарной сигнализации',
+        'cylinder_co2': 'Углекислотный огнетушитель',
+        'cylinder': 'Порошковый огнетушитель',
+        'hydrant': 'Внутренний пожарный кран',
+        'server': 'Сервера/Электрооборудование',
+      },
+      'fire_position': [7, -0.5, -8],
+      'fire_size': [6, 8],
+      'animation_sequence': [
+        'nurbspath_co2_fire-extinguisher',
+        'safety_pin_co2_fire-extinguisher',
+        'stamp_co2_fire-extinguisher',
+        'hose_co2_fire-extinguisher',
+        'handle_bottom_co2_fire-extinguisher',
+      ],
+    }
 
 @extend_schema(tags=["FireSafetyQuiz"], description="Получение данных о квизе.")
 class FireSafetyQuizView(APIView):
@@ -640,25 +667,33 @@ class FireSafetyQuizView(APIView):
         """Получение данных для викторины."""
         level = request.GET.get("level")
         if level == "1":
-            return Response(data_quiz, status=status.HTTP_200_OK)
+            return Response(data_quiz_level_1, status=status.HTTP_200_OK)
+        if level == "2":
+            return Response(data_quiz_level_2, status=status.HTTP_200_OK)
         return Response({"error": "Уровень не поддерживается"})
 
 
-@extend_schema(tags=["SendGlob"], description="Отправляет модель glb.")
-class SendGlobView(APIView):
-    """Отправляет модель glb."""
+@extend_schema(tags=["FireSafetyQuizResult"], description="Сохранение данных о квизе.")
+class FireSafetyQuizResultView(APIView):
+    """Сохранение данных о викторине."""
 
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, filename):
-        """Отправляет модель glb."""
-        model_path = os.path.join(settings.STATIC_ROOT, 'models', filename)
-        try:
-            with open(model_path, 'rb') as file:
-                glb_data = file.read()
-            return FileResponse(glb_data, content_type='model/gltf-binary')
-        except FileNotFoundError:
-            return Response(
-                {"error": "Модель не найдена"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+    def post(self, request):
+        """Сохранение данных о викторине."""
+        serializer = QuizResultSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data["date"] = timezone.now()
+        serializer.validated_data["user"] = request.user
+        swiper_result = serializer.save()
+
+        return Response(
+            {
+                "user": swiper_result.user.id,
+                "result": swiper_result.result,
+            },
+            status=status.HTTP_201_CREATED,
+        )

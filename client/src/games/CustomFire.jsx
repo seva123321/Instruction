@@ -1,4 +1,72 @@
-import { useRef, useMemo } from 'react'
+// // В родительском компоненте
+// import FirePlane from '../CustomFire'
+// import { Html } from '@react-three/drei'
+
+//   const [isBurning, setIsBurning] = useState(false)
+//   const [message, setMessage] = useState('Огонь выключен')
+
+//       <FirePlane
+//         position={[0, 0.5, 0]}
+//         isBurning={isBurning}
+//         onExtinguished={() => setMessage('Огонь потушен')}
+//         onFullyIgnited={() => setMessage('Огонь полностью разгорелся')}
+//       />
+
+//     <Html
+//         position={[0, -2, 0]} // Позиция в 3D пространстве
+//         transform // Сохраняет позиционирование при движении камеры
+//         occlude // Учитывает occlusion culling
+//         wrapperClass="fire-controls" // Класс для стилизации
+//       >
+//         <div
+//           style={{
+//             position: 'absolute',
+//             bottom: '20px',
+//             left: '50%',
+//             transform: 'translateX(-50%)',
+//             display: 'flex',
+//             flexDirection: 'column',
+//             alignItems: 'center',
+//             gap: '10px',
+//             background: 'rgba(0,0,0,0.5)',
+//             padding: '15px',
+//             borderRadius: '10px',
+//             color: 'white',
+//           }}
+//         >
+//           <div style={{ fontSize: '18px' }}>{message}</div>
+//           <div style={{ display: 'flex', gap: '10px' }}>
+//             <button
+//               onClick={() => setIsBurning(true)}
+//               style={{
+//                 padding: '10px 20px',
+//                 backgroundColor: '#4CAF50',
+//                 color: 'white',
+//                 border: 'none',
+//                 borderRadius: '5px',
+//                 cursor: 'pointer',
+//               }}
+//             >
+//               Зажечь огонь
+//             </button>
+//             <button
+//               onClick={() => setIsBurning(false)}
+//               style={{
+//                 padding: '10px 20px',
+//                 backgroundColor: '#ff4444',
+//                 color: 'white',
+//                 border: 'none',
+//                 borderRadius: '5px',
+//                 cursor: 'pointer',
+//               }}
+//             >
+//               Потушить огонь
+//             </button>
+//           </div>
+//         </div>
+//       </Html>
+
+import { useRef, useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
 import * as THREE from 'three'
@@ -7,104 +75,81 @@ import { extend } from '@react-three/fiber'
 const FireShaderMaterial = shaderMaterial(
   {
     time: 0,
-    color1: new THREE.Color(0xff4500),
-    color2: new THREE.Color(0xffff00),
-    color3: new THREE.Color(0x8b0000),
+    color1: new THREE.Color(0xff4500), // Основной цвет (оранжево-красный)
+    color2: new THREE.Color(0xffff00), // Верхний цвет (жёлтый)
+    color3: new THREE.Color(0x8b0000), // Базовый цвет (тёмно-красный)
     intensity: 1.5,
     speed: 1.0,
     distortion: 2.0,
     turbulence: 0.5,
+    fireProgress: 0, // Прогресс горения (0-1)
   },
-  // Vertex Shader (добавлены 3D-эффекты)
+  // Vertex Shader (упрощённая версия с плавными переходами)
   `
   uniform float time;
   uniform float distortion;
   uniform float turbulence;
-  varying vec3 vPosition;
+  uniform float fireProgress;
   varying vec2 vUv;
   
-  // Шум для 3D-деформации
   float noise(vec3 p) {
     return fract(sin(dot(p, vec3(12.9898, 78.233, 151.7182))) * 43758.5453);
   }
   
   void main() {
     vUv = uv;
-    vPosition = position;
-    
-    // 3D-деформация с шумом
     vec3 pos = position;
-    float displacement = sin(pos.y * 10.0 + time * 2.0) * 0.1;
-    displacement += noise(pos * 3.0 + time) * turbulence;
     
-    pos.x += displacement * distortion;
-    pos.z += displacement * distortion;
+    // Плавное применение эффектов в зависимости от прогресса
+    float activeEffect = smoothstep(0.0, 1.0, fireProgress);
+    float displacement = sin(pos.y * 10.0 + time * 2.0) * 0.1 * activeEffect;
+    displacement += noise(pos * 3.0 + time) * turbulence * activeEffect;
+    
+    pos.x += displacement * distortion * activeEffect;
+    pos.z += displacement * distortion * activeEffect;
+    pos.y *= activeEffect; // Уменьшаем высоту при затухании
     
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
   `,
-  // Fragment Shader (улучшенный)
+  // Fragment Shader (оптимизированная версия)
   `
   uniform float time;
   uniform float intensity;
   uniform float speed;
+  uniform float fireProgress;
   uniform vec3 color1;
   uniform vec3 color2;
   uniform vec3 color3;
-  varying vec3 vPosition;
   varying vec2 vUv;
   
-  // Улучшенный шум для пламени
-  float fireNoise(vec3 p) {
-    vec3 i = floor(p);
-    vec3 f = fract(p);
-    f = f*f*(3.0-2.0*f);
-    
-    return mix(
-      mix(
-        mix(dot(i+vec3(0,0,0), vec3(7,157,113)), dot(i+vec3(1,0,0), vec3(7,157,113)), f.x),
-        mix(dot(i+vec3(0,1,0), vec3(7,157,113)), dot(i+vec3(1,1,0), vec3(7,157,113)), f.x),
-        f.y
-      ),
-      mix(
-        mix(dot(i+vec3(0,0,1), vec3(7,157,113)), dot(i+vec3(1,0,1), vec3(7,157,113)), f.x),
-        mix(dot(i+vec3(0,1,1), vec3(7,157,113)), dot(i+vec3(1,1,1), vec3(7,157,113)), f.x),
-        f.y
-      ),
-      f.z
-    ) * 0.01;
+  float simpleNoise(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
   }
   
   void main() {
-    // 3D-координаты для объемного эффекта
-    vec3 pos = vec3(vUv.x * 2.0 - 1.0, vUv.y * 3.0, 0.0);
+    // Полностью скрываем если огонь потушен
+    if (fireProgress < 0.01) discard;
     
-    // Слои шума для сложной структуры пламени
-    float n1 = fireNoise(pos * 1.0 + vec3(0.0, -time * speed * 0.5, 0.0));
-    float n2 = fireNoise(pos * 2.0 + vec3(0.0, -time * speed * 0.7, 0.0));
-    float n3 = fireNoise(pos * 4.0 + vec3(0.0, -time * speed, 0.0));
-    
-    // Комбинирование шумов
-    float noise = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * intensity;
-    
-    // Градиент пламени (от основания к вершине)
+    // Градиент от основания к вершине
     float gradient = smoothstep(0.0, 0.8, vUv.y);
-    float flame = noise * (1.0 - gradient);
     
-    // Цветовая схема
-    vec3 color = mix(color3, color1, flame * 2.0);
-    color = mix(color, color2, flame * 4.0 * (1.0 - gradient));
+    // Шум для эффекта пламени
+    vec2 noisePos = vec2(vUv.x * 2.0, vUv.y * 3.0 - time * speed);
+    float noise = simpleNoise(noisePos) * 0.5 + 
+                 simpleNoise(noisePos * 2.0) * 0.3;
+    
+    // Форма пламени с учётом прогресса горения
+    float flame = noise * (1.0 - gradient) * fireProgress * intensity;
+    
+    // Цветовой градиент
+    vec3 baseColor = mix(color3, color1, flame * 2.0);
+    vec3 finalColor = mix(baseColor, color2, flame * 3.0 * (1.0 - gradient));
     
     // Альфа-канал с мерцанием
-    float alpha = flame * (0.8 + 0.2 * sin(time * 10.0 + vUv.x * 20.0));
+    float alpha = flame * (0.8 + 0.2 * sin(time * 8.0));
     
-    // Освещение для объема
-    float light = 0.5 + 0.5 * sin(vUv.y * 10.0 + time * 5.0);
-    color *= light;
-    
-    gl_FragColor = vec4(color, alpha);
-    
-    // Отсечение прозрачных пикселей
+    gl_FragColor = vec4(finalColor, alpha);
     if (gl_FragColor.a < 0.1) discard;
   }
   `
@@ -113,30 +158,43 @@ const FireShaderMaterial = shaderMaterial(
 extend({ FireShaderMaterial })
 
 export default function FirePlane({
-  rotation = [-Math.PI / 2, 0, 0],
-  position = [0, 0, 0],
-  size = [2, 3],
-  intensity = 1.5,
-  speed = 1.0,
-  distortion = 2.0,
-  turbulence = 0.5,
+  rotation = [-Math.PI / 2, 0, 0], // Ориентация плоскости
+  position = [0, 0, 0], // Позиция в пространстве
+  size = [4, 8], // Размер (ширина, высота)
+  intensity = 1.5, // Интенсивность пламени
+  speed = 0.6, // Скорость анимации
+  isBurning = false, // Состояние горения
+  onExtinguished = () => {}, // Колбек при тушении
+  onFullyIgnited = () => {}, // Колбек при разгорании
 }) {
   const materialRef = useRef()
   const meshRef = useRef()
+  const [fireProgress, setFireProgress] = useState(0)
 
-  // Создаем геометрию с большим количеством полигонов для 3D-эффекта
-  const geometry = useMemo(() => {
-    return new THREE.PlaneGeometry(size[0], size[1], 64, 64)
-  }, [size])
+  // Оптимизированная геометрия с мемоизацией
+  const geometry = useMemo(
+    () => new THREE.PlaneGeometry(size[0], size[1], 32, 32),
+    [size]
+  )
 
   useFrame(({ clock }) => {
-    if (materialRef.current) {
-      materialRef.current.time = clock.elapsedTime
-    }
+    if (!materialRef.current) return
 
-    // Легкое колебание для эффекта живого огня
-    if (meshRef.current) {
-      meshRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.5) * 0.05
+    // Обновляем время для анимации
+    materialRef.current.time = clock.elapsedTime
+
+    // Плавное изменение прогресса горения
+    const targetProgress = isBurning ? 1 : 0
+    const newProgress = THREE.MathUtils.lerp(fireProgress, targetProgress, 0.1)
+
+    setFireProgress(newProgress)
+    materialRef.current.fireProgress = newProgress
+
+    // Вызов колбеков при достижении крайних состояний
+    if (newProgress >= 0.99 && isBurning) {
+      onFullyIgnited()
+    } else if (newProgress <= 0.01 && !isBurning) {
+      onExtinguished()
     }
   })
 
@@ -145,8 +203,7 @@ export default function FirePlane({
       ref={meshRef}
       rotation={rotation}
       position={position}
-      castShadow
-      receiveShadow
+      visible={fireProgress > 0.01} // Полностью скрываем при потухании
     >
       <bufferGeometry attach="geometry" {...geometry} />
       <fireShaderMaterial
@@ -157,208 +214,11 @@ export default function FirePlane({
         blending={THREE.AdditiveBlending}
         intensity={intensity}
         speed={speed}
-        distortion={distortion}
-        turbulence={turbulence}
+        fireProgress={fireProgress}
       />
     </mesh>
   )
 }
-
-// import { useRef, useMemo, useState, useEffect } from 'react'
-// import { useFrame } from '@react-three/fiber'
-// import { shaderMaterial } from '@react-three/drei'
-// import * as THREE from 'three'
-// import { extend } from '@react-three/fiber'
-
-// const FireShaderMaterial = shaderMaterial(
-//   {
-//     time: 0,
-//     color1: new THREE.Color(0xff4500),
-//     color2: new THREE.Color(0xffff00),
-//     color3: new THREE.Color(0x8b0000),
-//     intensity: 1.5,
-//     speed: 1.0,
-//     distortion: 2.0,
-//     turbulence: 0.5,
-//     isExtinguishing: 0, // 0 - горит, 1 - полностью потушен
-//     extinguishingProgress: 0, // Прогресс тушения (0-1)
-//   },
-//   // Vertex Shader
-//   `
-//   uniform float time;
-//   uniform float distortion;
-//   uniform float turbulence;
-//   uniform float isExtinguishing;
-//   uniform float extinguishingProgress;
-//   varying vec3 vPosition;
-//   varying vec2 vUv;
-
-//   float noise(vec3 p) {
-//     return fract(sin(dot(p, vec3(12.9898, 78.233, 151.7182))) * 43758.5453);
-//   }
-
-//   void main() {
-//     vUv = uv;
-//     vPosition = position;
-
-//     vec3 pos = position;
-
-//     // Уменьшаем деформацию при тушении
-//     float activeDistortion = mix(distortion, 0.0, extinguishingProgress);
-//     float activeTurbulence = mix(turbulence, 0.0, extinguishingProgress);
-
-//     float displacement = sin(pos.y * 10.0 + time * 2.0) * 0.1;
-//     displacement += noise(pos * 3.0 + time) * activeTurbulence;
-
-//     pos.x += displacement * activeDistortion;
-//     pos.z += displacement * activeDistortion;
-
-//     // Уменьшаем размер при тушении
-//     pos.y *= mix(1.0, 0.3, extinguishingProgress);
-
-//     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-//   }
-//   `,
-//   // Fragment Shader
-//   `
-//   uniform float time;
-//   uniform float intensity;
-//   uniform float speed;
-//   uniform float isExtinguishing;
-//   uniform float extinguishingProgress;
-//   uniform vec3 color1;
-//   uniform vec3 color2;
-//   uniform vec3 color3;
-//   varying vec3 vPosition;
-//   varying vec2 vUv;
-
-//   float fireNoise(vec3 p) {
-//     vec3 i = floor(p);
-//     vec3 f = fract(p);
-//     f = f*f*(3.0-2.0*f);
-
-//     return mix(
-//       mix(
-//         mix(dot(i+vec3(0,0,0), vec3(7,157,113)), dot(i+vec3(1,0,0), vec3(7,157,113)), f.x),
-//         mix(dot(i+vec3(0,1,0), vec3(7,157,113)), dot(i+vec3(1,1,0), vec3(7,157,113)), f.x),
-//         f.y
-//       ),
-//       mix(
-//         mix(dot(i+vec3(0,0,1), vec3(7,157,113)), dot(i+vec3(1,0,1), vec3(7,157,113)), f.x),
-//         mix(dot(i+vec3(0,1,1), vec3(7,157,113)), dot(i+vec3(1,1,1), vec3(7,157,113)), f.x),
-//         f.y
-//       ),
-//       f.z
-//     ) * 0.01;
-//   }
-
-//   void main() {
-//     // Если пламя потушено - полностью прозрачный пиксель
-//     if (isExtinguishing > 0.99 && extinguishingProgress > 0.99) {
-//       discard;
-//     }
-
-//     vec3 pos = vec3(vUv.x * 2.0 - 1.0, vUv.y * 3.0, 0.0);
-
-//     // Уменьшаем интенсивность при тушении
-//     float activeIntensity = mix(intensity, 0.0, extinguishingProgress);
-//     float activeSpeed = mix(speed, 0.2, extinguishingProgress);
-
-//     float n1 = fireNoise(pos * 1.0 + vec3(0.0, -time * activeSpeed * 0.5, 0.0));
-//     float n2 = fireNoise(pos * 2.0 + vec3(0.0, -time * activeSpeed * 0.7, 0.0));
-//     float n3 = fireNoise(pos * 4.0 + vec3(0.0, -time * activeSpeed, 0.0));
-
-//     float noise = (n1 * 0.5 + n2 * 0.3 + n3 * 0.2) * activeIntensity;
-//     float gradient = smoothstep(0.0, 0.8, vUv.y);
-//     float flame = noise * (1.0 - gradient);
-
-//     // Темнеем при тушении
-//     vec3 baseColor = mix(color3, color1, flame * 2.0);
-//     vec3 finalColor = mix(baseColor, color2, flame * 4.0 * (1.0 - gradient));
-//     finalColor = mix(finalColor, vec3(0.1), extinguishingProgress * 0.8);
-
-//     float alpha = flame * (0.8 + 0.2 * sin(time * 10.0 + vUv.x * 20.0));
-//     alpha *= (1.0 - extinguishingProgress); // Уменьшаем прозрачность при тушении
-
-//     float light = 0.5 + 0.5 * sin(vUv.y * 10.0 + time * 5.0);
-//     finalColor *= light;
-
-//     gl_FragColor = vec4(finalColor, alpha);
-
-//     if (gl_FragColor.a < 0.1) discard;
-//   }
-//   `
-// )
-
-// extend({ FireShaderMaterial })
-
-// export default function FirePlane({
-//   rotation = [-Math.PI / 2, 0, 0],
-//   position = [0, 0, 0],
-//   size = [2, 3],
-//   intensity = 1.5,
-//   speed = 1.0,
-//   distortion = 2.0,
-//   turbulence = 0.5,
-//   isExtinguishing = false, // Флаг тушения извне
-//   onExtinguished = () => {}, // Колбек при полном тушении
-// }) {
-//   const materialRef = useRef()
-//   const meshRef = useRef()
-//   const [extinguishingProgress, setExtinguishingProgress] = useState(0)
-
-//   const geometry = useMemo(() => {
-//     return new THREE.PlaneGeometry(size[0], size[1], 64, 64)
-//   }, [size])
-
-//   useFrame(({ clock }) => {
-//     if (!materialRef.current) return
-
-//     materialRef.current.time = clock.elapsedTime
-
-//     // Плавное тушение при активации
-//     if (isExtinguishing && extinguishingProgress < 1) {
-//       const newProgress = Math.min(extinguishingProgress + 0.005, 1)
-//       setExtinguishingProgress(newProgress)
-//       materialRef.current.extinguishingProgress = newProgress
-//       materialRef.current.isExtinguishing = isExtinguishing ? 1 : 0
-
-//       if (newProgress >= 1) {
-//         onExtinguished()
-//       }
-//     }
-
-//     // Легкое колебание
-//     if (meshRef.current && extinguishingProgress < 0.9) {
-//       meshRef.current.rotation.z =
-//         Math.sin(clock.elapsedTime * 0.5) * 0.05 * (1 - extinguishingProgress)
-//     }
-//   })
-
-//   return (
-//     <mesh
-//       ref={meshRef}
-//       rotation={rotation}
-//       position={position}
-//       visible={extinguishingProgress < 0.99} // Полностью скрываем когда потушено
-//     >
-//       <bufferGeometry attach="geometry" {...geometry} />
-//       <fireShaderMaterial
-//         ref={materialRef}
-//         transparent
-//         side={THREE.DoubleSide}
-//         depthWrite={false}
-//         blending={THREE.AdditiveBlending}
-//         intensity={intensity}
-//         speed={speed}
-//         distortion={distortion}
-//         turbulence={turbulence}
-//         isExtinguishing={isExtinguishing ? 1 : 0}
-//         extinguishingProgress={extinguishingProgress}
-//       />
-//     </mesh>
-//   )
-// }
 
 // import { useRef } from 'react'
 // import { useFrame } from '@react-three/fiber'

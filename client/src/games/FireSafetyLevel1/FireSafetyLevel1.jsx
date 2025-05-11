@@ -125,17 +125,6 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
     calculateCameraPosition()
   }, [isMobile, mounted])
 
-
-  const [isExtinguishing, setIsExtinguishing] = useState(false)
-  
-  const handleExtinguish = () => {
-    setIsExtinguishing(true)
-  }
-  
-  const handleFireExtinguished = () => {
-    console.log('Огонь полностью потушен!')
-  }
-
   const controlsSettings = {
     mobile: {
       minDistance: 1,
@@ -201,13 +190,6 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
             scale={0.6}
             isMobile={isMobile}
           />
-          <FirePlane
-            position={[0, 0.5, 0]}
-            isExtinguishing={isExtinguishing}
-            onExtinguished={handleFireExtinguished}
-          />
-          {/* <button onClick={handleExtinguish}>Начать тушение</button> */}
-
 
           <OrbitControls
             ref={controls}

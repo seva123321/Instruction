@@ -11,41 +11,42 @@ import {
 import * as THREE from 'three'
 import useQuizPage from '@/hook/useQuizPage'
 import { useLazyGetModelQuery } from '@/slices/gameApi'
+import FirePlane from '../CustomFire'
 
 const Scene2 = forwardRef((props, ref) => {
   const group = useRef()
-  const { gameData: data, updateUserAnswers } = useQuizPage()
-  // const { gameData, updateUserAnswers } = useQuizPage() // @todo gameData
+  // const { gameData: data, updateUserAnswers } = useQuizPage()
+  const { gameData, updateUserAnswers } = useQuizPage() // @todo gameData
   const [getModel, { isLoading: isModelLoading }] = useLazyGetModelQuery()
 
-  const gameData = useMemo(
-    () => ({
-      question:
-        'Задайте правильную последовательность использования порошкового огнетушителя',
-      answer: [
-        'stamp_fire-extinguisher',
-        'safety_pin_fire-extinguisher',
-        'hose_fire-extinguisher',
-        'handle_bottom_fire-extinguisher',
-      ],
-      warning:
-        'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
-      model_path: '/models/scene_last4.glb',
-      part_tooltips: {
-        safety_pin: 'Предохранительная чека',
-        stamp: 'Пломба',
-        hose: 'Шланг',
-        handle_bottom: 'Ручка активации',
-      },
-      animation_sequence: [
-        'safety_pin_fire-extinguisher',
-        'stamp_fire-extinguisher',
-        'hose_fire-extinguisher',
-        'handle_bottom_fire-extinguisher',
-      ],
-    }),
-    []
-  )
+  // const gameData = useMemo(
+  //   () => ({
+  //     question:
+  //       'Задайте правильную последовательность использования порошкового огнетушителя',
+  //     answer: [
+  //       'stamp_fire-extinguisher',
+  //       'safety_pin_fire-extinguisher',
+  //       'hose_fire-extinguisher',
+  //       'handle_bottom_fire-extinguisher',
+  //     ],
+  //     warning:
+  //       'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
+  //     model_path: '/models/scene_last4.glb',
+  //     part_tooltips: {
+  //       safety_pin: 'Предохранительная чека',
+  //       stamp: 'Пломба',
+  //       hose: 'Шланг',
+  //       handle_bottom: 'Ручка активации',
+  //     },
+  //     animation_sequence: [
+  //       'safety_pin_fire-extinguisher',
+  //       'stamp_fire-extinguisher',
+  //       'hose_fire-extinguisher',
+  //       'handle_bottom_fire-extinguisher',
+  //     ],
+  //   }),
+  //   []
+  // )
 
   const {
     model_path: modelPath = '/models/scene_last4.glb',
@@ -66,6 +67,7 @@ const Scene2 = forwardRef((props, ref) => {
   const [hoveredPart, setHoveredPart] = useState(null)
   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
   const { raycaster, camera } = useThree()
+  const [isBurning, setIsBurning] = useState(true) //@TODO
 
   useEffect(() => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
@@ -145,6 +147,7 @@ const Scene2 = forwardRef((props, ref) => {
       resetAnimation()
       setIsPlayingSequence(true)
       setCurrentStep(0)
+      setIsBurning(false)
     },
   }))
 
@@ -199,6 +202,14 @@ const Scene2 = forwardRef((props, ref) => {
         onPointerOver={eventHandlers.handlePointerOver}
         onPointerOut={eventHandlers.handlePointerOut}
         {...props}
+      />
+
+      <FirePlane
+        size={gameData.fire_size}
+        position={gameData.fire_position}
+        isBurning={isBurning}
+        // onExtinguished={() => setMessage('Огонь потушен')}
+        // onFullyIgnited={() => setMessage('Огонь полностью разгорелся')}
       />
 
       {hoveredPart && (

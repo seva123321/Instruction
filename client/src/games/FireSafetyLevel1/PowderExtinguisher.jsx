@@ -38,6 +38,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
   const [hoveredPart, setHoveredPart] = useState(null)
   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
   const { raycaster, camera } = useThree()
+  const [errorText, setErrorText] = useState(null)
 
   useEffect(() => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
@@ -83,14 +84,45 @@ const PowderExtinguisher = forwardRef((props, ref) => {
         useGLTF.preload(modelResponse.url)
       } catch (error) {
         console.error('Failed to load model:', error)
-        // Можно показать простую геометрию в качестве fallback
+
+        // Создаем fallback-модель огнетушителя
         const fallbackScene = new THREE.Group()
-        const box = new THREE.Mesh(
-          new THREE.BoxGeometry(1, 1, 1),
-          new THREE.MeshBasicMaterial({ color: 0xff0000 })
-        )
-        fallbackScene.add(box)
+
+        // Корпус огнетушителя (красный цилиндр)
+        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 32)
+        const bodyMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff0000,
+          transparent: true,
+          opacity: 0.8,
+        })
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+        body.position.y = 1
+        fallbackScene.add(body)
+
+        // Верхняя часть (серый цилиндр)
+        const topGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 32)
+        const topMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 })
+        const top = new THREE.Mesh(topGeometry, topMaterial)
+        top.position.y = 2.2
+        fallbackScene.add(top)
+
+        // Ручка (черный ящик)
+        const handleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.6)
+        const handleMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 })
+        const handle = new THREE.Mesh(handleGeometry, handleMaterial)
+        handle.position.set(0, 2.4, 0.3)
+        fallbackScene.add(handle)
+
+        // Текст с ошибкой (используем HTML-элемент через drei's Html)
+        const errorTextMsg = {
+          position: new THREE.Vector3(-1, 0.5, 0),
+          text: 'Модель не загружена',
+          color: '#ff0000',
+          fontSize: '0.5rem',
+        }
+
         setModel(fallbackScene)
+        setErrorText(errorTextMsg)
       }
     }
 
@@ -108,6 +140,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
       }
       setModel(null)
       setAnimations([])
+      setErrorText(null)
     }
   }, [modelPath, props.isMobile, getModel])
 
@@ -245,12 +278,31 @@ const PowderExtinguisher = forwardRef((props, ref) => {
       {model && (
         <primitive
           ref={group}
+          object={model}
           onClick={eventHandlers.handleClick}
           onPointerOver={eventHandlers.handlePointerOver}
           onPointerOut={eventHandlers.handlePointerOut}
-          object={model}
           {...props}
         />
+      )}
+
+      {errorText && (
+        <Html
+          position={errorText.position}
+          distanceFactor={10}
+          style={{
+            color: errorText.color,
+            fontSize: errorText.fontSize,
+            whiteSpace: 'nowrap',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            background: 'rgba(255, 255, 255, 0.7)',
+            padding: '4px 8px',
+            borderRadius: '4px',
+          }}
+        >
+          {errorText.text}
+        </Html>
       )}
 
       {hoveredPart && (
@@ -281,20 +333,19 @@ export default PowderExtinguisher
 // const PowderExtinguisher = forwardRef((props, ref) => {
 //   const group = useRef()
 //   const { gameData, updateUserAnswers } = useQuizPage()
-//   const [getModel, { isLoading, isError }] = useLazyGetModelQuery()
+//   const [getModel, { isLoading: isModelLoading }] = useLazyGetModelQuery()
 
-//   // Мемоизация данных из gameData
 //   const {
 //     model_path: modelPath,
-//     part_tooltips: partTooltips,
-//     animation_sequence: animationSequence,
-//     answer: answerServer,
-//   } = useMemo(() => gameData, [gameData])
-//   console.log('modelPath', modelPath)
+//     part_tooltips: partTooltips = {},
+//     animation_sequence: animationSequence = [],
+//     answer: answerServer = [],
+//   } = gameData || {}
 
-//   const { scene, animations } = useGLTF(modelPath)
-//   const { actions } = useAnimations(animations, group)
-
+//   const [model, setModel] = useState(null)
+//   const [animations, setAnimations] = useState([])
+//   const { actions, mixer } = useAnimations(animations, group)
+//   const [errorText, setErrorText] = useState(null)
 //   const [isTouch, setIsTouch] = useState(false)
 //   const [currentStep, setCurrentStep] = useState(0)
 //   const [isPlayingSequence, setIsPlayingSequence] = useState(false)
@@ -302,43 +353,263 @@ export default PowderExtinguisher
 //   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
 //   const { raycaster, camera } = useThree()
 
+//   // Создаем fallback-модель и анимации
+//   const createFallbackModel = useMemo(
+//     () => () => {
+//       const scene = new THREE.Group()
+//       scene.name = 'fallback-extinguisher'
+
+//       // Функция создания части с возможностью анимации
+//       const createAnimatedPart = (name, geometry, material, position) => {
+//         const mesh = new THREE.Mesh(geometry, material)
+//         mesh.name = name
+//         mesh.position.copy(position)
+//         mesh.userData.originalPosition = position.clone() // Сохраняем исходную позицию
+//         mesh.cursor = 'pointer'
+//         return mesh
+//       }
+
+//       // Создаем части огнетушителя
+//       const body = createAnimatedPart(
+//         'body_fire-extinguisher',
+//         new THREE.CylinderGeometry(0.5, 0.5, 2, 32),
+//         new THREE.MeshBasicMaterial({
+//           color: 0xff0000,
+//           transparent: true,
+//           opacity: 0.8,
+//         }),
+//         new THREE.Vector3(0, 1, 0)
+//       )
+
+//       const top = createAnimatedPart(
+//         'top_fire-extinguisher',
+//         new THREE.CylinderGeometry(0.3, 0.3, 0.4, 32),
+//         new THREE.MeshBasicMaterial({ color: 0x888888 }),
+//         new THREE.Vector3(0, 2.2, 0)
+//       )
+
+//       const safetyPin = createAnimatedPart(
+//         'safety_pin_fire-extinguisher',
+//         new THREE.BoxGeometry(0.4, 0.1, 0.1),
+//         new THREE.MeshBasicMaterial({ color: 0xffff00 }),
+//         new THREE.Vector3(0.3, 2.3, 0)
+//       )
+
+//       const stamp = createAnimatedPart(
+//         'stamp_fire-extinguisher',
+//         new THREE.SphereGeometry(0.1, 16, 16),
+//         new THREE.MeshBasicMaterial({ color: 0xffffff }),
+//         new THREE.Vector3(0.5, 2.25, 0)
+//       )
+
+//       const hose = createAnimatedPart(
+//         'hose_fire-extinguisher',
+//         new THREE.TubeGeometry(
+//           new THREE.CatmullRomCurve3([
+//             new THREE.Vector3(0, 1.8, 0),
+//             new THREE.Vector3(0.5, 1.6, 0),
+//             new THREE.Vector3(1, 1.5, 0),
+//           ]),
+//           20,
+//           0.05
+//         ),
+//         new THREE.MeshBasicMaterial({ color: 0x000000 }),
+//         new THREE.Vector3(0, 0, 0)
+//       )
+
+//       const handle = createAnimatedPart(
+//         'handle_bottom_fire-extinguisher',
+//         new THREE.BoxGeometry(0.2, 0.2, 0.6),
+//         new THREE.MeshBasicMaterial({ color: 0x333333 }),
+//         new THREE.Vector3(0, 2.4, 0.3)
+//       )
+
+//       // Добавляем все части в сцену
+//       scene.add(body, top, safetyPin, stamp, hose, handle)
+
+//       // Создаем более сложные анимации
+//       const createComplexAnimation = (name, affectedPart, animationType) => {
+//         const tracks = []
+//         const duration = 1
+//         const times = [0, duration / 2, duration]
+
+//         switch (animationType) {
+//           case 'pull':
+//             // Анимация выдергивания чеки
+//             tracks.push(
+//               new THREE.VectorKeyframeTrack(
+//                 `${affectedPart.name}.position`,
+//                 times,
+//                 [
+//                   affectedPart.userData.originalPosition.x,
+//                   affectedPart.userData.originalPosition.y,
+//                   affectedPart.userData.originalPosition.z,
+
+//                   affectedPart.userData.originalPosition.x + 0.5,
+//                   affectedPart.userData.originalPosition.y,
+//                   affectedPart.userData.originalPosition.z + 0.2,
+
+//                   affectedPart.userData.originalPosition.x + 1,
+//                   affectedPart.userData.originalPosition.y - 0.3,
+//                   affectedPart.userData.originalPosition.z,
+//                 ]
+//               ),
+//               new THREE.QuaternionKeyframeTrack(
+//                 `${affectedPart.name}.quaternion`,
+//                 times,
+//                 [0, 0, 0, 1, 0, 0.2, 0, 0.98, 0, 0, 0, 1]
+//               )
+//             )
+//             break
+
+//           case 'rotate':
+//             // Анимация вращения (для ручки)
+//             tracks.push(
+//               new THREE.QuaternionKeyframeTrack(
+//                 `${affectedPart.name}.quaternion`,
+//                 times,
+//                 [0, 0, 0, 1, 0, 0.5, 0, 0.87, 0, 0, 0, 1]
+//               )
+//             )
+//             break
+
+//           case 'move':
+//             // Простое перемещение (для шланга)
+//             tracks.push(
+//               new THREE.VectorKeyframeTrack(
+//                 `${affectedPart.name}.position`,
+//                 times,
+//                 [
+//                   ...affectedPart.userData.originalPosition.toArray(),
+//                   affectedPart.userData.originalPosition.x + 0.3,
+//                   affectedPart.userData.originalPosition.y + 0.2,
+//                   affectedPart.userData.originalPosition.z,
+//                   ...affectedPart.userData.originalPosition.toArray(),
+//                 ]
+//               )
+//             )
+//             break
+//         }
+
+//         return new THREE.AnimationClip(name, duration, tracks)
+//       }
+
+//       // Создаем анимационные клипы
+//       const fallbackAnimations = [
+//         createComplexAnimation(
+//           'safety_pin_fire-extinguisherAction',
+//           safetyPin,
+//           'pull'
+//         ),
+//         createComplexAnimation('stamp_fire-extinguisherAction', stamp, 'pull'),
+//         createComplexAnimation('hose_fire-extinguisherAction', hose, 'move'),
+//         createComplexAnimation(
+//           'handle_bottom_fire-extinguisherAction',
+//           handle,
+//           'rotate'
+//         ),
+//       ]
+
+//       return { scene, animations: fallbackAnimations }
+//     },
+//     []
+//   )
+
 //   useEffect(() => {
 //     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
 //   }, [])
 
-//   // Предзагрузка модели (вынесен в отдельный эффект)
 //   useEffect(() => {
-//     if (modelPath) {
-//       useGLTF.preload(modelPath)
+//     if (!modelPath) return
+
+//     const loadModel = async () => {
+//       try {
+//         const modelResponse = await getModel(modelPath).unwrap()
+//         const { scene: loadedScene, animations: loadedAnimations } =
+//           await useGLTF.load(modelResponse.url)
+
+//         loadedScene.traverse((node) => {
+//           if (node.isMesh) {
+//             node.material.transparent = false
+//             node.material.depthWrite = true
+//             node.cursor = 'pointer'
+//           }
+//         })
+
+//         // Сначала сбрасываем ошибку, затем устанавливаем модель
+//         setErrorText(null)
+//         setModel(loadedScene)
+//         setAnimations(loadedAnimations)
+//         useGLTF.preload(modelResponse.url)
+//       } catch (error) {
+//         console.error('Failed to load model:', error)
+
+//         // Сначала создаем fallback-модель
+//         const { scene: fallbackScene, animations: fallbackAnimations } =
+//           createFallbackModel()
+
+//         // Затем атомарно обновляем все состояния
+//         setModel(fallbackScene)
+//         setAnimations(fallbackAnimations)
+//         setErrorText({
+//           position: new THREE.Vector3(0, 3, 0),
+//           text: 'Модель не загружена. Используется упрощенная версия.',
+//           color: '#ff0000',
+//           fontSize: '0.5rem',
+//         })
+//       }
 //     }
-//   }, [modelPath])
 
-//   const { isMobile } = props
+//     loadModel()
 
-//   // Мемоизированный обработчик событий
+//     return () => {
+//       // Очищаем только если модель не является fallback
+//       if (model && model.name !== 'fallback-extinguisher') {
+//         model.traverse((obj) => {
+//           if (obj.isMesh) {
+//             obj.geometry?.dispose()
+//             obj.material?.dispose()
+//           }
+//         })
+//       }
+//       setModel(null)
+//       setAnimations([])
+//       setErrorText(null)
+//     }
+//   }, [modelPath, props.isMobile, getModel, createFallbackModel])
+
+//   // Добавляем безопасный mixer
+//   const safeMixer = useMemo(
+//     () => mixer || new THREE.AnimationMixer(new THREE.Group()),
+//     [mixer]
+//   )
+
+//   useEffect(() => {
+//     if (!safeMixer) return
+
+//     // Очистка при размонтировании
+//     return () => {
+//       safeMixer.stopAllAction()
+//     }
+//   }, [safeMixer])
+
 //   const eventHandlers = useMemo(
 //     () => ({
 //       handlePointerOver: (event) => {
-//         if (isTouch) return
+//         if (isTouch || !model) return
 //         event.stopPropagation()
 //         document.body.style.cursor = 'pointer'
 
 //         const clickedObject = event.object
-//         const offsetY = 0.1
-//         const elevatedPoint = new THREE.Vector3(
-//           event.point.x,
-//           event.point.y + offsetY,
-//           event.point.z
-//         )
-
-//         setTooltipPosition(elevatedPoint)
-
 //         const partName = Object.keys(partTooltips).find((key) =>
 //           clickedObject.name.includes(key)
 //         )
 
 //         if (partName) {
 //           setHoveredPart(partName)
+//           setTooltipPosition(
+//             new THREE.Vector3(event.point.x, event.point.y + 0.1, event.point.z)
+//           )
 //         }
 //       },
 //       handlePointerOut: () => {
@@ -346,26 +617,22 @@ export default PowderExtinguisher
 //         setHoveredPart(null)
 //       },
 //       handleClick: (event) => {
+//         if (!model || !raycaster || !camera) return
 //         event.stopPropagation()
-//         event.nativeEvent.stopImmediatePropagation()
 
 //         raycaster.setFromCamera(event.pointer, camera)
-//         const intersects = raycaster.intersectObjects(scene.children, true)
 
-//         if (intersects.length > 0 && intersects[0].distance < 10) {
+//         if (!model.children) return
+//         const intersects = raycaster.intersectObjects(model.children, true)
+
+//         if (intersects.length > 0) {
 //           const clickedObject = intersects[0].object
-//           console.log('Clicked:', clickedObject.name)
 //           if (answerServer.includes(clickedObject.name)) {
 //             updateUserAnswers(clickedObject.name)
 //           }
 
-//           // Запускаем анимацию
-//           const matchingAction = Object.keys(actions).find((key) =>
-//             key.includes(clickedObject.name)
-//           )
-
-//           if (matchingAction) {
-//             const action = actions[matchingAction]
+//           const action = actions[`${clickedObject.name}Action`]
+//           if (action) {
 //             action.reset().setLoop(THREE.LoopOnce, 1).clampWhenFinished = true
 //             action.play()
 //           }
@@ -374,37 +641,15 @@ export default PowderExtinguisher
 //     }),
 //     [
 //       isTouch,
+//       model,
 //       partTooltips,
-//       scene.children,
-//       actions,
-//       camera,
 //       raycaster,
+//       camera,
+//       answerServer,
 //       updateUserAnswers,
+//       actions,
 //     ]
 //   )
-
-//   // Настройка материалов
-//   useEffect(() => {
-//     scene.traverse((node) => {
-//       if (node.isMesh) {
-//         node.material.transparent = false
-//         node.material.depthWrite = true
-//         // Изменение размера для мобильных устройств
-//         if (
-//           (isMobile && node.name === 'safety_pin_fire-extinguisher') ||
-//           node.name === 'stamp_fire-extinguisher'
-//         ) {
-//           node.geometry.scale(1.3, 1, 1.3)
-//           node.geometry.attributes.position.needsUpdate = true
-//           node.geometry.computeBoundingBox()
-//           node.geometry.computeBoundingSphere()
-//         }
-
-//         node.cursor = 'pointer'
-//       }
-//     })
-//   }, [scene, isMobile])
-
 //   const resetAnimation = useMemo(
 //     () => () => {
 //       Object.values(actions).forEach((action) => {
@@ -417,22 +662,20 @@ export default PowderExtinguisher
 //     [actions]
 //   )
 
-//   useImperativeHandle(
-//     ref,
-//     () => ({
-//       playAnimationSequence: () => {
-//         if (!isPlayingSequence) {
-//           resetAnimation()
-//           setIsPlayingSequence(true)
-//           setCurrentStep(0)
-//         }
-//       },
-//     }),
-//     [isPlayingSequence, resetAnimation]
-//   )
+//   useImperativeHandle(ref, () => ({
+//     playAnimationSequence: () => {
+//       if (!safeMixer || animations.length === 0) {
+//         console.warn('Анимации не готовы')
+//         return
+//       }
+//       resetAnimation()
+//       setIsPlayingSequence(true)
+//       setCurrentStep(0)
+//     },
+//   }))
 
 //   useFrame(() => {
-//     if (!isPlayingSequence || !animationSequence) return
+//     if (!isPlayingSequence || !animationSequence || !model || !actions) return
 
 //     const currentActionName = animationSequence[currentStep]
 //     const action = actions[`${currentActionName}Action`]
@@ -464,27 +707,51 @@ export default PowderExtinguisher
 
 //   return (
 //     <>
-//       <primitive
-//         ref={group}
-//         onClick={eventHandlers.handleClick}
-//         onPointerOver={eventHandlers.handlePointerOver}
-//         onPointerOut={eventHandlers.handlePointerOut}
-//         object={scene}
-//         {...props}
-//       />
+//       {isModelLoading && (
+//         <Html center>
+//           <div style={{ color: 'white' }}>Loading model...</div>
+//         </Html>
+//       )}
+
+//       {model && (
+//         <primitive
+//           ref={group}
+//           object={model}
+//           onClick={eventHandlers.handleClick}
+//           onPointerOver={eventHandlers.handlePointerOver}
+//           onPointerOut={eventHandlers.handlePointerOut}
+//           {...props}
+//         />
+//       )}
+
+//       {model && model.name === 'fallback-extinguisher' && errorText && (
+//         <Html
+//           position={errorText.position}
+//           distanceFactor={10}
+//           style={{
+//             color: errorText.color,
+//             fontSize: errorText.fontSize,
+//             whiteSpace: 'nowrap',
+//             fontWeight: 'bold',
+//             textAlign: 'center',
+//             background: 'rgba(255, 255, 255, 0.7)',
+//             padding: '4px 8px',
+//             borderRadius: '4px',
+//           }}
+//         >
+//           {errorText.text}
+//         </Html>
+//       )}
 
 //       {hoveredPart && (
 //         <Html position={tooltipPosition} distanceFactor={10}>
 //           <div
 //             style={{
-//               background: 'rgba(0, 0, 0, 0.8)',
+//               background: 'rgba(0,0,0,0.7)',
 //               color: 'white',
 //               padding: '4px 8px',
 //               borderRadius: '4px',
-//               fontSize: '10px',
-//               whiteSpace: 'nowrap',
-//               pointerEvents: 'none',
-//               transform: 'translate(-50%, -100%)',
+//               fontSize: '14px',
 //             }}
 //           >
 //             {partTooltips[hoveredPart]}
@@ -492,290 +759,6 @@ export default PowderExtinguisher
 //         </Html>
 //       )}
 //     </>
-//   )
-// })
-
-// export default PowderExtinguisher
-
-// // для работы с СЕРВЕРОМ
-// import { useGLTF, useAnimations, Html } from '@react-three/drei'
-// import { useThree, useFrame } from '@react-three/fiber'
-// import {
-//   forwardRef,
-//   useRef,
-//   useState,
-//   useEffect,
-//   useImperativeHandle,
-//   useMemo,
-// } from 'react'
-// import * as THREE from 'three'
-// import useQuizPage from '@/hook/useQuizPage'
-// import ModelLoader from '@/hoc/ModelLoader'
-
-// const PowderExtinguisher = forwardRef((props, ref) => {
-//   const group = useRef()
-//   const { gameData } = useQuizPage()
-//   // Мемоизация данных из gameData
-//   const {
-//     model_path: modelPath,
-//     part_tooltips: partTooltips,
-//     animation_sequence: animationSequence,
-//   } = useMemo(() => gameData, [gameData])
-
-//   const { scene, animations } = useGLTF(modelPath)
-//   const { actions } = useAnimations(animations, group)
-
-//   const [isTouch, setIsTouch] = useState(false)
-//   const [currentStep, setCurrentStep] = useState(0)
-//   const [isPlayingSequence, setIsPlayingSequence] = useState(false)
-//   const [hoveredPart, setHoveredPart] = useState(null)
-//   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
-//   const { raycaster, camera } = useThree()
-
-//   useEffect(() => {
-//     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
-//   }, [])
-
-//   // Предзагрузка модели (вынесен в отдельный эффект)
-//   useEffect(() => {
-//     if (modelPath) {
-//       useGLTF.preload(modelPath)
-//     }
-//   }, [modelPath])
-
-//   const { isMobile } = props
-
-//   // Мемоизированный обработчик событий
-//   const eventHandlers = useMemo(
-//     () => ({
-//       handlePointerOver: (event) => {
-//         if (isTouch) return
-//         event.stopPropagation()
-//         document.body.style.cursor = 'pointer'
-
-//         const clickedObject = event.object
-//         const offsetY = 0.1
-//         const elevatedPoint = new THREE.Vector3(
-//           event.point.x,
-//           event.point.y + offsetY,
-//           event.point.z
-//         )
-
-//         setTooltipPosition(elevatedPoint)
-
-//         const partName = Object.keys(partTooltips).find((key) =>
-//           clickedObject.name.includes(key)
-//         )
-
-//         if (partName) {
-//           setHoveredPart(partName)
-//         }
-//       },
-//       handlePointerOut: () => {
-//         document.body.style.cursor = 'auto'
-//         setHoveredPart(null)
-//       },
-//       // handleClick: (event) => {
-//       //   event.stopPropagation()
-//       //   const { raycaster, camera } = useThree()
-//       //   raycaster.setFromCamera(event.pointer, camera)
-//       //   const intersects = raycaster.intersectObjects(scene.children, true)
-
-//       //   if (intersects.length > 0) {
-//       //     const clickedObject = intersects[0].object
-//       //     const action =
-//       //       actions[clickedObject.name] ||
-//       //       Object.entries(actions).find(([key]) =>
-//       //         key.includes(clickedObject.name)
-//       //       )?.[1]
-
-//       //     if (action) {
-//       //       action.reset()
-//       //       action.setLoop(THREE.LoopOnce)
-//       //       action.clampWhenFinished = true
-//       //       action.play()
-//       //     }
-//       //   }
-//       // },
-//       handleClick: (event) => {
-//         event.stopPropagation()
-
-//         raycaster.setFromCamera(event.pointer, camera)
-//         const intersects = raycaster.intersectObjects(scene.children, true)
-
-//         if (intersects.length > 0) {
-//           const clickedObject = intersects[0].object
-//           const matchingAction = Object.keys(actions).find(
-//             (key) => key.includes(clickedObject.name)
-//             // eslint-disable-next-line function-paren-newline
-//           )
-//           if (matchingAction) {
-//             const action = actions[matchingAction]
-//             action.reset()
-//             action.setLoop(THREE.LoopOnce)
-//             action.clampWhenFinished = true
-//             action.play()
-//           }
-//         }
-//       },
-//     }),
-//     [isTouch, partTooltips, scene.children, actions, camera, raycaster]
-//   )
-
-//   // Настройка материалов с мемоизацией
-//   // производительнее но нерабочий
-//   // useEffect(() => {
-//   //   const modifiedScene = scene.clone()
-//   //   modifiedScene.traverse((node) => {
-//   //     if (node.isMesh) {
-//   //       const box = new THREE.Box3().setFromObject(node)
-//   //       const size = box.getSize(new THREE.Vector3())
-
-//   //       if (
-//   //         (isMobile && node.name === 'Safety_pin_fire-extinguisher') ||
-//   //         node.name === 'Stamp_fire-extinguisher'
-//   //       ) {
-//   //         const geometry = node.geometry.clone()
-//   //         geometry.scale(1.3, 1, 1.3)
-//   //         geometry.attributes.position.needsUpdate = true
-//   //         geometry.computeBoundingBox()
-//   //         geometry.computeBoundingSphere()
-//   //         node.geometry = geometry
-//   //       }
-
-//   //       if (size.length() > 1.5) {
-//   //         node.material = node.material.clone()
-//   //         node.material.color.set('#8B0000')
-//   //         node.material.transparent = false
-//   //         node.material.opacity = 1
-//   //       }
-
-//   //       node.cursor = 'pointer'
-//   //     }
-//   //   })
-//   // }, [scene, isMobile])
-
-//   // Настройка материалов
-//   useEffect(() => {
-//     scene.traverse((node) => {
-//       if (node.isMesh) {
-//         const box = new THREE.Box3().setFromObject(node)
-//         const size = box.getSize(new THREE.Vector3())
-
-//         // Изменение размера для мобильных устройств
-//         if (
-//           (isMobile && node.name === 'Safety_pin_fire-extinguisher') ||
-//           node.name === 'Stamp_fire-extinguisher'
-//         ) {
-//           node.geometry.scale(1.3, 1, 1.3)
-//           node.geometry.attributes.position.needsUpdate = true
-//           node.geometry.computeBoundingBox()
-//           node.geometry.computeBoundingSphere()
-//         }
-
-//         if (size.length() > 1.5) {
-//           node.material = new THREE.MeshStandardMaterial({
-//             color: '#8B0000',
-//             transparent: false,
-//             opacity: 1,
-//           })
-//         }
-
-//         node.cursor = 'pointer'
-//       }
-//     })
-//   }, [scene, isMobile])
-
-//   const resetAnimation = useMemo(
-//     () => () => {
-//       Object.values(actions).forEach((action) => {
-//         action?.stop?.()
-//         action?.reset?.()
-//       })
-//       setCurrentStep(0)
-//       setIsPlayingSequence(false)
-//     },
-//     [actions]
-//   )
-
-//   useImperativeHandle(
-//     ref,
-//     () => ({
-//       playAnimationSequence: () => {
-//         if (!isPlayingSequence) {
-//           resetAnimation()
-//           setIsPlayingSequence(true)
-//           setCurrentStep(0)
-//         }
-//       },
-//     }),
-//     [isPlayingSequence, resetAnimation]
-//   )
-
-//   useFrame(() => {
-//     if (!isPlayingSequence || !animationSequence) return
-
-//     const currentActionName = animationSequence[currentStep]
-//     const action = actions[`${currentActionName}Action`]
-
-//     if (!action) {
-//       if (currentStep < animationSequence.length - 1) {
-//         setCurrentStep((prev) => prev + 1)
-//       } else {
-//         setIsPlayingSequence(false)
-//       }
-//       return
-//     }
-
-//     if (!action.isRunning()) {
-//       if (action.time === 0) {
-//         action.reset()
-//         action.setLoop(THREE.LoopOnce)
-//         action.clampWhenFinished = true
-//         action.play()
-//       } else if (action.time >= action.getClip().duration) {
-//         if (currentStep < animationSequence.length - 1) {
-//           setCurrentStep((prev) => prev + 1)
-//         } else {
-//           setIsPlayingSequence(false)
-//         }
-//       }
-//     }
-//   })
-
-//   const tooltipStyle = {
-//     background: 'rgba(0, 0, 0, 0.8)',
-//     color: 'white',
-//     padding: '4px 8px',
-//     borderRadius: '4px',
-//     fontSize: '10px',
-//     whiteSpace: 'nowrap',
-//     pointerEvents: 'none',
-//     transform: 'translate(-50%, -100%)',
-//   }
-
-//   return (
-//     <ModelLoader modelPath={modelPath}>
-//       {(scene, loaderProps) => (
-//         <>
-//           <primitive
-//             ref={group}
-//             object={scene}
-//             onClick={eventHandlers.handleClick}
-//             onPointerOver={eventHandlers.handlePointerOver}
-//             onPointerOut={eventHandlers.handlePointerOut}
-//             {...props}
-//             {...loaderProps}
-//           />
-
-//           {hoveredPart && (
-//             <Html position={tooltipPosition} distanceFactor={10}>
-//               <div style={tooltipStyle}>{partTooltips[hoveredPart]}</div>
-//             </Html>
-//           )}
-//         </>
-//       )}
-//     </ModelLoader>
 //   )
 // })
 

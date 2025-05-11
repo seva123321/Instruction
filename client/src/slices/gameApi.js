@@ -29,7 +29,7 @@ const gameApi = createApi({
     }),
     getModel: build.query({
       query: (modelPath) => ({
-        url: `static/${modelPath}`,
+        url: `${modelPath}`,
         responseHandler: async (response) => {
           if (!response.ok) throw new Error('Model loading failed')
           return response.blob()

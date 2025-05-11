@@ -1,4 +1,3 @@
-import base64
 import json
 import random
 import os
@@ -221,7 +220,7 @@ class SignUpSerializer(serializers.Serializer):
                 dtype=np.float32
             )
 
-            if len(input_descriptor) != 128:
+            if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:
                 raise serializers.ValidationError(
                     "Дескриптор лица должен содержать 128 элементов"
                 )
@@ -362,7 +361,7 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         child=serializers.DictField(child=serializers.BooleanField()),
         required=True,
     )
-    face_descriptor = serializers.DictField(write_only=True, required=True)
+    face_descriptor = serializers.DictField(required=True)
 
     class Meta:
         model = InstructionResult
@@ -438,24 +437,7 @@ class InstructionResultSerializer(serializers.ModelSerializer):
         """Создаем запись о результате инструктажа."""
         request = self.context.get("request")
         agreements_data = validated_data.pop("instruction_agreement")
-        face_descriptor = validated_data.pop("face_descriptor")
-
-        try:
-            user_descriptor_encrypted = json.loads(request.user.face_descriptor)
-            user_descriptor = np.array(
-                decrypt_descriptor(user_descriptor_encrypted, AES_STORAGE_KEY),
-                dtype=np.float32,
-            )
-
-            distance = np.linalg.norm(face_descriptor - user_descriptor)
-            if distance >= settings.FACE_MATCH_THRESHOLD:
-                raise serializers.ValidationError(
-                    {"face_descriptor": "Лицо не соответствует текущему пользователю"}
-                )
-        except Exception as e:
-            raise serializers.ValidationError(
-                {"face_descriptor": f"Ошибка верификации: {str(e)}"}
-            )
+        validated_data.pop("face_descriptor")
 
         instruction_result = InstructionResult.objects.create(
             user=request.user,

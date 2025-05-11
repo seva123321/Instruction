@@ -28,7 +28,8 @@ from api.models import (
     UserBadge,
     Rank,
     GameSwiper,
-    GameSwiperResult
+    GameSwiperResult,
+    QuizResult
 )
 from api.utils.utils import (
     decrypt_descriptor,
@@ -665,6 +666,7 @@ class GameSwiperSerializer(serializers.ModelSerializer):
         model = GameSwiper
         fields = ("question", "answer")
 
+
 class GameSwiperResultSerializer(serializers.ModelSerializer):
     """Сериализатор для результатов игры GameSwiper."""
 
@@ -673,4 +675,15 @@ class GameSwiperResultSerializer(serializers.ModelSerializer):
         fields = ("score",)
         extra_kwargs = {
             "score": {"required": True},
+        }
+
+
+class QuizResultSerializer(serializers.ModelSerializer):
+    """Сериализатор для результатов викторины."""
+
+    class Meta:
+        model = QuizResult
+        fields = ("result",)
+        extra_kwargs = {
+            "result": {"required": True},
         }

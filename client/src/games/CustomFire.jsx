@@ -5,7 +5,7 @@
 //   const [isBurning, setIsBurning] = useState(false)
 //   const [message, setMessage] = useState('Огонь выключен')
 
-// <FirePlane
+//       <FirePlane
 //         position={[0, 0.5, 0]}
 //         isBurning={isBurning}
 //         onExtinguished={() => setMessage('Огонь потушен')}
@@ -160,9 +160,9 @@ extend({ FireShaderMaterial })
 export default function FirePlane({
   rotation = [-Math.PI / 2, 0, 0], // Ориентация плоскости
   position = [0, 0, 0], // Позиция в пространстве
-  size = [2, 3], // Размер (ширина, высота)
+  size = [4, 8], // Размер (ширина, высота)
   intensity = 1.5, // Интенсивность пламени
-  speed = 1.0, // Скорость анимации
+  speed = 0.6, // Скорость анимации
   isBurning = false, // Состояние горения
   onExtinguished = () => {}, // Колбек при тушении
   onFullyIgnited = () => {}, // Колбек при разгорании

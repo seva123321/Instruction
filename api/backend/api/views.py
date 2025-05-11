@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
 from django.db import IntegrityError, models
 from django.db.models import Prefetch
+from django.http import FileResponse
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from dotenv import load_dotenv
@@ -52,6 +53,7 @@ from backend.constants import (
     GAME_HOUR,
     GAME_MINUTE,
     LIMIT_GAME_SWIPER_QUESTIONS,
+    MAX_LENGTH_FACE_DESCRIPTOR,
     ME,
     POWER_OF_USER
 )
@@ -301,7 +303,7 @@ class FaceLoginView(APIView):
             decrypted_descriptor = decrypt_descriptor(encrypted_data, encoded_key)
             input_descriptor = np.array(decrypted_descriptor, dtype=np.float32)
 
-            if len(input_descriptor) != 128:
+            if len(input_descriptor) != MAX_LENGTH_FACE_DESCRIPTOR:
                 return Response(
                     {"error": "Дескриптор лица должен содержать 128 элементов"},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -325,7 +327,7 @@ class FaceLoginView(APIView):
                     dtype=np.float32,
                 )
 
-                if stored_descriptor.shape != (128,):
+                if stored_descriptor.shape != (MAX_LENGTH_FACE_DESCRIPTOR,):
                     continue
 
                 distance = np.linalg.norm(input_descriptor - stored_descriptor)
@@ -653,7 +655,7 @@ class SendGlobView(APIView):
         try:
             with open(model_path, 'rb') as file:
                 glb_data = file.read()
-            return Response(glb_data, content_type='application/octet-stream')
+            return FileResponse(glb_data, content_type='model/gltf-binary')
         except FileNotFoundError:
             return Response(
                 {"error": "Модель не найдена"},

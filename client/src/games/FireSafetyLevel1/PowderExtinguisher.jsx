@@ -10,13 +10,14 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useCallback,
 } from 'react'
 import * as THREE from 'three'
 import useQuizPage from '@/hook/useQuizPage'
 
 const PowderExtinguisher = forwardRef((props, ref) => {
   const group = useRef()
-  const { gameData, updateUserAnswers } = useQuizPage()
+  const { gameData, setResult } = useQuizPage()
 
   const {
     model_path: modelPath,
@@ -36,32 +37,38 @@ const PowderExtinguisher = forwardRef((props, ref) => {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
   const { raycaster, camera } = useThree()
   const [error, setError] = useState(null)
+  const [userAnswers, setUserAnswers] = useState([])
 
   useEffect(() => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
   }, [])
 
   useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
     if (!scene) return
 
-    scene.traverse((node) => {
-      if (node.isMesh) {
-        node.material.transparent = false
-        node.material.depthWrite = true
-        node.cursor = 'pointer'
+    const processModel = () => {
+      scene.traverse((node) => {
+        if (node.isMesh) {
+          node.material.transparent = false
+          node.material.depthWrite = true
+          node.cursor = 'pointer'
 
-        if (
-          props.isMobile &&
-          (node.name === 'safety_pin_fire-extinguisher' ||
-            node.name === 'stamp_fire-extinguisher')
-        ) {
-          node.geometry.scale(1.3, 1, 1.3)
-          node.geometry.attributes.position.needsUpdate = true
-          node.geometry.computeBoundingBox()
-          node.geometry.computeBoundingSphere()
+          if (
+            props.isMobile &&
+            (node.name.includes('safety_pin') || node.name.includes('stamp'))
+          ) {
+            node.geometry.scale(1.3, 1, 1.3)
+            node.geometry.attributes.position.needsUpdate = true
+            node.geometry.computeBoundingBox()
+            node.geometry.computeBoundingSphere()
+          }
         }
-      }
-    })
+      })
+    }
+
+    processModel()
 
     return () => {
       scene.traverse((obj) => {
@@ -124,6 +131,14 @@ const PowderExtinguisher = forwardRef((props, ref) => {
     },
     [actions]
   )
+  const isEqualArray = (arr1, arr2) => arr1.every((item, i) => item === arr2[i])
+
+  useEffect(() => {
+    const uniqUserAnswers = Array.from(new Set(userAnswers))
+    if (uniqUserAnswers.length === answerServer?.length) {
+      setResult(isEqualArray(answerServer, uniqUserAnswers))
+    }
+  }, [userAnswers, answerServer, isEqualArray, setResult])
 
   useImperativeHandle(
     ref,
@@ -208,8 +223,10 @@ const PowderExtinguisher = forwardRef((props, ref) => {
 
         if (intersects.length > 0 && intersects[0].distance < 10) {
           const clickedObject = intersects[0].object
+
           if (answerServer.includes(clickedObject.name)) {
-            updateUserAnswers(clickedObject.name)
+            // updateAnswers(clickedObject.name)
+            setUserAnswers((prev) => [...prev, clickedObject.name])
           }
 
           const matchingAction = Object.keys(actions).find((key) =>
@@ -224,16 +241,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
         }
       },
     }),
-    [
-      isTouch,
-      partTooltips,
-      scene,
-      actions,
-      camera,
-      raycaster,
-      answerServer,
-      updateUserAnswers,
-    ]
+    [isTouch, partTooltips, scene, actions, camera, raycaster, answerServer]
   )
 
   return (

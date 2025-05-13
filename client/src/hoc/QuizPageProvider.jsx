@@ -35,7 +35,7 @@ import { useGetGameQuizQuery } from '@/slices/gameApi'
 export const QuizPageContext = createContext({
   showAnswer: () => {},
   gameData: null,
-  updateUserAnswers: (answers) => {},
+  setResult: () => {},
 })
 
 export function QuizPageProvider({ children }) {
@@ -49,58 +49,65 @@ export function QuizPageProvider({ children }) {
   const gameType = location.pathname.split('/').pop()
 
   const {
-    data: gameData,
+    data, // @TODO : gameData,
     isLoading,
     isError,
   } = useGetGameQuizQuery({ gameType, level })
-  const [userAnswers, setUserAnswers] = useState([])
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState(null)
   const gameRef = useRef(null)
+  const [isCorrect, setIsCorrect] = useState(false)
 
-  console.log('data > ', gameData)
+  const gameData = useMemo(
+    () => ({
+      question:
+        'Выберите оптимальный способ тушения пожара. Обратите внимание на очаг возгорания.',
+      answer: ['co2_fire-extinguisher'],
+      // answer: ['cylinder_co2_fire-extinguisher'],
+      warning: 'Результатом является первый клик или таб по предмету.',
+      model_path: '/models/dark_room_fire_safety.glb',
+      // model_path: '/models/scene_last4.10.glb',
+      part_tooltips: {
+        safety_pin: 'Предохранительная чека',
+        stamp: 'Пломба',
+        hose: 'Шланг',
+        handle_bottom: 'Ручка активации',
+        fire_secur_indicator: 'Кнопка пожарной сигнализации',
+        cylinder_co2: 'Углекислотный огнетушитель',
+        cylinder: 'Порошковый огнетушитель',
+        hydrant: 'Внутренний пожарный кран',
+        server: 'Сервера/Электрооборудование',
+      },
+      fire_position: [7, -0.5, -8],
+      fire_size: [6, 8],
+      animation_sequence: [
+        'nurbspath_co2_fire-extinguisher',
+        'safety_pin_co2_fire-extinguisher',
+        'stamp_co2_fire-extinguisher',
+        'hose_co2_fire-extinguisher',
+        'handle_bottom_co2_fire-extinguisher',
+      ],
+      obj_allowed_clicks: [
+        'hydrant',
+        'fire-extinguisher',
+        'fire_secur_indicator',
+      ],
+    }),
+    []
+  )
 
-  // const gameData = useMemo(
-  //   () => ({
-  //     question:
-  //       'Задайте правильную последовательность использования порошкового огнетушителя',
-  //     answer: [
-  //       'stamp_fire-extinguisher',
-  //       'safety_pin_fire-extinguisher',
-  //       'hose_fire-extinguisher',
-  //       'handle_bottom_fire-extinguisher',
-  //     ],
-  //     warning:
-  //       'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
-  //     model_path: '/models/fire_extinguisher_powder.glb',
-  //     part_tooltips: {
-  //       safety_pin: 'Предохранительная чека',
-  //       stamp: 'Пломба',
-  //       hose: 'Шланг',
-  //       handle_bottom: 'Ручка активации',
-  //     },
-  //     animation_sequence: [
-  //       'safety_pin_fire-extinguisher',
-  //       'stamp_fire-extinguisher',
-  //       'hose_fire-extinguisher',
-  //       'handle_bottom_fire-extinguisher',
-  //     ],
-  //   }),
-  //   []
-  // )
+  // Метод для обновления результата из дочерних компонентов
+  const handleSetResult = useCallback((correct) => {
+    setIsCorrect(correct)
 
-  const updateUserAnswers = useCallback((newAnswer) => {
-    setUserAnswers((prev) => [...prev, newAnswer])
+    setResult(correct ? 'win' : 'lose') // Синхронизируем с существующим состоянием
   }, [])
-
-  const isEqualArray = (arr1, arr2) => arr1.every((item, i) => item === arr2[i])
 
   const handleShowAnswer = useCallback(() => {
     if (gameRef.current?.playAnimationSequence) {
       gameRef.current.playAnimationSequence()
     }
 
-    const isCorrect = isEqualArray(gameData.answer, userAnswers)
     setResult(isCorrect ? 'win' : 'lose')
     setShowResult(true)
 
@@ -110,16 +117,15 @@ export function QuizPageProvider({ children }) {
     }, 5000)
 
     return () => clearTimeout(timer)
-  }, [userAnswers, gameData?.answer])
+  }, [isCorrect])
 
   const contextValue = useMemo(
     () => ({
       showAnswer: handleShowAnswer,
       gameData,
-      userAnswers,
-      updateUserAnswers,
+      setResult: handleSetResult,
     }),
-    [gameData, handleShowAnswer, userAnswers, updateUserAnswers]
+    [gameData, handleShowAnswer, handleSetResult]
   )
 
   return (

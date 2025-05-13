@@ -156,14 +156,14 @@ const FireSafetyLevel2 = forwardRef((props, ref) => {
           <Sky />
 
           <ambientLight intensity={0.8} />
-          <spotLight
+          {/* <spotLight
             position={[10, 15, 10]}
             angle={0.3}
             penumbra={1}
             intensity={1}
             castShadow
             shadow-mapSize={2048}
-          />
+          /> */}
 
           <Environment preset="city" />
 

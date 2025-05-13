@@ -35,7 +35,6 @@ import { useGetGameQuizQuery } from '@/slices/gameApi'
 export const QuizPageContext = createContext({
   showAnswer: () => {},
   gameData: null,
-  // updateUserAnswers: (answers) => {},
   setResult: () => {},
 })
 
@@ -54,7 +53,6 @@ export function QuizPageProvider({ children }) {
     isLoading,
     isError,
   } = useGetGameQuizQuery({ gameType, level })
-  // const [userAnswers, setUserAnswers] = useState([])
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState(null)
   const gameRef = useRef(null)
@@ -67,7 +65,8 @@ export function QuizPageProvider({ children }) {
       answer: ['co2_fire-extinguisher'],
       // answer: ['cylinder_co2_fire-extinguisher'],
       warning: 'Результатом является первый клик или таб по предмету.',
-      model_path: '/models/scene_last4.10.glb',
+      model_path: '/models/dark_room_fire_safety.glb',
+      // model_path: '/models/scene_last4.10.glb',
       part_tooltips: {
         safety_pin: 'Предохранительная чека',
         stamp: 'Пломба',
@@ -93,33 +92,9 @@ export function QuizPageProvider({ children }) {
         'fire-extinguisher',
         'fire_secur_indicator',
       ],
-      // obj_allowed_clicks: [
-      //   'cylinder_co2_fire-extinguisher',
-      //   'hose_co2_fire-extinguisher',
-      //   'Cylinder001_fire-extinguisher_0',
-      //   'fire_secur_indicator',
-      //   'Cabinet_Cabinet1_0',
-      //   'hydrant_door_cabinet',
-      //   'hydrant_door_cristal',
-      //   'hydrant_handle_door_cabinet',
-      //   'handle_top_fire-extinguisher',
-      //   'Cylinder001_fire-extinguisher_0001',
-      //   'Cylinder005_fire-extinguisher_0',
-      //   'cylinder_fire-extinguisher001',
-      //   'nozzle_fire-extinguisher',
-      //   'hose_fire-extinguisher',
-      //   'handle_bottom_fire-extinguisher',
-      //   'Cylinder002_fire-extinguisher_0001',
-      // ],
     }),
     []
   )
-
-  // const updateUserAnswers = useCallback((newAnswer) => {
-  //   setUserAnswers((prev) => [...prev, newAnswer])
-  // }, [])
-
-  // const isEqualArray = (arr1, arr2) => arr1.every((item, i) => item === arr2[i])
 
   // Метод для обновления результата из дочерних компонентов
   const handleSetResult = useCallback((correct) => {
@@ -133,7 +108,6 @@ export function QuizPageProvider({ children }) {
       gameRef.current.playAnimationSequence()
     }
 
-    // const isCorrect = isEqualArray(gameData.answer, userAnswers)
     setResult(isCorrect ? 'win' : 'lose')
     setShowResult(true)
 
@@ -149,17 +123,9 @@ export function QuizPageProvider({ children }) {
     () => ({
       showAnswer: handleShowAnswer,
       gameData,
-      // userAnswers,
-      // updateUserAnswers,
       setResult: handleSetResult,
     }),
-    [
-      gameData,
-      handleShowAnswer,
-      handleSetResult,
-      // userAnswers,
-      // updateUserAnswers,
-    ]
+    [gameData, handleShowAnswer, handleSetResult]
   )
 
   return (

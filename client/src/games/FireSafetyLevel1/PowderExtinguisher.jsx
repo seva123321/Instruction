@@ -131,7 +131,10 @@ const PowderExtinguisher = forwardRef((props, ref) => {
     },
     [actions]
   )
-  const isEqualArray = (arr1, arr2) => arr1.every((item, i) => item === arr2[i])
+  const isEqualArray = useCallback(
+    (arr1, arr2) => arr1.every((item, i) => item === arr2[i]),
+    []
+  )
 
   useEffect(() => {
     const uniqUserAnswers = Array.from(new Set(userAnswers))

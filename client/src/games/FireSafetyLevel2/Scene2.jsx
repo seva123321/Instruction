@@ -19,36 +19,7 @@ const Scene2 = forwardRef((props, ref) => {
   const [userAnswers, setUserAnswers] = useState([])
   const group = useRef()
   const { gameData, updateUserAnswers, setResult } = useQuizPage()
-  // const { gameData } = useQuizPage() // @todo gameData
   const [getModel, { isLoading: isModelLoading }] = useLazyGetModelQuery()
-  // const gameData = useMemo(
-  //   () => ({
-  //     question:
-  //       'Задайте правильную последовательность использования порошкового огнетушителя',
-  //     answer: [
-  //       'stamp_fire-extinguisher',
-  //       'safety_pin_fire-extinguisher',
-  //       'hose_fire-extinguisher',
-  //       'handle_bottom_fire-extinguisher',
-  //     ],
-  //     warning:
-  //       'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
-  //     model_path: '/models/scene_last4.glb',
-  //     part_tooltips: {
-  //       safety_pin: 'Предохранительная чека',
-  //       stamp: 'Пломба',
-  //       hose: 'Шланг',
-  //       handle_bottom: 'Ручка активации',
-  //     },
-  //     animation_sequence: [
-  //       'safety_pin_fire-extinguisher',
-  //       'stamp_fire-extinguisher',
-  //       'hose_fire-extinguisher',
-  //       'handle_bottom_fire-extinguisher',
-  //     ],
-  //   }),
-  //   []
-  // )
 
   const {
     model_path: modelPath = '/models/scene_last4.10.glb',
@@ -74,17 +45,23 @@ const Scene2 = forwardRef((props, ref) => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
   }, [model, props.isMobile])
 
-  const isEqualArray = useCallback(
-    (arr1, arr2) => arr2[0].includes(arr1[0]),
-    []
-  )
+  // const isEqualArray = useCallback(
+  //   (arr1, arr2) => arr2[0].includes(arr1[0]),
+  //   []
+  // )
+
+  // useEffect(() => {
+  //   const uniqUserAnswers = Array.from(new Set(userAnswers))
+  //   if (uniqUserAnswers.length === answerServer?.length) {
+  //     setResult(isEqualArray(answerServer, uniqUserAnswers))
+  //   }
+  // }, [userAnswers, answerServer, isEqualArray, setResult])
 
   useEffect(() => {
-    const uniqUserAnswers = Array.from(new Set(userAnswers))
-    if (uniqUserAnswers.length === answerServer?.length) {
-      setResult(isEqualArray(answerServer, uniqUserAnswers))
+    if (userAnswers.length === answerServer?.length) {
+      setResult(userAnswers[0].includes(answerServer[0]))
     }
-  }, [userAnswers, answerServer, isEqualArray, setResult])
+  }, [userAnswers, answerServer, setResult])
 
   const eventHandlers = useMemo(
     () => ({
@@ -117,21 +94,27 @@ const Scene2 = forwardRef((props, ref) => {
         if (!model) return
 
         event.stopPropagation()
-        raycaster.setFromCamera(event.pointer, camera)
-        const intersects = raycaster.intersectObjects(model.children, true)
 
-        if (intersects.length > 0) {
-          const clickedObject = intersects[0].object
-          console.log('clickedObject > ', clickedObject.name)
+        requestAnimationFrame(() => {
+          raycaster.setFromCamera(event.pointer, camera)
+          const intersects = raycaster.intersectObjects(model.children, true)
 
-          const isAnsweredClick = gameData.obj_allowed_clicks.some(
-            (allowedWord) => clickedObject.name.includes(allowedWord)
-          )
+          if (intersects.length > 0) {
+            const clickedObject = intersects[0].object
+            const isAnsweredClick = gameData.obj_allowed_clicks.some(
+              (allowedWord) => clickedObject.name.includes(allowedWord)
+            )
 
-          if (isAnsweredClick) {
-            setUserAnswers((prev) => [...prev, clickedObject.name])
+            if (isAnsweredClick) {
+              setUserAnswers((prev) => {
+                if (!prev.some((item) => item === clickedObject.name)) {
+                  return [...prev, clickedObject.name]
+                }
+                return prev
+              })
+            }
           }
-        }
+        })
       },
     }),
     [gameData, isTouch, model, partTooltips, raycaster, camera]
@@ -156,6 +139,7 @@ const Scene2 = forwardRef((props, ref) => {
 
   useFrame(() => {
     if (!isPlayingSequence || !animationSequence || !model) return
+    if (actions === null || Object.keys(actions).length === 0) return
 
     const currentActionName = animationSequence[currentStep]
     const action = actions[`${currentActionName}Action`]
@@ -202,8 +186,6 @@ const Scene2 = forwardRef((props, ref) => {
     )
   }
 
-  // console.log(' arrClick > ', arrClick)
-
   return (
     <>
       <primitive
@@ -219,8 +201,6 @@ const Scene2 = forwardRef((props, ref) => {
         size={gameData.fire_size}
         position={gameData.fire_position}
         isBurning={isBurning}
-        // onExtinguished={() => setMessage('Огонь потушен')}
-        // onFullyIgnited={() => setMessage('Огонь полностью разгорелся')}
       />
 
       {hoveredPart && (

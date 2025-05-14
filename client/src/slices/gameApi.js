@@ -6,7 +6,7 @@ import { getCsrfToken } from '../utils/cookies'
 const gameApi = createApi({
   reducerPath: 'gameApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${API_CONFIG.PROXY_PREFIX}/`,
+    baseUrl: `${API_CONFIG.PROXY_PREFIX}/game/`,
     credentials: 'include',
     prepareHeaders: (headers) => {
       const csrfToken = getCsrfToken()
@@ -20,11 +20,11 @@ const gameApi = createApi({
   tagTypes: ['game'],
   endpoints: (build) => ({
     getGame: build.query({
-      query: () => 'game/',
+      query: () => '/',
       providesTags: ['game'],
     }),
     getGameQuiz: build.query({
-      query: ({ gameType, level }) => `game/${gameType}?level=${level}`,
+      query: ({ gameType, level }) => `${gameType}?level=${level}`,
       //`game/fire_safety?level=1`
     }),
     getModel: build.query({
@@ -40,12 +40,20 @@ const gameApi = createApi({
       // Долгий срок кэширования для моделей (1 день)
       keepUnusedDataFor: 86400,
     }),
+    postFireSafetyResult: build.mutation({
+      query: (body) => ({
+        url: 'fire_safety_results/',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['game'],
+    }),
     getGameSwiper: build.query({
-      query: () => 'game/swiper/',
+      query: () => 'swiper/',
     }),
     postSwiperResult: build.mutation({
       query: (body) => ({
-        url: 'game/swiper_result/',
+        url: 'swiper_result/',
         method: 'POST',
         body,
       }),
@@ -59,6 +67,7 @@ export const {
   useGetGameSwiperQuery,
   useGetGameQuizQuery,
   useLazyGetModelQuery,
+  usePostFireSafetyResultMutation,
   usePostSwiperResultMutation,
 } = gameApi
 export default gameApi

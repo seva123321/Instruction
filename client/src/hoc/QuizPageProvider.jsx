@@ -21,7 +21,12 @@ import {
   AccordionDetails,
   AccordionSummary,
   Tooltip,
-  CircularProgress,
+  IconButton,
+  Popover,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -29,8 +34,15 @@ import {
   Celebration as CelebrationIcon,
   MoodBad as MoodBadIcon,
   ExpandMore as ExpandMoreIcon,
+  HelpOutline as HelpOutlineIcon,
+  ZoomIn as ZoomInIcon,
+  PanTool as PanToolIcon,
+  RotateLeft as RotateLeftIcon,
 } from '@mui/icons-material'
-import { useGetGameQuizQuery } from '@/slices/gameApi'
+import {
+  useGetGameQuizQuery,
+  usePostFireSafetyResultMutation,
+} from '@/slices/gameApi'
 
 export const QuizPageContext = createContext({
   showAnswer: () => {},
@@ -41,6 +53,8 @@ export const QuizPageContext = createContext({
 export function QuizPageProvider({ children }) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null)
+  const helpOpen = Boolean(helpAnchorEl)
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -53,20 +67,28 @@ export function QuizPageProvider({ children }) {
     isLoading,
     isError,
   } = useGetGameQuizQuery({ gameType, level })
+  const [postFireSafetyResult] = usePostFireSafetyResultMutation()
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState(null)
+  const [resultIsSended, setResultIsSended] = useState(false)
   const gameRef = useRef(null)
   const [isCorrect, setIsCorrect] = useState(false)
+
+  const handleHelpClick = (event) => {
+    setHelpAnchorEl(event.currentTarget)
+  }
+
+  const handleHelpClose = () => {
+    setHelpAnchorEl(null)
+  }
 
   const gameData = useMemo(
     () => ({
       question:
         'Выберите оптимальный способ тушения пожара. Обратите внимание на очаг возгорания.',
       answer: ['co2_fire-extinguisher'],
-      // answer: ['cylinder_co2_fire-extinguisher'],
       warning: 'Результатом является первый клик или таб по предмету.',
       model_path: '/models/dark_room_fire_safety.glb',
-      // model_path: '/models/scene_last4.10.glb',
       part_tooltips: {
         safety_pin: 'Предохранительная чека',
         stamp: 'Пломба',
@@ -96,28 +118,69 @@ export function QuizPageProvider({ children }) {
     []
   )
 
+  // // Метод для обновления результата из дочерних компонентов
+  // const handleSetResult = useCallback((correct) => {
+  //   setIsCorrect(correct)
+  //   setResult(correct ? 'win' : 'lose')
+  // }, [])
+
+  // const handleShowAnswer = useCallback(() => {
+  //   if (gameRef.current?.playAnimationSequence) {
+  //     gameRef.current.playAnimationSequence()
+  //   }
+  //   setResultIsSended(true)
+
+  //   if (resultIsSended) {
+  //     setResult(isCorrect ? 'win' : 'lose')
+  //     postFireSafetyResult({ result: isCorrect })
+  //   }
+  //   setShowResult(true)
+  //   const timer = setTimeout(() => {
+  //     setShowResult(false)
+  //   }, 5000)
+
+  //   return () => clearTimeout(timer)
+  // }, [isCorrect])
+
+  // const contextValue = useMemo(
+  //   () => ({
+  //     showAnswer: handleShowAnswer,
+  //     gameData,
+  //     setResult: handleSetResult,
+  //   }),
+  //   [gameData, handleShowAnswer, handleSetResult]
+  // )
+
   // Метод для обновления результата из дочерних компонентов
   const handleSetResult = useCallback((correct) => {
     setIsCorrect(correct)
-
-    setResult(correct ? 'win' : 'lose') // Синхронизируем с существующим состоянием
+    setResult(correct ? 'win' : 'lose')
   }, [])
 
   const handleShowAnswer = useCallback(() => {
+    // Запускаем анимацию
     if (gameRef.current?.playAnimationSequence) {
       gameRef.current.playAnimationSequence()
     }
+    if (resultIsSended) return
 
-    setResult(isCorrect ? 'win' : 'lose')
-    setShowResult(true)
+    // Устанавливаем флаг отправки результата
+    setResultIsSended(true)
 
-    // Автоматическое скрытие через 5 секунд
-    const timer = setTimeout(() => {
+    // Отправляем результат и показываем сообщение
+    requestAnimationFrame(() => {
+      setResult(isCorrect ? 'win' : 'lose')
+      postFireSafetyResult({ result: isCorrect })
+      setShowResult(true)
+    })
+
+    // Таймер для скрытия результата
+    const hideTimer = setTimeout(() => {
       setShowResult(false)
     }, 5000)
 
-    return () => clearTimeout(timer)
-  }, [isCorrect])
+    return () => clearTimeout(hideTimer)
+  }, [isCorrect, resultIsSended, postFireSafetyResult])
 
   const contextValue = useMemo(
     () => ({
@@ -126,6 +189,11 @@ export function QuizPageProvider({ children }) {
       setResult: handleSetResult,
     }),
     [gameData, handleShowAnswer, handleSetResult]
+  )
+
+  const memoizedChildren = useMemo(
+    () => cloneElement(children, { ref: gameRef }),
+    [children]
   )
 
   return (
@@ -138,28 +206,101 @@ export function QuizPageProvider({ children }) {
           overflow: 'hidden',
         }}
       >
-        {/* Кнопка назад */}
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
+        {/* Кнопка назад и помощь */}
+        <Box
           sx={{
             position: 'absolute',
             top: isMobile ? 8 : 16,
             right: isMobile ? 8 : 16,
             zIndex: 1000,
-            borderRadius: '50px',
-            padding: isMobile ? '6px 12px' : '8px 20px',
-            fontSize: isMobile ? '0.8rem' : '0.9rem',
-            backgroundColor: 'rgba(255,255,255,0.8)',
-            '&:hover': {
-              backgroundColor: 'rgba(255,255,255,1)',
-            },
-            minWidth: 'auto',
+            display: 'flex',
+            gap: 1,
           }}
         >
-          {isMobile ? 'Назад' : 'Назад к играм'}
-        </Button>
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            sx={{
+              borderRadius: '50px',
+              padding: isMobile ? '6px 12px' : '8px 20px',
+              fontSize: isMobile ? '0.8rem' : '0.9rem',
+              backgroundColor: 'rgba(255,255,255,0.8)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,1)',
+              },
+              minWidth: 'auto',
+            }}
+          >
+            {isMobile ? 'Назад' : 'Назад к играм'}
+          </Button>
+
+          <IconButton
+            onClick={handleHelpClick}
+            sx={{
+              backgroundColor: 'rgba(255,255,255,0.8)',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,1)',
+              },
+            }}
+          >
+            <HelpOutlineIcon />
+          </IconButton>
+        </Box>
+
+        {/* Поповер с инструкцией */}
+        <Popover
+          open={helpOpen}
+          anchorEl={helpAnchorEl}
+          onClose={handleHelpClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          sx={{
+            '& .MuiPaper-root': {
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              minWidth: '250px',
+            },
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              Управление сценой
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <ZoomInIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Колесико мыши - приближение/отдаление" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <RotateLeftIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="ЛКМ + движение - вращение сцены" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon sx={{ minWidth: 36 }}>
+                  <PanToolIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Shift + ЛКМ - смена фокуса (панорамирование)" />
+              </ListItem>
+            </List>
+            {isMobile && (
+              <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                На мобильных устройствах используйте жесты пальцами для
+                управления.
+              </Typography>
+            )}
+          </Box>
+        </Popover>
 
         {/* Основной контент */}
         <Box
@@ -168,7 +309,7 @@ export function QuizPageProvider({ children }) {
             mt: isMobile ? 4 : 0,
           }}
         >
-          {cloneElement(children, { ref: gameRef })}
+          {memoizedChildren}
         </Box>
 
         {/* Панель задания и кнопки */}
@@ -389,7 +530,9 @@ export function QuizPageProvider({ children }) {
 //         'handle_bottom_fire-extinguisher',
 //       ],
 //       warning:
-//         'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
+//         'Подачу огнетушащего материала необходимо
+//  производить порционно. Длительность подачи должна составлять
+//  примерно 2 секунды с небольшим перерывом.',
 //       model_path: '/models/fire_extinguisher_powder.glb',
 //       part_tooltips: {
 //         safety_pin: 'Предохранительная чека',

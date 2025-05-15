@@ -27,7 +27,6 @@ const BLINK_CONFIG = {
   requiredCount: 1, // Количество морганий для завершения
 }
 
-
 const loadModelsOnce = (() => {
   let modelsLoaded = false
   let loadingPromise = null
@@ -62,7 +61,6 @@ const FaceRecognition = forwardRef(
     const [cameraPermissionGranted, setCameraPermissionGranted] =
       useState(false)
     const [blinkCount, setBlinkCount] = useState(0)
-    const [videoSize, setVideoSize] = useState({ width: 0, height: 0 })
     // useRef
     const videoRef = useRef(null)
     const animationFrameRef = useRef(null)
@@ -154,10 +152,6 @@ const FaceRecognition = forwardRef(
       const video = videoRef.current
       if (!video || video.videoWidth === 0) return
 
-      setVideoSize({
-        width: video.videoWidth,
-        height: video.videoHeight,
-      })
       let lastBlinkTime = 0
 
       const processFrame = async () => {

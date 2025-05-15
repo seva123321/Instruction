@@ -57,8 +57,7 @@ function CheckboxFields({ agreements = [], id }) {
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [postInstructionResults] = usePostInstructionResultsMutation()
-  const [fetchAesKey, { data: aesKey, isError: isErrorAes }] =
-    useLazyGetAesKeyQuery()
+  const [fetchAesKey] = useLazyGetAesKeyQuery()
 
   const complianceValue = useWatch({
     control,
@@ -121,7 +120,7 @@ function CheckboxFields({ agreements = [], id }) {
           throw new Error('AES key not available')
         }
 
-        const response = await postInstructionResults({
+        await postInstructionResults({
           submissionData,
           aesKey: currentAesKey,
         }).unwrap()

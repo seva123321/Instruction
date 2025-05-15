@@ -1,6 +1,7 @@
 /* eslint-disable operator-linebreak */
 
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+
 import {
   useSignUpMutation,
   useLoginMutation,
@@ -23,14 +24,15 @@ export function AuthProvider({ children }) {
   const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
 
   // Используем lazy запрос для получения ключа по требованию
-  const [fetchAesKey, { data: aesKey, isError: isErrorAes }] =
-    useLazyGetAesKeyQuery()
+  const [fetchAesKey] = useLazyGetAesKeyQuery()
 
-  const hasSessionCookie = useCallback(() => {
-    return document.cookie
-      .split(';')
-      .some((cookie) => cookie.trim().startsWith('sessionid='))
-  }, [])
+  const hasSessionCookie = useCallback(
+    () =>
+      document.cookie
+        .split(';')
+        .some((cookie) => cookie.trim().startsWith('sessionid=')),
+    []
+  )
 
   useEffect(() => {
     const verifyAuth = async () => {

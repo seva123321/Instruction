@@ -302,7 +302,10 @@ const GameStatsSection = memo(({ profileData }) => {
             {profileData?.badges?.length ? (
               <Grid container spacing={2}>
                 {profileData.badges.map((badgeObj) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={badgeObj.badge.id}>
+                  <Grid
+                    size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                    key={badgeObj.badge.id}
+                  >
                     <Card
                       sx={{
                         height: '100%',

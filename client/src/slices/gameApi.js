@@ -25,7 +25,7 @@ const gameApi = createApi({
     }),
     getGameQuiz: build.query({
       query: ({ gameType, level }) => `${gameType}?level=${level}`,
-      //`game/fire_safety?level=1`
+      // `game/fire_safety?level=1`
     }),
     getModel: build.query({
       query: (modelPath) => ({

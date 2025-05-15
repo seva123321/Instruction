@@ -13,6 +13,7 @@ import {
   CircularProgress,
 } from '@mui/material'
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material'
+
 import {
   useGetGameSwiperQuery,
   usePostSwiperResultMutation,
@@ -208,7 +209,7 @@ function SwiperGame() {
     )
   }
   if (isError) return <div>Ошибка загрузки данных</div>
-  if (!questions || !questions.length)
+  if (!questions || !questions.length) {
     return (
       <Typography
         variant="h6"
@@ -221,6 +222,7 @@ function SwiperGame() {
         Нет вопросов
       </Typography>
     )
+  }
 
   return (
     <Box

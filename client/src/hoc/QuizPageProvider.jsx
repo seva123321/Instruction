@@ -39,6 +39,7 @@ import {
   PanTool as PanToolIcon,
   RotateLeft as RotateLeftIcon,
 } from '@mui/icons-material'
+
 import {
   useGetGameQuizQuery,
   usePostFireSafetyResultMutation,
@@ -106,6 +107,7 @@ export function QuizPageProvider({ children }) {
       setShowResult(false)
     }, 5000)
 
+    // eslint-disable-next-line consistent-return
     return () => clearTimeout(hideTimer)
   }, [level, isCorrect, resultIsSended, postFireSafetyResult])
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import { useGLTF, useAnimations, Html } from '@react-three/drei'
 import { useThree, useFrame } from '@react-three/fiber'
 import {
@@ -7,20 +8,20 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useCallback,
 } from 'react'
 import * as THREE from 'three'
+
 import useQuizPage from '@/hook/useQuizPage'
-import { useLazyGetModelQuery } from '@/slices/gameApi'
+
 import FirePlane from '../CustomFire'
+
 import ExtinguishingSubstance from './ExtinguishingSubstance'
 
 const Scene2 = forwardRef((props, ref) => {
   const [isBurning, setIsBurning] = useState(true) // @TODO
   const [userAnswers, setUserAnswers] = useState([])
   const group = useRef()
-  const { gameData, updateUserAnswers, setResult } = useQuizPage()
-  const [getModel, { isLoading: isModelLoading }] = useLazyGetModelQuery()
+  const { gameData, setResult } = useQuizPage()
   const [isExtinguishing, setIsExtinguishing] = useState(false)
   const [nozzlePosition, setNozzlePosition] = useState([0, 0, 0])
   const [extinguishingDirection, setExtinguishingDirection] = useState([
@@ -51,18 +52,6 @@ const Scene2 = forwardRef((props, ref) => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
   }, [model, props.isMobile])
 
-  // const isEqualArray = useCallback(
-  //   (arr1, arr2) => arr2[0].includes(arr1[0]),
-  //   []
-  // )
-
-  // useEffect(() => {
-  //   const uniqUserAnswers = Array.from(new Set(userAnswers))
-  //   if (uniqUserAnswers.length === answerServer?.length) {
-  //     setResult(isEqualArray(answerServer, uniqUserAnswers))
-  //   }
-  // }, [userAnswers, answerServer, isEqualArray, setResult])
-
   useEffect(() => {
     if (userAnswers.length === answerServer?.length) {
       setResult(userAnswers[0].includes(answerServer[0]))
@@ -86,8 +75,9 @@ const Scene2 = forwardRef((props, ref) => {
 
         setTooltipPosition(elevatedPoint)
 
-        const partName = Object.keys(partTooltips).find((key) =>
-          clickedObject.name.includes(key)
+        const partName = Object.keys(partTooltips).find(
+          (key) => clickedObject.name.includes(key)
+          // eslint-disable-next-line function-paren-newline
         )
 
         if (partName) setHoveredPart(partName)
@@ -166,7 +156,7 @@ const Scene2 = forwardRef((props, ref) => {
           child.getWorldPosition(worldPosition)
           setNozzlePosition([
             worldPosition.x + 8.2,
-            worldPosition.y + 0.6, //высота
+            worldPosition.y + 0.6, // высота
             worldPosition.z + 1.2,
           ])
 
@@ -206,14 +196,6 @@ const Scene2 = forwardRef((props, ref) => {
       }
     }
   })
-
-  if (isModelLoading) {
-    return (
-      <Html center>
-        <div style={{ color: 'white' }}>Loading model...</div>
-      </Html>
-    )
-  }
 
   if (!model) {
     return (

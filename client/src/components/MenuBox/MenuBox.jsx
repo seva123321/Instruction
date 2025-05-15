@@ -167,7 +167,7 @@ export default function MenuBox() {
               maxWidth: 'calc(100% - 48px)',
               fontWeight: 500,
             }}
-            title={`Привет, ${user?.first_name}`}
+            title={`Привет, ${user?.first_name || user?.email}`}
           >
             <Box component="span">{'Привет, '}</Box>
             <Box component="span" color="primary.main">

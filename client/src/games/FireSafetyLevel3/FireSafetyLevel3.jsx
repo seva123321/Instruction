@@ -1,6 +1,6 @@
 import GameInDevelopment from '../GameInDevelopment'
 
-const FireSafetyLevel3 = () => {
+function FireSafetyLevel3() {
   return <GameInDevelopment />
 }
 

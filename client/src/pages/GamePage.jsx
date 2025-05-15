@@ -12,8 +12,8 @@ import {
   styled,
   useMediaQuery,
 } from '@mui/material'
-import StarIcon from '@mui/icons-material/Star'
-import { Link, useNavigate } from 'react-router-dom'
+// import StarIcon from '@mui/icons-material/Star'
+import { useNavigate } from 'react-router-dom'
 import {
   Construction as ConstructionIcon,
   Bolt as BoltIcon,
@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material'
 
 import KnowBaseHeader from '@/components/KnowBaseHeader'
-import { useGetGameQuery } from '@/slices/gameApi'
+// import { useGetGameQuery } from '@/slices/gameApi'
 import useGame from '@/hook/useGame'
 
 // Стилизованные компоненты
@@ -79,16 +79,17 @@ const IndustrialCard = styled(Paper)(({ theme }) => ({
   },
 }))
 
-const GameLink = styled(Link)(({ theme }) => ({
-  display: 'block',
-  margin: '8px 0',
-  color: theme.palette.primary.main,
-  textDecoration: 'none',
-  fontWeight: 500,
-  '&:hover': {
-    textDecoration: 'underline',
-  },
-}))
+// @TODO
+// const GameLink = styled(Link)(({ theme }) => ({
+//   display: 'block',
+//   margin: '8px 0',
+//   color: theme.palette.primary.main,
+//   textDecoration: 'none',
+//   fontWeight: 500,
+//   '&:hover': {
+//     textDecoration: 'underline',
+//   },
+// }))
 
 const GameIconWrapper = styled(Box)(() => ({
   width: 80,
@@ -103,34 +104,34 @@ const GameIconWrapper = styled(Box)(() => ({
   transition: 'all 0.3s ease',
 }))
 
-// Компонент кликабельного рейтинга
-function LevelRating() {
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 2 }}>
-      <Typography variant="body2" color="text.secondary">
-        Уровни:
-      </Typography>
-      {[1, 2, 3].map((level) => (
-        <Link
-          key={level}
-          to={`fire_safety?level=${level}`}
-          style={{ display: 'flex' }}
-        >
-          <Tooltip title={`${level} уровень`}>
-            <StarIcon
-              sx={{
-                color: '#ffb400',
-                fontSize: '1.5rem',
-                '&:hover': { transform: 'scale(1.2)' },
-                transition: 'transform 0.2s',
-              }}
-            />
-          </Tooltip>
-        </Link>
-      ))}
-    </Box>
-  )
-}
+// // Компонент кликабельного рейтинга
+// function LevelRating() {
+//   return (
+//     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 2 }}>
+//       <Typography variant="body2" color="text.secondary">
+//         Уровни:
+//       </Typography>
+//       {[1, 2, 3].map((level) => (
+//         <Link
+//           key={level}
+//           to={`fire_safety?level=${level}`}
+//           style={{ display: 'flex' }}
+//         >
+//           <Tooltip title={`${level} уровень`}>
+//             <StarIcon
+//               sx={{
+//                 color: '#ffb400',
+//                 fontSize: '1.5rem',
+//                 '&:hover': { transform: 'scale(1.2)' },
+//                 transition: 'transform 0.2s',
+//               }}
+//             />
+//           </Tooltip>
+//         </Link>
+//       ))}
+//     </Box>
+//   )
+// }
 
 function GamePage() {
   const navigate = useNavigate()
@@ -227,6 +228,18 @@ function GamePage() {
       setShowAlert(true)
       return
     }
+    if (
+      gamePath.includes('fire_safety') &&
+      megaPowers.remaining_mega_powers <= 1
+    ) {
+      setMessage({
+        text: `Для данной игры необходимо две мегасилы!\nНовые мегасилы появятся через: ${timeToReset}.`,
+        type: 'warning',
+      })
+      setShowAlert(true)
+      return
+    }
+
     navigate(gamePath)
   }
 
@@ -470,8 +483,6 @@ function GamePage() {
                 <LevelRating />
               </Box>
 
-            
-
               <Box sx={{ mt: 'auto' }}>
                 <Button
                   variant="contained"
@@ -626,8 +637,10 @@ function GamePage() {
                         title={`${item.level} уровень сложности`}
                         arrow
                       >
-                        <Link
-                          to={`fire_safety?level=${item.level}`}
+                        <Button
+                          onClick={() =>
+                            handleGameClick(`fire_safety?level=${item.level}`)
+                          }
                           style={{
                             textDecoration: 'none',
                             display: 'flex',
@@ -699,13 +712,13 @@ function GamePage() {
                           >
                             {item.caption}
                           </Typography>
-                        </Link>
+                        </Button>
                       </Tooltip>
                     ))}
                   </Box>
                 </Box>
               </Box>
-
+              {/* 
               <Box sx={{ mt: 'auto' }}>
                 <Button
                   variant="contained"
@@ -732,7 +745,7 @@ function GamePage() {
                 >
                   К испытаниям
                 </Button>
-              </Box>
+              </Box> */}
             </IndustrialCard>
           </IndustrialBadgeWrapper>
         </Box>

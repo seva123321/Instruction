@@ -100,8 +100,8 @@ export function QuizPageProvider({ children }) {
         hydrant: 'Внутренний пожарный кран',
         server: 'Сервера/Электрооборудование',
       },
-      fire_position: [7, -0.5, -8],
-      fire_size: [6, 8],
+      fire_position: [10, -0.5, -13],
+      fire_size: [10, 8],
       animation_sequence: [
         'nurbspath_co2_fire-extinguisher',
         'safety_pin_co2_fire-extinguisher',

@@ -13,6 +13,7 @@ import * as THREE from 'three'
 import useQuizPage from '@/hook/useQuizPage'
 import { useLazyGetModelQuery } from '@/slices/gameApi'
 import FirePlane from '../CustomFire'
+import ExtinguishingSubstance from './ExtinguishingSubstance'
 
 const Scene2 = forwardRef((props, ref) => {
   const [isBurning, setIsBurning] = useState(true) // @TODO
@@ -20,6 +21,11 @@ const Scene2 = forwardRef((props, ref) => {
   const group = useRef()
   const { gameData, updateUserAnswers, setResult } = useQuizPage()
   const [getModel, { isLoading: isModelLoading }] = useLazyGetModelQuery()
+  const [isExtinguishing, setIsExtinguishing] = useState(false)
+  const [nozzlePosition, setNozzlePosition] = useState([0, 0, 0])
+  const [extinguishingDirection, setExtinguishingDirection] = useState([
+    0, 0, -1,
+  ])
 
   const {
     model_path: modelPath = '/models/scene_last4.10.glb',
@@ -134,6 +140,7 @@ const Scene2 = forwardRef((props, ref) => {
       resetAnimation()
       setIsPlayingSequence(true)
       setCurrentStep(0)
+      setIsBurning(true)
     },
   }))
 
@@ -143,6 +150,36 @@ const Scene2 = forwardRef((props, ref) => {
 
     const currentActionName = animationSequence[currentStep]
     const action = actions[`${currentActionName}Action`]
+
+    // Проверяем, началась ли анимация огнетушителя
+    const isExtinguisherAction =
+      currentActionName.includes('handle_bottom_co2_fire-extinguisher') ||
+      currentActionName.includes('handle_bottom_fire-extinguisher')
+
+    if (isExtinguisherAction && action && action.isRunning()) {
+      setIsExtinguishing(true)
+
+      // Находим позицию сопла в модели
+      model.traverse((child) => {
+        if (child.name.includes('nozzle')) {
+          const worldPosition = new THREE.Vector3()
+          child.getWorldPosition(worldPosition)
+          setNozzlePosition([
+            worldPosition.x + 8.2,
+            worldPosition.y + 0.6, //высота
+            worldPosition.z + 1.2,
+          ])
+
+          // Получаем направление из сопла
+          const direction = new THREE.Vector3(0, -1, 1.5)
+          child.localToWorld(direction)
+          direction.sub(worldPosition).normalize()
+          setExtinguishingDirection([direction.x, direction.y, direction.z])
+        }
+      })
+    } else {
+      setIsExtinguishing(false)
+    }
 
     if (!action) {
       if (currentStep < animationSequence.length - 1) {
@@ -197,6 +234,11 @@ const Scene2 = forwardRef((props, ref) => {
         {...props}
       />
 
+      <ExtinguishingSubstance
+        isActive={isExtinguishing}
+        position={nozzlePosition}
+        direction={extinguishingDirection}
+      />
       <FirePlane
         size={gameData.fire_size}
         position={gameData.fire_position}

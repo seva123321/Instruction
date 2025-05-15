@@ -28,7 +28,7 @@ const Scene2 = forwardRef((props, ref) => {
   ])
 
   const {
-    model_path: modelPath = '/models/scene_last4.10.glb',
+    model_path: modelPath = '/models/dark_room_fire_safety.glb',
     part_tooltips: partTooltips = {},
     animation_sequence: animationSequence = [],
     answer: answerServer = [],

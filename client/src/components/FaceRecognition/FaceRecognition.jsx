@@ -24,8 +24,9 @@ const DETECTOR_OPTIONS = {
 const BLINK_CONFIG = {
   cooldown: 500, // 0.5s между морганиями
   earThreshold: 0.25, // Порог закрытого глаза
-  requiredCount: 2, // Количество морганий для завершения
+  requiredCount: 1, // Количество морганий для завершения
 }
+
 
 const loadModelsOnce = (() => {
   let modelsLoaded = false
@@ -61,6 +62,7 @@ const FaceRecognition = forwardRef(
     const [cameraPermissionGranted, setCameraPermissionGranted] =
       useState(false)
     const [blinkCount, setBlinkCount] = useState(0)
+    const [videoSize, setVideoSize] = useState({ width: 0, height: 0 })
     // useRef
     const videoRef = useRef(null)
     const animationFrameRef = useRef(null)
@@ -152,6 +154,10 @@ const FaceRecognition = forwardRef(
       const video = videoRef.current
       if (!video || video.videoWidth === 0) return
 
+      setVideoSize({
+        width: video.videoWidth,
+        height: video.videoHeight,
+      })
       let lastBlinkTime = 0
 
       const processFrame = async () => {
@@ -167,6 +173,14 @@ const FaceRecognition = forwardRef(
           }
 
           const detection = detections[0]
+
+          const qualityIndicator = detection.detection._score
+          if (qualityIndicator < 0.8) {
+            setMessage({
+              text: 'Подвиньтесь ближе или улучшите освещение',
+              type: 'warning',
+            })
+          }
 
           // Проверяем моргание
           const { landmarks } = detection

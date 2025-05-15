@@ -1,3 +1,5 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable no-nested-ternary */
 import { useState, useEffect, useMemo } from 'react'
 import {
   Box,
@@ -392,9 +394,18 @@ function GamePage() {
               >
                 <FactoryIcon sx={{ fontSize: 40 }} />
               </GameIconWrapper>
+
               <Typography
                 variant="h6"
-                sx={{ mb: 1, fontWeight: 'bold', textAlign: 'center' }}
+                sx={{
+                  mb: 1,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  background: 'linear-gradient(145deg, #ff9800, #f57c00)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                }}
               >
                 СВАЙПЕР
               </Typography>
@@ -432,7 +443,7 @@ function GamePage() {
           </IndustrialBadgeWrapper>
 
           {/* Вторая карточка - Квиз */}
-          <IndustrialBadgeWrapper>
+          {/* <IndustrialBadgeWrapper>
             <BadgeLabel className="technical">Технический отдел</BadgeLabel>
             <IndustrialCard>
               <GameIconWrapper
@@ -459,15 +470,7 @@ function GamePage() {
                 <LevelRating />
               </Box>
 
-              {/* <Box sx={{ mb: 2 }}>
-                <GameLink to="fire_safety?game=2&level=1">
-                  <Box display="flex" alignItems="center">
-                    <FlashOnIcon color="warning" sx={{ mr: 1 }} />
-                    Электро-безопасность
-                  </Box>
-                </GameLink>
-                <LevelRating />
-              </Box> */}
+            
 
               <Box sx={{ mt: 'auto' }}>
                 <Button
@@ -479,6 +482,252 @@ function GamePage() {
                     fontWeight: 'bold',
                     py: 1.5,
                     background: 'linear-gradient(145deg, #2196f3, #1976d2)',
+                  }}
+                >
+                  К испытаниям
+                </Button>
+              </Box>
+            </IndustrialCard>
+          </IndustrialBadgeWrapper> */}
+          {/* Вторая карточка - Квиз */}
+          <IndustrialBadgeWrapper>
+            <BadgeLabel className="technical">Технический отдел</BadgeLabel>
+            <IndustrialCard>
+              <GameIconWrapper
+                sx={{
+                  background: 'linear-gradient(145deg, #2196f3, #1976d2)',
+                }}
+              >
+                <BoltIcon sx={{ fontSize: 40 }} />
+              </GameIconWrapper>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 1,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  background: 'linear-gradient(to right, #1976d2, #2196f3)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 2px 4px rgba(25, 118, 210, 0.2)',
+                }}
+              >
+                ТЕМАТИЧЕСКИЙ КВИЗ
+              </Typography>
+
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 2,
+                  backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(25, 118, 210, 0.1)',
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    p: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                      transform: 'translateX(5px)',
+                    },
+                  }}
+                >
+                  <LocalFireDepartmentIcon
+                    color="error"
+                    sx={{
+                      mr: 1,
+                      fontSize: '1.2rem',
+                      filter: 'drop-shadow(0 2px 4px rgba(244, 67, 54, 0.3))',
+                    }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.error.dark,
+                    }}
+                  >
+                    Пожарная безопасность
+                  </Typography>
+                </Box>
+                {/* <GameLink
+                  to="fire_safety?level=1"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    p: '8px 12px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                      transform: 'translateX(5px)',
+                    },
+                  }}
+                >
+                  <LocalFireDepartmentIcon
+                    color="error"
+                    sx={{
+                      mr: 1,
+                      fontSize: '1.2rem',
+                      filter: 'drop-shadow(0 2px 4px rgba(244, 67, 54, 0.3))',
+                    }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.error.dark,
+                    }}
+                  >
+                    Пожарная безопасность
+                  </Typography>
+                </GameLink> */}
+
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      textAlign: 'center',
+                      mb: 1,
+                    }}
+                  >
+                    Выберите уровень сложности:
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-around',
+                      gap: 1,
+                    }}
+                  >
+                    {[
+                      { level: 1, caption: 'Легкий' },
+                      { level: 2, caption: 'Средний' },
+                      { level: 3, caption: 'Сложный' },
+                    ].map((item) => (
+                      <Tooltip
+                        key={item.level}
+                        title={`${item.level} уровень сложности`}
+                        arrow
+                      >
+                        <Link
+                          to={`fire_safety?level=${item.level}`}
+                          style={{
+                            textDecoration: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '50%',
+                              backgroundColor:
+                                item.level === 1
+                                  ? 'rgba(76, 175, 80, 0.2)'
+                                  : item.level === 2
+                                    ? 'rgba(255, 152, 0, 0.2)'
+                                    : 'rgba(244, 67, 54, 0.2)',
+                              border: `2px solid ${
+                                item.level === 1
+                                  ? '#4CAF50'
+                                  : item.level === 2
+                                    ? '#FF9800'
+                                    : '#F44336'
+                              }`,
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                transform: 'scale(1.1)',
+                                boxShadow: `0 0 12px ${
+                                  item.level === 1
+                                    ? 'rgba(76, 175, 80, 0.4)'
+                                    : item.level === 2
+                                      ? 'rgba(255, 152, 0, 0.4)'
+                                      : 'rgba(244, 67, 54, 0.4)'
+                                }`,
+                              },
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 'bold',
+                                color:
+                                  item.level === 1
+                                    ? '#4CAF50'
+                                    : item.level === 2
+                                      ? '#FF9800'
+                                      : '#F44336',
+                              }}
+                            >
+                              {item.level}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color:
+                                item.level === 1
+                                  ? '#4CAF50'
+                                  : item.level === 2
+                                    ? '#FF9800'
+                                    : '#F44336',
+                              fontWeight: 500,
+                            }}
+                          >
+                            {item.caption}
+                          </Typography>
+                        </Link>
+                      </Tooltip>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
+
+              <Box sx={{ mt: 'auto' }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={
+                    <BoltIcon
+                      sx={{
+                        filter:
+                          'drop-shadow(0 2px 4px rgba(33, 150, 243, 0.5))',
+                      }}
+                    />
+                  }
+                  fullWidth
+                  sx={{
+                    fontWeight: 'bold',
+                    py: 1.5,
+                    background: 'linear-gradient(145deg, #2196f3, #1976d2)',
+                    boxShadow: '0 4px 8px rgba(25, 118, 210, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(145deg, #1976d2, #2196f3)',
+                      boxShadow: '0 6px 12px rgba(25, 118, 210, 0.4)',
+                    },
                   }}
                 >
                   К испытаниям

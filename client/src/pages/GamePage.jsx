@@ -410,7 +410,7 @@ function GamePage() {
                 СВАЙПЕР
               </Typography>
               <Typography
-                variant="body2"
+                variant="h5"
                 color="text.secondary"
                 sx={{
                   mb: 2,

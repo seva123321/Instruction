@@ -10,9 +10,6 @@ import SwiperGame from '@/models/SwiperGame'
 import { AuthProvider } from './hoc/AuthProvider'
 import { GameProvider } from './hoc/GameProvider'
 import RequireAuth from './hoc/RequireAuth'
-import GamePage from './pages/GamePage'
-import GamePageRouter from './pages/GamePageRouter'
-import { QuizPageProvider } from './hoc/QuizPageProvider'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
@@ -24,6 +21,13 @@ const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
 const CalendarResults = lazy(() => import('@/models/CalendarResults'))
 const RatingPage = lazy(() => import('@/pages/RatingPage'))
+const QuizPageProvider = lazy(() =>
+  import('./hoc/QuizPageProvider').then(({ QuizPageProvider }) => ({
+    default: QuizPageProvider,
+  }))
+)
+const GamePageRouter = lazy(() => import('@/components/GamePageRouter'))
+const GamePage = lazy(() => import('@/pages/GamePage'))
 
 function App() {
   return (

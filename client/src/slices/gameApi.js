@@ -42,9 +42,9 @@ const gameApi = createApi({
     }),
     postFireSafetyResult: build.mutation({
       query: (body) => ({
-        url: 'fire_safety_results/',
+        url: `fire_safety_results?level=${body.level}`,
         method: 'POST',
-        body,
+        body: body.data,
       }),
       invalidatesTags: ['game'],
     }),

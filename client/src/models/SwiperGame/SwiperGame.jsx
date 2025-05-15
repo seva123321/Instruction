@@ -12,11 +12,12 @@ import {
   styled,
   CircularProgress,
 } from '@mui/material'
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material'
 import {
   useGetGameSwiperQuery,
   usePostSwiperResultMutation,
-} from '../../slices/gameApi'
-import useGame from '../../hook/useGame'
+} from '@/slices/gameApi'
+import useGame from '@/hook/useGame'
 
 const TIME_LIMIT = 30
 
@@ -232,6 +233,35 @@ function SwiperGame() {
         overflowX: 'hidden', // Запрещаем горизонтальный скролл страницы
       }}
     >
+      {/* Кнопка назад и помощь */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: isMobile ? 8 : 16,
+          right: isMobile ? 8 : 16,
+          zIndex: 1000,
+          display: 'flex',
+          gap: 1,
+        }}
+      >
+        <Button
+          onClick={() => navigate(-1)}
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          sx={{
+            borderRadius: '50px',
+            padding: isMobile ? '6px 12px' : '8px 20px',
+            fontSize: isMobile ? '0.8rem' : '0.9rem',
+            backgroundColor: 'rgba(255,255,255,0.8)',
+            '&:hover': {
+              backgroundColor: 'rgba(255,255,255,1)',
+            },
+            minWidth: 'auto',
+          }}
+        >
+          {isMobile ? 'Назад' : 'Назад к играм'}
+        </Button>
+      </Box>
       {gameOver ? (
         <Box
           sx={{

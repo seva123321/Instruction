@@ -28,7 +28,9 @@ from backend.constants import (
     MAX_NOTIFICATION_ERROR,
     TEST_SCORE,
     MAX_NAME_SHIFT,
-    POWER_OF_USER
+    POWER_OF_USER,
+    QUIZ_FACTOR,
+    SWIPER_FACTOR
 )
 
 
@@ -967,12 +969,30 @@ class GameSwiperResult(models.Model):
         return f"{self.user} - {self.date} ({self.score})"
 
     def save(self, *args, **kwargs):
-        self.user.experience_points += self.score * 4
+        self.user.experience_points += self.score * SWIPER_FACTOR
         PowerOfUser.objects.filter(
             user=self.user
-        ).update(power=models.F('power') - 1)
+        ).update(power=models.F("power") - 1)
         self.user.save(update_fields=["experience_points"])
         super().save(*args, **kwargs)
+
+
+class Quiz(models.Model):
+    """Модель квиза."""
+
+    instruction = models.JSONField(
+        "Инструкция",
+    )
+    level = models.IntegerField(
+        "Уровень",
+        default=1,
+    )
+    class Meta:
+        verbose_name = "Квиз"
+        verbose_name_plural = "Квизы"
+
+    def __str__(self):
+        return str(self.instruction.get("instruction", ""))
 
 
 class QuizResult(models.Model):
@@ -987,6 +1007,7 @@ class QuizResult(models.Model):
     )
     date = models.DateField("Дата квиза", auto_now_add=True)
     result = models.BooleanField("Результат квиза", default=False)
+    level = models.IntegerField("Уровень", default=1)
 
     class Meta:
         verbose_name = "Результат квиза"
@@ -995,6 +1016,14 @@ class QuizResult(models.Model):
     def __str__(self):
         return f"{self.user} - {self.date} ({self.result})"
 
+
+    def save(self, *args, **kwargs):
+        self.user.experience_points += self.level * QUIZ_FACTOR
+        PowerOfUser.objects.filter(
+            user=self.user
+        ).update(power=models.F("power") - 2)
+        self.user.save(update_fields=["experience_points"])
+        super().save(*args, **kwargs)
 
 
 class PowerOfUser(models.Model):

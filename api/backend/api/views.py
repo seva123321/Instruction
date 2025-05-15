@@ -614,10 +614,10 @@ class FireSafetyQuizView(APIView):
     def get(self, request):
         """Получение данных для викторины."""
         level = request.GET.get("level")
-        if level:
+        try:
             quiz = Quiz.objects.filter(level=level).first()
             return Response(quiz.instruction, status=status.HTTP_200_OK)
-        else:
+        except BaseException:
             return Response({"error": "Уровень не поддерживается"})
 
 

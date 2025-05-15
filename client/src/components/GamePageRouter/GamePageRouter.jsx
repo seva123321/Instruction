@@ -14,9 +14,9 @@ const GamePageRouter = forwardRef((props, ref) => {
   const gameComponents = useMemo(
     () => ({
       fire_safety: {
-        1: lazy(() => import('../games/FireSafetyLevel1')),
-        2: lazy(() => import('../games/FireSafetyLevel2')),
-        3: lazy(() => import('../games/FireSafetyLevel3')),
+        1: lazy(() => import('../../games/FireSafetyLevel1')),
+        2: lazy(() => import('../../games/FireSafetyLevel2')),
+        3: lazy(() => import('../../games/FireSafetyLevel3')),
       },
     }),
     []

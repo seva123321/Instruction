@@ -4,6 +4,10 @@ import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development'
+  const basePath = isDev ? '/' : '/frontend-static/'
+  const serverTarget = isDev
+    ? 'http://localhost:8000'
+    : 'https://grustno-insrtuction.ru'
 
   return {
     plugins: [react()],
@@ -13,21 +17,19 @@ export default defineConfig(({ mode }) => {
       },
     },
     publicDir: 'public',
-    server: isDev
-      ? {
-          headers: {
-            'Service-Worker-Allowed': '/',
-          },
-          port: 3000,
-          proxy: {
-            '/api': {
-              target: 'https://grustno-insrtuction.ru',
-              changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/api/, '/api'),
-            },
-          },
-        }
-      : undefined,
+    server: {
+      headers: {
+        'Service-Worker-Allowed': '/',
+      },
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: serverTarget,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '/api'),
+        },
+      },
+    },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
@@ -45,6 +47,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    base: '/frontend-static/',
+    base: basePath,
   }
 })

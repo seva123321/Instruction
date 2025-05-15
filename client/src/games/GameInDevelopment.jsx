@@ -4,7 +4,12 @@ import EngineeringIcon from '@mui/icons-material/Engineering'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 
 const IndustrialOverlay = styled(Box)(({ theme }) => ({
-  position: 'relative',
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 1050,
   padding: theme.spacing(4),
   borderRadius: '12px',
   backgroundColor: '#f5f5f5',

@@ -1,0 +1,34 @@
+/* static/css/admin.css */
+:root {
+  --chart-text: #374151;
+  --chart-border: #e5e7eb;
+  --chart-grid: #f3f4f6;
+  --test-passed: #4CAF50;
+  --test-failed: #F44336;
+  --instruction-passed: #2196F3;
+  --instruction-failed: #FF9800;
+}
+
+[data-theme="dark"] {
+  --chart-text: #e5e7eb;
+  --chart-border: #374151;
+  --chart-grid: #1f2937;
+  --test-passed: #81C784;
+  --test-failed: #EF5350;
+  --instruction-passed: #64B5F6;
+  --instruction-failed: #FFB74D;
+}
+
+.bg-orange-100 {
+  background-color: rgba(255, 237, 213, 0.7);
+}
+.dark .bg-orange-900\/20 {
+  background-color: rgba(124, 45, 18, 0.2);
+}
+
+.bg-purple-100 {
+  background-color: rgba(243, 232, 255, 0.7);
+}
+.dark .bg-purple-900\/20 {
+  background-color: rgba(76, 29, 149, 0.2);
+}

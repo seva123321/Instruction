@@ -679,7 +679,7 @@ class GameSwiperResultSerializer(serializers.ModelSerializer):
 
 
 class QuizResultSerializer(serializers.ModelSerializer):
-    """Сериализатор для результатов викторины."""
+    """Сериализатор для результатов квиза."""
 
     class Meta:
         model = QuizResult

@@ -26,7 +26,8 @@ from api.models import (
     Video,
     NormativeLegislation,
     InstructionResult,
-    GameSwiper
+    GameSwiper,
+    Quiz
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -604,59 +605,6 @@ class PowerOfUserView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-data_quiz_level_1 = {
-      'question':
-        'Задайте правильную последовательность использования порошкового огнетушителя',
-      'answer': [
-        'stamp_fire-extinguisher',
-        'safety_pin_fire-extinguisher',
-        'hose_fire-extinguisher',
-        'handle_bottom_fire-extinguisher',
-      ],
-      'warning':
-        'Подачу огнетушащего материала необходимо производить порционно. Длительность подачи должна составлять примерно 2 секунды с небольшим перерывом.',
-      'model_path': '/models/fire_extinguisher_powder.glb',
-      'part_tooltips': {
-        'safety_pin': 'Предохранительная чека',
-        'stamp': 'Пломба',
-        'hose': 'Шланг',
-        'handle_bottom': 'Ручка активации',
-      },
-      'animation_sequence': [
-        'safety_pin_fire-extinguisher',
-        'stamp_fire-extinguisher',
-        'hose_fire-extinguisher',
-        'handle_bottom_fire-extinguisher',
-      ],
-    }
-data_quiz_level_2 = {
-      'question':
-        'Выберите оптимальный способ тушения пожара. Обратите внимание на очаг возгорания.',
-      'answer': ['cylinder_co2_fire-extinguisher'],
-      'warning': 'Результатом является первый клик или таб по предмету.',
-      'model_path': '/models/scene_last4.10.glb',
-      'part_tooltips': {
-        'safety_pin': 'Предохранительная чека',
-        'stamp': 'Пломба',
-        'hose': 'Шланг',
-        'handle_bottom': 'Ручка активации',
-        'fire_secur_indicator': 'Кнопка пожарной сигнализации',
-        'cylinder_co2': 'Углекислотный огнетушитель',
-        'cylinder': 'Порошковый огнетушитель',
-        'hydrant': 'Внутренний пожарный кран',
-        'server': 'Сервера/Электрооборудование',
-      },
-      'fire_position': [7, -0.5, -8],
-      'fire_size': [6, 8],
-      'animation_sequence': [
-        'nurbspath_co2_fire-extinguisher',
-        'safety_pin_co2_fire-extinguisher',
-        'stamp_co2_fire-extinguisher',
-        'hose_co2_fire-extinguisher',
-        'handle_bottom_co2_fire-extinguisher',
-      ],
-    }
-
 @extend_schema(tags=["FireSafetyQuiz"], description="Получение данных о квизе.")
 class FireSafetyQuizView(APIView):
     """Получение данных для викторины."""
@@ -666,11 +614,11 @@ class FireSafetyQuizView(APIView):
     def get(self, request):
         """Получение данных для викторины."""
         level = request.GET.get("level")
-        if level == "1":
-            return Response(data_quiz_level_1, status=status.HTTP_200_OK)
-        if level == "2":
-            return Response(data_quiz_level_2, status=status.HTTP_200_OK)
-        return Response({"error": "Уровень не поддерживается"})
+        if level:
+            quiz = Quiz.objects.filter(level=level).first()
+            return Response(quiz.instruction, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Уровень не поддерживается"})
 
 
 @extend_schema(tags=["FireSafetyQuizResult"], description="Сохранение данных о квизе.")
@@ -680,7 +628,13 @@ class FireSafetyQuizResultView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        """Сохранение данных о викторине."""
+        """Сохранение данных о квизе."""
+        level = request.query_params.get("level")
+        if not level:
+            return Response(
+                {"error": "Уровень не указан в запросе."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         serializer = QuizResultSerializer(
             data=request.data,
             context={"request": request}
@@ -688,6 +642,7 @@ class FireSafetyQuizResultView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.validated_data["date"] = timezone.now()
         serializer.validated_data["user"] = request.user
+        serializer.validated_data["level"] = int(level)
         swiper_result = serializer.save()
 
         return Response(

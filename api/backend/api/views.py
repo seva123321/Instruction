@@ -188,7 +188,12 @@ class SignUpView(APIView):
             raise ValidationError({"detail": str(e)})
 
         return Response(
-            {"id": user.id, "email": user.email},
+            {
+                "detail": "Успешный вход",
+                "user_id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+            },
             status=status.HTTP_201_CREATED,
         )
 

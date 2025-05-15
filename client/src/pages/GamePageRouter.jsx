@@ -16,6 +16,7 @@ const GamePageRouter = forwardRef((props, ref) => {
       fire_safety: {
         1: lazy(() => import('../games/FireSafetyLevel1')),
         2: lazy(() => import('../games/FireSafetyLevel2')),
+        3: lazy(() => import('../games/FireSafetyLevel3')),
       },
     }),
     []

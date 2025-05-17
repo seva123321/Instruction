@@ -296,8 +296,7 @@ function GamePage() {
       <Box
         sx={{
           maxWidth: '800px',
-          margin: '0 auto',
-          px: 2,
+          m: '0 auto',
           textAlign: 'center',
         }}
       >
@@ -393,7 +392,7 @@ function GamePage() {
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
             gap: 4,
-            padding: 2,
+            p: 2,
           }}
         >
           {/* Первая карточка - Свайпер */}

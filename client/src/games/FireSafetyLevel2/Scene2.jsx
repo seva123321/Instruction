@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable react/no-unknown-property */
 import { useGLTF, useAnimations, Html } from '@react-three/drei'
 import { useThree, useFrame } from '@react-three/fiber'
@@ -8,17 +9,18 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useCallback,
 } from 'react'
 import * as THREE from 'three'
-
-import useQuizPage from '@/hook/useQuizPage'
 
 import FirePlane from '../CustomFire'
 
 import ExtinguishingSubstance from './ExtinguishingSubstance'
 
+import useQuizPage from '@/hook/useQuizPage'
+
 const Scene2 = forwardRef((props, ref) => {
-  const [isBurning, setIsBurning] = useState(true) // @TODO
+  const [isBurning, setIsBurning] = useState(true)
   const [userAnswers, setUserAnswers] = useState([])
   const group = useRef()
   const { gameData, setResult } = useQuizPage()
@@ -27,6 +29,8 @@ const Scene2 = forwardRef((props, ref) => {
   const [extinguishingDirection, setExtinguishingDirection] = useState([
     0, 0, -1,
   ])
+  const [highlightedObject, setHighlightedObject] = useState(null)
+  const originalMaterials = useRef(new Map())
 
   const {
     model_path: modelPath = '/models/dark_room_fire_safety.glb',
@@ -48,15 +52,63 @@ const Scene2 = forwardRef((props, ref) => {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0, 0])
   const { raycaster, camera } = useThree()
 
+  // Функция для сброса подсветки
+  const resetHighlight = useCallback(() => {
+    if (highlightedObject) {
+      highlightedObject.traverse((child) => {
+        if (child.isMesh && originalMaterials.current.has(child)) {
+          child.material = originalMaterials.current.get(child)
+        }
+      })
+      originalMaterials.current.clear()
+      setHighlightedObject(null)
+    }
+  }, [highlightedObject])
+
+  const highlightObject = useCallback(
+    (object) => {
+      resetHighlight()
+
+      if (!object) return
+
+      object.traverse((child) => {
+        if (child.isMesh && child.material) {
+          originalMaterials.current.set(child, child.material)
+
+          const highlightMaterial = child.material.clone()
+
+          // Увеличиваем яркость материала
+          if (highlightMaterial.color) {
+            const originalColor = highlightMaterial.color.clone()
+            highlightMaterial.color = new THREE.Color(
+              Math.min(originalColor.r * 1.8),
+              Math.min(originalColor.g * 1.8),
+              Math.min(originalColor.b * 1.8)
+            )
+          }
+
+          child.material = highlightMaterial
+        }
+      })
+
+      setHighlightedObject(object)
+    },
+    [resetHighlight]
+  )
+
   useEffect(() => {
     setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
   }, [model, props.isMobile])
 
   useEffect(() => {
-    if (userAnswers.length === answerServer?.length) {
+    if (
+      !isPlayingSequence &&
+      userAnswers.length > 0 &&
+      userAnswers.length === answerServer?.length
+    ) {
       setResult(userAnswers[0].includes(answerServer[0]))
     }
-  }, [userAnswers, answerServer, setResult])
+  }, [userAnswers, answerServer, setResult, isPlayingSequence])
 
   const eventHandlers = useMemo(
     () => ({
@@ -102,18 +154,16 @@ const Scene2 = forwardRef((props, ref) => {
             )
 
             if (isAnsweredClick) {
-              setUserAnswers((prev) => {
-                if (!prev.some((item) => item === clickedObject.name)) {
-                  return [...prev, clickedObject.name]
-                }
-                return prev
-              })
+              // Подсвечиваем объект
+              highlightObject(clickedObject.parent || clickedObject)
+              // Полностью меняем выбор
+              setUserAnswers([clickedObject.name])
             }
           }
         })
       },
     }),
-    [gameData, isTouch, model, partTooltips, raycaster, camera]
+    [gameData, highlightObject, isTouch, model, partTooltips, raycaster, camera]
   )
 
   const resetAnimation = () => {
@@ -123,6 +173,7 @@ const Scene2 = forwardRef((props, ref) => {
     })
     setCurrentStep(0)
     setIsPlayingSequence(false)
+    resetHighlight()
   }
 
   useImperativeHandle(ref, () => ({
@@ -141,26 +192,22 @@ const Scene2 = forwardRef((props, ref) => {
     const currentActionName = animationSequence[currentStep]
     const action = actions[`${currentActionName}Action`]
 
-    // Проверяем, началась ли анимация огнетушителя
     const isExtinguisherAction =
       currentActionName.includes('handle_bottom_co2_fire-extinguisher') ||
       currentActionName.includes('handle_bottom_fire-extinguisher')
 
     if (isExtinguisherAction && action && action.isRunning()) {
       setIsExtinguishing(true)
-
-      // Находим позицию сопла в модели
       model.traverse((child) => {
         if (child.name.includes('nozzle')) {
           const worldPosition = new THREE.Vector3()
           child.getWorldPosition(worldPosition)
           setNozzlePosition([
             worldPosition.x + 8.2,
-            worldPosition.y + 0.6, // высота
+            worldPosition.y + 0.6,
             worldPosition.z + 1.2,
           ])
 
-          // Получаем направление из сопла
           const direction = new THREE.Vector3(0, -1, 1.5)
           child.localToWorld(direction)
           direction.sub(worldPosition).normalize()

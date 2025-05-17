@@ -19,6 +19,7 @@ import {
   usePostSwiperResultMutation,
 } from '@/slices/gameApi'
 import useGame from '@/hook/useGame'
+import GameOverScreen from '@/components/GameOverScreen'
 
 const TIME_LIMIT = 30
 
@@ -229,13 +230,14 @@ function SwiperGame() {
       sx={{
         maxWidth: '800px',
         margin: '0 auto',
-        padding: '3rem 1rem',
+        mt: 5,
+        p: '3rem 1rem',
         display: 'flex',
         flexDirection: 'column',
         overflowX: 'hidden', // Запрещаем горизонтальный скролл страницы
       }}
     >
-      {/* Кнопка назад и помощь */}
+      {/* Кнопка назад */}
       <Box
         sx={{
           position: 'absolute',
@@ -265,27 +267,7 @@ function SwiperGame() {
         </Button>
       </Box>
       {gameOver ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-          }}
-        >
-          <Typography variant="h4" gutterBottom>
-            Время вышло!
-          </Typography>
-          <Typography variant="h6" gutterBottom>
-            {`Правильных ответов: ${Math.max(0, correctAnswers)}`}
-          </Typography>
-          <Button
-            variant="contained"
-            fullWidth={!!isMobile}
-            size="large"
-            onClick={() => navigate(-1)}
-            sx={{ mt: 3 }}
-          >
-            Вернуться к играм
-          </Button>
-        </Box>
+        <GameOverScreen isMobile={isMobile} correctAnswers={correctAnswers} />
       ) : (
         <>
           <Box sx={{ width: '100%', mb: 2 }}>

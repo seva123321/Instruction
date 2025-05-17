@@ -57,10 +57,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
           node.material.depthWrite = true
           node.cursor = 'pointer'
 
-          if (
-            props.isMobile &&
-            (node.name.includes('safety_pin') || node.name.includes('stamp'))
-          ) {
+          if (node.name.includes('safety_pin') || node.name.includes('stamp')) {
             node.geometry.scale(1.3, 1, 1.3)
             node.geometry.attributes.position.needsUpdate = true
             node.geometry.computeBoundingBox()
@@ -200,7 +197,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
         document.body.style.cursor = 'pointer'
 
         const clickedObject = event.object
-        const offsetY = 0.1
+        const offsetY = 0.3
         const elevatedPoint = new THREE.Vector3(
           event.point.x,
           event.point.y + offsetY,
@@ -280,7 +277,17 @@ const PowderExtinguisher = forwardRef((props, ref) => {
 
       {hoveredPart && (
         <Html position={tooltipPosition} distanceFactor={10}>
-          <div className="tooltip">{partTooltips[hoveredPart]}</div>
+          <div
+            style={{
+              background: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '14px',
+            }}
+          >
+            {partTooltips[hoveredPart]}
+          </div>
         </Html>
       )}
     </>

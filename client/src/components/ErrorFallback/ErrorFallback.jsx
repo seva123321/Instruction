@@ -6,7 +6,7 @@ import {
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
-const ErrorFallback = ({ error, resetErrorBoundary }) => {
+function ErrorFallback({ error, resetErrorBoundary }) {
   const theme = useTheme()
   const navigate = useNavigate()
 
@@ -140,7 +140,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
           color="text.secondary"
           sx={{ mt: 2, display: 'block' }}
         >
-          Код ошибки: {error.code || 'UNKNOWN'}
+          {`Код ошибки: ${error.code || 'UNKNOWN'}`}
         </Typography>
       </Paper>
     </Box>

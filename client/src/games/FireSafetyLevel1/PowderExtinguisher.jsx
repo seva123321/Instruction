@@ -58,7 +58,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
           node.cursor = 'pointer'
 
           if (node.name.includes('safety_pin') || node.name.includes('stamp')) {
-            node.geometry.scale(1.3, 1, 1.3)
+            node.geometry.scale(1.3, 1.02, 1.3)
             node.geometry.attributes.position.needsUpdate = true
             node.geometry.computeBoundingBox()
             node.geometry.computeBoundingSphere()

@@ -639,8 +639,10 @@ function GamePage() {
                         arrow
                       >
                         <Button
-                          onClick={() =>
-                            handleGameClick(`fire_safety?level=${item.level}`)
+                          onClick={
+                            () =>
+                              handleGameClick(`fire_safety?level=${item.level}`)
+                            // eslint-disable-next-line react/jsx-curly-newline
                           }
                           style={{
                             textDecoration: 'none',
@@ -719,7 +721,7 @@ function GamePage() {
                   </Box>
                 </Box>
               </Box>
-              {/* 
+              {/*
               <Box sx={{ mt: 'auto' }}>
                 <Button
                   variant="contained"

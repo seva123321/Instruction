@@ -119,7 +119,7 @@ const styles = {
   },
 }
 
-const GameOverScreen = ({ correctAnswers, isMobile }) => {
+function GameOverScreen({ correctAnswers, isMobile }) {
   const navigate = useNavigate()
 
   return (
@@ -130,7 +130,7 @@ const GameOverScreen = ({ correctAnswers, isMobile }) => {
         </Typography>
 
         <Typography variant="h4" gutterBottom sx={styles.score}>
-          Правильных ответов: <span>{Math.max(0, correctAnswers)}</span>
+          {` Правильных ответов: ${Math.max(0, correctAnswers)}`}
         </Typography>
 
         <Button

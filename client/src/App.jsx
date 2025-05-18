@@ -21,10 +21,14 @@ const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
 const CalendarResults = lazy(() => import('@/models/CalendarResults'))
 const RatingPage = lazy(() => import('@/pages/RatingPage'))
-const QuizPageProvider = lazy(() =>
-  import('./hoc/QuizPageProvider').then(({ QuizPageProvider }) => ({
-    default: QuizPageProvider,
-  }))
+const QuizPageProvider = lazy(
+  () =>
+    import('./hoc/QuizPageProvider').then(
+      ({ QuizPageProvider: QuizPageProviderHoc }) => ({
+        default: QuizPageProviderHoc,
+      })
+    )
+  // eslint-disable-next-line function-paren-newline
 )
 const GamePageRouter = lazy(() => import('@/components/GamePageRouter'))
 const GamePage = lazy(() => import('@/pages/GamePage'))

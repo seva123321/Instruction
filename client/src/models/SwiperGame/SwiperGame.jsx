@@ -84,8 +84,8 @@ const AnswerIndicator = styled(Box)(({ answer, theme }) => ({
   bottom: 0,
   backgroundColor:
     answer === 'yes'
-      ? theme.palette.success.light + '33'
-      : theme.palette.error.light + '33',
+      ? `${theme.palette.success.light}33`
+      : `${theme.palette.error.light}33`,
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
@@ -372,13 +372,13 @@ function SwiperGame() {
                   variant="body1"
                   sx={{ fontWeight: 'bold', color: 'text.secondary' }}
                 >
-                  ⏱ {timeLeft} сек
+                  {`⏱ ${timeLeft} сек`}
                 </Typography>
                 <Typography
                   variant="body1"
                   sx={{ fontWeight: 'bold', color: 'text.secondary' }}
                 >
-                  ✅ {Math.max(0, correctAnswers)}
+                  {`✅ ${Math.max(0, correctAnswers)}`}
                 </Typography>
               </Box>
               <LinearProgress

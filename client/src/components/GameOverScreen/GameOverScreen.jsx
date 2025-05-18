@@ -12,7 +12,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background:
+      'linear-gradient(135deg,rgb(171, 211, 222)  0%, #667eea 50%, rgb(25, 129, 158) 100%)',
     color: 'white',
     textAlign: 'center',
     zIndex: 1000,

@@ -1,5 +1,6 @@
 /* eslint-disable operator-linebreak */
 /* eslint-disable no-nested-ternary */
+
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSwipeable } from 'react-swipeable'
@@ -11,8 +12,14 @@ import {
   LinearProgress,
   styled,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
+  Fade,
 } from '@mui/material'
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material'
+import {
+  ArrowBack as ArrowBackIcon,
+  Info as InfoIcon,
+} from '@mui/icons-material'
 
 import {
   useGetGameSwiperQuery,
@@ -23,51 +30,136 @@ import GameOverScreen from '@/components/GameOverScreen'
 
 const TIME_LIMIT = 30
 
-const CardContainer = styled(Box)({
+const CardContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
   width: '100%',
-  height: '300px',
-  overflow: 'hidden',
-})
+  height: '50vh',
+  minHeight: '300px',
+  maxHeight: '500px',
+  marginBottom: theme.spacing(1),
+  [theme.breakpoints.down('sm')]: {
+    height: '55vh',
+    minHeight: '280px',
+    maxHeight: 'none',
+    marginBottom: 0,
+  },
+}))
 
-const QuestionCard = styled(Paper)({
+const QuestionCard = styled(Paper)(({ theme }) => ({
   position: 'absolute',
   top: 0,
   left: 0,
   right: 0,
-  padding: '24px',
+  bottom: 0,
+  padding: theme.spacing(3),
   margin: '0 auto',
-  maxWidth: '500px',
-  minHeight: '200px',
+  maxWidth: '600px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
   textAlign: 'center',
-  transition: 'transform 0.4s ease-out, opacity 0.3s ease-out',
-  touchAction: 'pan-y', // Ограничиваем свайп только по вертикали для родителя
+  transition: 'transform 0.3s ease-out, opacity 0.2s ease-out',
+  touchAction: 'none',
   userSelect: 'none',
   willChange: 'transform, opacity',
-})
+  borderRadius: '16px',
+  boxShadow: theme.shadows[6],
+  backgroundColor: theme.palette.background.paper,
+  cursor: 'grab',
+  '&:active': {
+    cursor: 'grabbing',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2.5),
+    borderRadius: '12px',
+  },
+}))
 
-const AnswerIndicator = styled(Box)(({ answer }) => ({
+const AnswerIndicator = styled(Box)(({ answer, theme }) => ({
   position: 'absolute',
   top: 0,
   left: 0,
   right: 0,
   bottom: 0,
   backgroundColor:
-    answer === 'yes' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+    answer === 'yes'
+      ? theme.palette.success.light + '33'
+      : theme.palette.error.light + '33',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  fontSize: '3rem',
+  fontSize: '4rem',
   fontWeight: 'bold',
   opacity: 0,
-  transition: 'opacity 0.3s',
+  transition: 'opacity 0.2s',
+  borderRadius: 'inherit',
+}))
+
+const ActionButton = styled(Button)(({ theme, answer }) => ({
+  minWidth: '120px',
+  height: '56px',
+  fontSize: '1.1rem',
+  fontWeight: 'bold',
+  borderRadius: '12px',
+  boxShadow: theme.shadows[3],
+  textTransform: 'none',
+  transition: 'transform 0.2s, box-shadow 0.2s',
+  '&:active': {
+    transform: 'scale(0.98)',
+    boxShadow: theme.shadows[1],
+  },
+  [theme.breakpoints.down('sm')]: {
+    minWidth: '48%',
+    height: '52px',
+    fontSize: '1rem',
+    borderRadius: '10px',
+  },
+  ...(answer === 'yes' && {
+    backgroundColor: theme.palette.success.main,
+    '&:hover': {
+      backgroundColor: theme.palette.success.dark,
+    },
+  }),
+  ...(answer === 'no' && {
+    backgroundColor: theme.palette.error.main,
+    '&:hover': {
+      backgroundColor: theme.palette.error.dark,
+    },
+  }),
+}))
+
+const InstructionText = styled(Typography)(({ theme }) => ({
+  position: 'fixed',
+  left: '50%',
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: '20px',
+  padding: theme.spacing(1, 2),
+  boxShadow: theme.shadows[2],
+  fontSize: '0.85rem',
+  maxWidth: '90%',
+  zIndex: 100,
+  display: 'flex',
+  alignItems: 'center',
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '0.9rem',
+    padding: theme.spacing(1.5, 3),
+    transform: 'translate(-45%)',
+    bottom: 60,
+  },
+  [theme.breakpoints.down('sm')]: {
+    bottom: 100,
+    fontSize: '0.8rem',
+    transform: 'translateX(-50%)',
+    width: 'calc(100% - 32px)',
+  },
 }))
 
 function SwiperGame() {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [currentIndex, setCurrentIndex] = useState(0)
   const [position, setPosition] = useState(0)
   const [isSwiping, setIsSwiping] = useState(false)
@@ -75,8 +167,8 @@ function SwiperGame() {
   const [gameOver, setGameOver] = useState(false)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [isCorrect, setIsCorrect] = useState(null)
-  const [isMobile, setIsMobile] = useState(false)
   const [isPostedData, setPostedData] = useState(false)
+  const [showInstruction, setShowInstruction] = useState(true)
   const timerRef = useRef(null)
   const cardRef = useRef(null)
   const navigate = useNavigate()
@@ -92,15 +184,6 @@ function SwiperGame() {
   }, [hasMegaPower, navigate])
 
   useEffect(() => {
-    // Определяем мобильное устройство
-    const checkIsMobile = () => setIsMobile(window.innerWidth < 768)
-    checkIsMobile()
-    window.addEventListener('resize', checkIsMobile)
-    return () => window.removeEventListener('resize', checkIsMobile)
-  }, [])
-
-  useEffect(() => {
-    // Функция обновления времени
     const updateTimer = () => {
       const now = Date.now()
       const timeRemaining = Math.max(
@@ -121,14 +204,16 @@ function SwiperGame() {
       }
     }
 
-    // Запускаем таймер
     timerRef.current = requestAnimationFrame(updateTimer)
-
-    // Очистка
-    return () => {
-      cancelAnimationFrame(timerRef.current)
-    }
+    return () => cancelAnimationFrame(timerRef.current)
   }, [postSwiperResult, correctAnswers, isPostedData])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowInstruction(false)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const nextQuestion = () => {
     if (!questions?.length) return
@@ -144,29 +229,29 @@ function SwiperGame() {
     const isAnswerCorrect = userAnswer === questions[currentIndex].answer
 
     setIsCorrect(isAnswerCorrect)
-    setCorrectAnswers(correctAnswers + (isAnswerCorrect ? 1 : -1))
+    setCorrectAnswers((prev) => Math.max(0, prev + (isAnswerCorrect ? 1 : -1)))
 
-    // Анимация улетания карточки
     setPosition(dir === 'right' ? window.innerWidth : -window.innerWidth)
-    setTimeout(nextQuestion, 400)
+    setTimeout(nextQuestion, 300)
   }
 
   const handlers = useSwipeable({
     onSwiping: (e) => {
-      if (!isMobile) return
       if (!isSwiping) setIsSwiping(true)
       setPosition(e.deltaX)
     },
-    onSwipedLeft: () => isMobile && handleSwipe('left'),
-    onSwipedRight: () => isMobile && handleSwipe('right'),
+    onSwipedLeft: () => handleSwipe('left'),
+    onSwipedRight: () => handleSwipe('right'),
     onSwiped: () => {
       if (Math.abs(position) < 100) {
         setPosition(0)
         setIsSwiping(false)
       }
     },
-    trackMouse: false,
+    trackMouse: true,
     preventDefaultTouchmoveEvent: true,
+    delta: 10,
+    swipeDuration: 500,
   })
 
   const handleButtonAnswer = (answer) => {
@@ -174,20 +259,15 @@ function SwiperGame() {
     handleSwipe(answer ? 'right' : 'left')
   }
 
-  // Стили для карточек
   const currentCardStyle = {
-    transform: `translateX(${position}px)`,
-    opacity: isSwiping ? 1 - Math.min(Math.abs(position) / 200, 0.7) : 1,
+    transform: `translateX(${position}px) rotate(${position / 20}deg)`,
+    opacity: isSwiping ? 1 - Math.min(Math.abs(position) / 300, 0.5) : 1,
     zIndex: 2,
-    cursor: isMobile ? 'grab' : 'default',
-    '&:active': {
-      cursor: isMobile ? 'grabbing' : 'default',
-    },
   }
 
   const nextCardStyle = {
-    transform: 'scale(0.95)',
-    opacity: 0.8,
+    transform: 'scale(0.92)',
+    opacity: 0.7,
     zIndex: 1,
   }
 
@@ -209,18 +289,12 @@ function SwiperGame() {
       </Box>
     )
   }
+
   if (isError) return <div>Ошибка загрузки данных</div>
   if (!questions || !questions.length) {
     return (
-      <Typography
-        variant="h6"
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        Нет вопросов
+      <Typography variant="h6" align="center" sx={{ mt: 4 }}>
+        Нет вопросов для игры
       </Typography>
     )
   }
@@ -228,133 +302,225 @@ function SwiperGame() {
   return (
     <Box
       sx={{
-        maxWidth: '800px',
+        position: 'relative',
+        height: '100vh',
+        maxWidth: 'md',
         margin: '0 auto',
-        mt: 5,
-        p: '3rem 1rem',
+        px: 2,
         display: 'flex',
         flexDirection: 'column',
-        overflowX: 'hidden', // Запрещаем горизонтальный скролл страницы
+        overflow: 'hidden',
+        [theme.breakpoints.down('sm')]: {
+          px: 1,
+          height: '100dvh',
+        },
       }}
     >
       {/* Кнопка назад */}
-      <Box
+      <Button
+        onClick={() => navigate(-1)}
+        variant="contained"
+        startIcon={<ArrowBackIcon />}
         sx={{
           position: 'absolute',
-          top: isMobile ? 8 : 16,
-          right: isMobile ? 8 : 16,
+          top: 16,
+          right: 16,
           zIndex: 1000,
-          display: 'flex',
-          gap: 1,
+          borderRadius: '50px',
+          backgroundColor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: theme.shadows[2],
+          '&:hover': {
+            backgroundColor: 'background.default',
+          },
+          [theme.breakpoints.down('sm')]: {
+            top: 8,
+            right: 8,
+            padding: '6px 12px',
+            minWidth: 'auto',
+          },
         }}
       >
-        <Button
-          onClick={() => navigate(-1)}
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          sx={{
-            borderRadius: '50px',
-            padding: isMobile ? '6px 12px' : '8px 20px',
-            fontSize: isMobile ? '0.8rem' : '0.9rem',
-            backgroundColor: 'rgba(255,255,255,0.8)',
-            '&:hover': {
-              backgroundColor: 'rgba(255,255,255,1)',
-            },
-            minWidth: 'auto',
-          }}
-        >
-          {isMobile ? 'Назад' : 'Назад к играм'}
-        </Button>
-      </Box>
-      {gameOver ? (
-        <GameOverScreen isMobile={isMobile} correctAnswers={correctAnswers} />
-      ) : (
-        <>
-          <Box sx={{ width: '100%', mb: 2 }}>
-            <Typography variant="body1" align="center" gutterBottom>
-              {`Осталось: ${timeLeft} сек | Правильных ответов: ${Math.max(0, correctAnswers)}`}
-            </Typography>
-            <LinearProgress
-              variant="determinate"
-              value={(timeLeft / TIME_LIMIT) * 100}
-              sx={{ height: 8, borderRadius: 4 }}
-            />
-          </Box>
+        {isMobile ? 'Назад' : 'Назад к играм'}
+      </Button>
 
-          <CardContainer>
-            {/* Следующая карточка (всегда видна под текущей) */}
-            <QuestionCard style={nextCardStyle}>
-              <Typography variant="h5" sx={{ mb: 2 }}>
-                {questions[nextQuestionIndex].question}
-              </Typography>
-            </QuestionCard>
-
-            {/* Текущая карточка */}
-            <QuestionCard ref={cardRef} style={currentCardStyle} {...handlers}>
-              <AnswerIndicator
-                answer={position > 0 ? 'yes' : 'no'}
-                sx={{ opacity: Math.min(Math.abs(position) / 100, 0.7) }}
+      {/* Основной контент */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          paddingBottom: isMobile ? '120px' : '80px',
+        }}
+      >
+        {gameOver ? (
+          <GameOverScreen isMobile={isMobile} correctAnswers={correctAnswers} />
+        ) : (
+          <div style={{ position: 'relative' }}>
+            {/* Таймер и счет */}
+            <Box sx={{ width: '100%', mb: 4, mt: 4, px: isMobile ? 0 : 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 1,
+                }}
               >
-                {position > 0 ? '✓' : '✗'}
-              </AnswerIndicator>
-              <Typography variant="h5" sx={{ mb: 2 }}>
-                {questions[currentIndex].question}
-              </Typography>
-              {isMobile && (
-                <Typography variant="body2" color="text.secondary">
-                  {position > 50
-                    ? 'Отпустите для "Да"'
-                    : position < -50
-                      ? 'Отпустите для "Нет"'
-                      : 'Потяните в сторону'}
+                <Typography
+                  variant="body1"
+                  sx={{ fontWeight: 'bold', color: 'text.secondary' }}
+                >
+                  ⏱ {timeLeft} сек
                 </Typography>
-              )}
-            </QuestionCard>
-          </CardContainer>
+                <Typography
+                  variant="body1"
+                  sx={{ fontWeight: 'bold', color: 'text.secondary' }}
+                >
+                  ✅ {Math.max(0, correctAnswers)}
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={(timeLeft / TIME_LIMIT) * 100}
+                sx={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: 'divider',
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor:
+                      timeLeft > 10 ? 'primary.main' : 'error.main',
+                    transition: 'background-color 0.3s',
+                  },
+                }}
+              />
+            </Box>
 
-          {/* Кнопки для ответа */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mt: 4,
-              gap: 2,
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="error"
-              size="large"
-              onClick={() => handleButtonAnswer(false)}
-              sx={{ minWidth: 120 }}
-              disabled={isSwiping}
-            >
-              Нет
-            </Button>
-            <Button
-              variant="outlined"
-              color="success"
-              size="large"
-              onClick={() => handleButtonAnswer(true)}
-              sx={{ minWidth: 120 }}
-              disabled={isSwiping}
-            >
-              Да
-            </Button>
-          </Box>
+            {/* Карточки */}
+            <CardContainer>
+              {/* Следующая карточка */}
+              <QuestionCard style={nextCardStyle}>
+                <Typography
+                  variant={isMobile ? 'h6' : 'h5'}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  {questions[nextQuestionIndex].question}
+                </Typography>
+              </QuestionCard>
 
-          {isCorrect !== null && (
-            <Typography
-              variant="h4"
-              align="center"
-              mt={2}
-              color={isCorrect ? 'success.main' : 'error.main'}
+              {/* Текущая карточка */}
+              <QuestionCard
+                ref={cardRef}
+                style={currentCardStyle}
+                {...handlers}
+              >
+                <AnswerIndicator
+                  answer={position > 0 ? 'yes' : 'no'}
+                  sx={{ opacity: Math.min(Math.abs(position) / 100, 0.8) }}
+                >
+                  {position > 0 ? '✓' : '✗'}
+                </AnswerIndicator>
+                <Typography
+                  variant={isMobile ? 'h6' : 'h5'}
+                  sx={{ fontWeight: 'bold', mb: 2 }}
+                >
+                  {questions[currentIndex].question}
+                </Typography>
+                {isMobile && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 2 }}
+                  >
+                    {position > 50
+                      ? 'Отпустите для "Да"'
+                      : position < -50
+                        ? 'Отпустите для "Нет"'
+                        : 'Потяните в сторону'}
+                  </Typography>
+                )}
+              </QuestionCard>
+            </CardContainer>
+
+            {/* Инструкция */}
+            <Fade in={showInstruction} timeout={500}>
+              <InstructionText>
+                <InfoIcon
+                  sx={{
+                    fontSize: '1rem',
+                    verticalAlign: 'middle',
+                    mr: 1,
+                    color: theme.palette.primary.main,
+                  }}
+                />
+                Правильные ответы +1, неправильные -1. Счет не может быть меньше
+                нуля.
+              </InstructionText>
+            </Fade>
+
+            {/* Кнопки для ответа */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 3,
+                mt: 2,
+                [theme.breakpoints.down('sm')]: {
+                  position: 'fixed',
+                  bottom: 20,
+                  left: 0,
+                  right: 0,
+                  padding: '0 16px',
+                  gap: 2,
+                },
+              }}
             >
-              {isCorrect ? '✓ Правильно!' : '✗ Неправильно!'}
-            </Typography>
-          )}
-        </>
-      )}
+              <ActionButton
+                answer="no"
+                variant="contained"
+                onClick={() => handleButtonAnswer(false)}
+                disabled={isSwiping}
+              >
+                Нет
+              </ActionButton>
+              <ActionButton
+                answer="yes"
+                variant="contained"
+                onClick={() => handleButtonAnswer(true)}
+                disabled={isSwiping}
+              >
+                Да
+              </ActionButton>
+            </Box>
+
+            {isCorrect !== null && (
+              <Typography
+                variant="h4"
+                align="center"
+                mt={2}
+                color={isCorrect ? 'success.main' : 'error.main'}
+                sx={{
+                  position: 'fixed',
+                  bottom: isMobile ? 120 : 80,
+                  left: 0,
+                  right: 0,
+                  padding: '0 16px',
+                  animation: 'fadeInOut 1.5s',
+                  '@keyframes fadeInOut': {
+                    '0%': { opacity: 0, transform: 'scale(0.8)' },
+                    '20%': { opacity: 1, transform: 'scale(1.1)' },
+                    '80%': { opacity: 1, transform: 'scale(1.1)' },
+                    '100%': { opacity: 0, transform: 'scale(0.8)' },
+                  },
+                }}
+              >
+                {isCorrect ? '✓ Правильно!' : '✗ Неправильно!'}
+              </Typography>
+            )}
+          </div>
+        )}
+      </Box>
     </Box>
   )
 }

@@ -351,6 +351,8 @@ function GamePage() {
               minWidth: '120px',
               display: 'inline-block',
               mb: 2,
+              ml: 2,
+              mr: 2,
             }}
           >
             {renderMegaPowerBolts}
@@ -753,6 +755,8 @@ function GamePage() {
           <Box
             sx={{
               mt: 4,
+              ml: 2,
+              mr: 2,
               p: 2,
               background: 'rgba(255, 255, 255, 0.7)',
               borderRadius: '12px',

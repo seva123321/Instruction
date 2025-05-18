@@ -351,6 +351,8 @@ function GamePage() {
               minWidth: '120px',
               display: 'inline-block',
               mb: 2,
+              ml: 2,
+              mr: 2,
             }}
           >
             {renderMegaPowerBolts}
@@ -637,8 +639,10 @@ function GamePage() {
                         arrow
                       >
                         <Button
-                          onClick={() =>
-                            handleGameClick(`fire_safety?level=${item.level}`)
+                          onClick={
+                            () =>
+                              handleGameClick(`fire_safety?level=${item.level}`)
+                            // eslint-disable-next-line react/jsx-curly-newline
                           }
                           style={{
                             textDecoration: 'none',
@@ -717,7 +721,7 @@ function GamePage() {
                   </Box>
                 </Box>
               </Box>
-              {/* 
+              {/*
               <Box sx={{ mt: 'auto' }}>
                 <Button
                   variant="contained"
@@ -753,6 +757,8 @@ function GamePage() {
           <Box
             sx={{
               mt: 4,
+              ml: 2,
+              mr: 2,
               p: 2,
               background: 'rgba(255, 255, 255, 0.7)',
               borderRadius: '12px',

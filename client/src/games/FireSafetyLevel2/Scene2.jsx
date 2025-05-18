@@ -13,11 +13,11 @@ import {
 } from 'react'
 import * as THREE from 'three'
 
+import useQuizPage from '@/hook/useQuizPage'
+
 import FirePlane from '../CustomFire'
 
 import ExtinguishingSubstance from './ExtinguishingSubstance'
-
-import useQuizPage from '@/hook/useQuizPage'
 
 const Scene2 = forwardRef((props, ref) => {
   const [isBurning, setIsBurning] = useState(true)

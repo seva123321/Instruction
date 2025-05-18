@@ -12,7 +12,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background:
+      'linear-gradient(135deg,rgb(171, 211, 222)  0%, #667eea 50%, rgb(25, 129, 158) 100%)',
     color: 'white',
     textAlign: 'center',
     zIndex: 1000,
@@ -118,7 +119,7 @@ const styles = {
   },
 }
 
-const GameOverScreen = ({ correctAnswers, isMobile }) => {
+function GameOverScreen({ correctAnswers, isMobile }) {
   const navigate = useNavigate()
 
   return (
@@ -129,7 +130,7 @@ const GameOverScreen = ({ correctAnswers, isMobile }) => {
         </Typography>
 
         <Typography variant="h4" gutterBottom sx={styles.score}>
-          Правильных ответов: <span>{Math.max(0, correctAnswers)}</span>
+          {` Правильных ответов: ${Math.max(0, correctAnswers)}`}
         </Typography>
 
         <Button

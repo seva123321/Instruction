@@ -7,23 +7,19 @@ import NotFoundPage from '@/pages/NotFoundPage'
 
 const GamePageRouter = forwardRef((props, ref) => {
   const location = useLocation()
-  const searchParams = new URLSearchParams(location.search)
-  const level = searchParams.get('level')
   const gameType = location.pathname.split('/').pop()
+  const level = new URLSearchParams(location.search).get('level')
 
-  const gameComponents = useMemo(
-    () => ({
+  const GameComponent = useMemo(() => {
+    const components = {
       fire_safety: {
         1: lazy(() => import('../../games/FireSafetyLevel1')),
         2: lazy(() => import('../../games/FireSafetyLevel2')),
         3: lazy(() => import('../../games/FireSafetyLevel3')),
       },
-    }),
-    []
-  )
-
-  const GameComponent =
-    gameComponents[gameType]?.[level] || (() => <NotFoundPage />)
+    }
+    return components[gameType]?.[level] || (() => <NotFoundPage />)
+  }, [gameType, level])
 
   return (
     <Suspense fallback={<LoadingIndicator />}>

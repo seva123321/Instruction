@@ -43,7 +43,7 @@ function ErrorMessage({ error }) {
 
 function OfflineIndicator() {
   return (
-    <Box sx={{ position: 'fixed', top: 70, right: 20, zIndex: 1000 }}>
+    <Box sx={{ position: 'fixed', top: 10, right: 20, zIndex: 1000 }}>
       <Chip label="Оффлайн режим" color="warning" icon={<OfflineBoltIcon />} />
     </Box>
   )

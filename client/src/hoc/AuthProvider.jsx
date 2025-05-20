@@ -1,6 +1,7 @@
 /* eslint-disable operator-linebreak */
 
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   useSignUpMutation,
@@ -10,7 +11,6 @@ import {
   useLazyGetAesKeyQuery, // Изменяем на lazy версию
 } from '@/slices/userApi'
 import { secureStorage } from '@/service/utilsFunction'
-import { useNavigate } from 'react-router-dom'
 
 export const AuthContext = createContext(null)
 

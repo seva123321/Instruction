@@ -32,14 +32,12 @@ import {
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material'
-
 import { useLocation } from 'react-router-dom'
 
 import {
   useGetGameQuizQuery,
   usePostGameQuizResultMutation,
 } from '@/slices/gameApi'
-
 import ButtonBack from '@/components/ButtonBack'
 import SortableItem from '@/components/SortableItem'
 import AlertGameResult from '@/components/AlertGameResult'

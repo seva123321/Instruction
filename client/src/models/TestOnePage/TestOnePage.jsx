@@ -525,7 +525,7 @@ function TestOnePage() {
         content: (
           <Box
             sx={{
-              p: isMobile ? 1 : 2,
+              p: isMobile ? 0 : 2,
               '& *': { maxWidth: '100%', wordBreak: 'break-word' },
             }}
           >
@@ -603,8 +603,8 @@ function TestOnePage() {
     <Box
       sx={{
         maxWidth: 800,
-        width: '80vw',
-        margin: '0 auto',
+        width: isMobile ? '95vw' : '80vw',
+        margin: '56px auto',
         touchAction: isMobile ? 'pan-y' : 'auto',
       }}
       {...(isMobile ? swipeHandlers : {})}

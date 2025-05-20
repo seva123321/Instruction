@@ -40,9 +40,9 @@ const gameApi = createApi({
       // Долгий срок кэширования для моделей (1 день)
       keepUnusedDataFor: 86400,
     }),
-    postFireSafetyResult: build.mutation({
+    postGameQuizResult: build.mutation({
       query: (body) => ({
-        url: `fire_safety_results?level=${body.level}`,
+        url: `${body.nameGame}_results?level=${body.level}`,
         method: 'POST',
         body: body.data,
       }),
@@ -67,7 +67,7 @@ export const {
   useGetGameSwiperQuery,
   useGetGameQuizQuery,
   useLazyGetModelQuery,
-  usePostFireSafetyResultMutation,
+  usePostGameQuizResultMutation,
   usePostSwiperResultMutation,
 } = gameApi
 export default gameApi

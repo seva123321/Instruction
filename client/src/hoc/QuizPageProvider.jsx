@@ -42,7 +42,7 @@ import ErrorFallback from '@/components/ErrorFallback'
 import AlertGameResult from '@/components/AlertGameResult'
 import {
   useGetGameQuizQuery,
-  usePostFireSafetyResultMutation,
+  usePostGameQuizResultMutation,
 } from '@/slices/gameApi'
 
 export const QuizPageContext = createContext({
@@ -64,7 +64,7 @@ export function QuizPageProvider({ children }) {
   const gameType = location.pathname.split('/').pop()
 
   const { data: gameData } = useGetGameQuizQuery({ gameType, level })
-  const [postFireSafetyResult] = usePostFireSafetyResultMutation()
+  const [postGameResultResult] = usePostGameQuizResultMutation()
   const [showResult, setShowResult] = useState(false)
   const [result, setResult] = useState(null)
   const [resultIsSended, setResultIsSended] = useState(false)
@@ -98,7 +98,11 @@ export function QuizPageProvider({ children }) {
     // Отправляем результат и показываем сообщение
     requestAnimationFrame(() => {
       setResult(isCorrect ? 'win' : 'lose')
-      postFireSafetyResult({ level, data: { result: isCorrect } })
+      postGameResultResult({
+        nameGame: 'fire_safety',
+        level,
+        data: { result: isCorrect },
+      })
       setShowResult(true)
     })
 
@@ -109,7 +113,7 @@ export function QuizPageProvider({ children }) {
 
     // eslint-disable-next-line consistent-return
     return () => clearTimeout(hideTimer)
-  }, [level, isCorrect, resultIsSended, postFireSafetyResult])
+  }, [level, isCorrect, resultIsSended, postGameResultResult])
 
   const contextValue = useMemo(
     () => ({

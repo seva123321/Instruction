@@ -1,6 +1,6 @@
 /* eslint-disable arrow-body-style */
 /* eslint-disable operator-linebreak */
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -25,89 +25,52 @@ import {
   useTheme,
   useMediaQuery,
   Button,
+  CircularProgress,
 } from '@mui/material'
 import {
   DragHandle as DragHandleIcon,
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material'
+import { useLocation } from 'react-router-dom'
 
+import {
+  useGetGameQuizQuery,
+  usePostGameQuizResultMutation,
+} from '@/slices/gameApi'
 import ButtonBack from '@/components/ButtonBack'
 import SortableItem from '@/components/SortableItem'
 import AlertGameResult from '@/components/AlertGameResult'
 
-const dataDefault = {
-  title:
-    'Общая последовательность действий на месте происшествия с наличием пострадавших',
-  items: [
-    {
-      id: '1',
-      text: 'Провести оценку обстановки и обеспечить безопасные условия для оказания первой помощи',
-    },
-    { id: '2', text: 'Определить наличие сознания у пострадавшего' },
-    {
-      id: '3',
-      text: 'Восстановить проходимость дыхательных путей и определить признаки жизни',
-    },
-    {
-      id: '4',
-      text: 'Вызвать скорую медицинскую помощь, другие специальные службы',
-    },
-    {
-      id: '5',
-      text: 'Начать проведение сердечно-легочной реанимации',
-    },
-    {
-      id: '6',
-      text: 'При появлении (или наличии) признаков жизни выполнить мероприятия по поддержанию проходимости дыхательных путей',
-    },
-    {
-      id: '7',
-      text: 'Провести обзорный осмотр пострадавшего и осуществить мероприятия по временной остановке наружного кровотечения',
-    },
-    {
-      id: '8',
-      text: 'Провести подробный осмотр пострадавшего в целях выявления признаков травм, отравлений и других состояний, угрожающих его жизни и здоровью, осуществить вызов скорой медицинской помощи (если она не была вызвана ранее)',
-    },
-    {
-      id: '9',
-      text: 'Придать пострадавшему оптимальное положение тела',
-    },
-    {
-      id: '10',
-      text: 'Постоянно контролировать состояние пострадавшего и оказывать психологическую поддержку',
-    },
-    {
-      id: '11',
-      text: 'Передать пострадавшего бригаде скорой медицинской помощи',
-    },
-  ],
-}
-
-const serverCorrectOrder = [
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  '11',
-]
-
 function DragAndDropList() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const [data, setData] = useState(dataDefault)
   const [showResults, setShowResults] = useState(false)
-  const [attempts, setAttempts] = useState(2) // Начальное количество попыток
+  const [attempts, setAttempts] = useState(2)
   const [isCorrect, setIsCorrect] = useState(false)
   const [hasInteracted, setHasInteracted] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false) // Флаг отправки результата
-  const initialOrder = useRef(dataDefault.items.map((item) => item.id))
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [items, setItems] = useState([])
+
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const level = searchParams.get('level')
+  const gameType = location.pathname.split('/').pop()
+  const [postGameResultResult] = usePostGameQuizResultMutation()
+  const { data: gameData, isLoading } = useGetGameQuizQuery({ gameType, level })
+
+  useEffect(() => {
+    if (gameData && gameData.length > 0) {
+      setItems(gameData[0].items)
+    }
+  }, [gameData])
+
+  // Получаем правильный порядок из serial_number по возрастанию
+  const getCorrectOrder = () => {
+    return [...items]
+      .sort((a, b) => a.serial_number - b.serial_number)
+      .map((item) => item.serial_number)
+  }
 
   useEffect(() => {
     let hideTimer
@@ -144,41 +107,39 @@ function DragAndDropList() {
     const { active, over } = event
 
     if (active.id !== over.id) {
-      setData((prevData) => {
-        const oldIndex = prevData.items.findIndex(
-          (item) => item.id === active.id
+      setItems((prevItems) => {
+        const oldIndex = prevItems.findIndex(
+          (item) => item.serial_number.toString() === active.id
         )
-        const newIndex = prevData.items.findIndex((item) => item.id === over.id)
+        const newIndex = prevItems.findIndex(
+          (item) => item.serial_number.toString() === over.id
+        )
 
-        return {
-          ...prevData,
-          items: arrayMove(prevData.items, oldIndex, newIndex),
-        }
+        return arrayMove(prevItems, oldIndex, newIndex)
       })
     }
   }
 
-  const sendResultsToServer = (isCorrect) => {
-    // Здесь реализация отправки результатов на сервер
-    console.log('Результат отправлен на сервер:', isCorrect)
-    // Ваша логика API запроса...
+  const sendResultsToServer = (correct) => {
+    postGameResultResult({
+      nameGame: 'medical_training',
+      level,
+      data: { result: correct },
+    })
   }
 
   const checkResults = () => {
-    if (attempts <= 0 || isSubmitted) return
+    if (attempts <= 0 || isSubmitted || !gameData) return
 
-    const userOrder = data.items.map((item) => item.id)
-    const correct =
-      JSON.stringify(userOrder) === JSON.stringify(serverCorrectOrder)
+    const userOrder = items.map((item) => item.serial_number)
+    const correctOrder = getCorrectOrder()
+    const correct = JSON.stringify(userOrder) === JSON.stringify(correctOrder)
 
     setIsCorrect(correct)
     setShowResults(true)
     setHasInteracted(false)
     setAttempts((prev) => prev - 1)
 
-    // Отправляем результат на сервер если:
-    // 1. Ответ правильный
-    // 2. Это последняя попытка
     if (correct || attempts === 1) {
       sendResultsToServer(correct)
       setIsSubmitted(true)
@@ -186,15 +147,46 @@ function DragAndDropList() {
   }
 
   const resetTest = () => {
-    if (attempts > 0 && !isSubmitted) {
+    if (attempts > 0 && !isSubmitted && gameData) {
       setShowResults(false)
-      setData(dataDefault)
+      setItems(gameData[0].items)
       setHasInteracted(false)
     }
   }
 
-  const isInOriginalPosition = (itemId, index) => {
-    return initialOrder.current[index] === itemId
+  const isInCorrectPosition = (serialNumber, index) => {
+    const correctOrder = getCorrectOrder()
+    return correctOrder[index] === serialNumber
+  }
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          height: '70vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress size={60} />
+      </Box>
+    )
+  }
+
+  if (!gameData || gameData.length === 0) {
+    return (
+      <Box
+        sx={{
+          height: '70vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        Данные не загружены
+      </Box>
+    )
   }
 
   return (
@@ -240,7 +232,7 @@ function DragAndDropList() {
           px: 2,
         }}
       >
-        {data.title}
+        {gameData[0].title}
       </Typography>
 
       <Paper
@@ -260,12 +252,15 @@ function DragAndDropList() {
           onDragStart={handleDragStart}
         >
           <SortableContext
-            items={data.items}
+            items={items.map((item) => item.serial_number.toString())}
             strategy={verticalListSortingStrategy}
           >
             <List sx={{ p: 0 }}>
-              {data.items.map((item, index) => (
-                <SortableItem key={item.id} id={item.id}>
+              {items.map((item, index) => (
+                <SortableItem
+                  key={item.serial_number}
+                  id={item.serial_number.toString()}
+                >
                   <ListItem
                     sx={{
                       backgroundColor: theme.palette.background.paper,
@@ -329,12 +324,12 @@ function DragAndDropList() {
                           right: 16,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          color: isInOriginalPosition(item.id, index)
+                          color: isInCorrectPosition(item.serial_number, index)
                             ? theme.palette.success.main
                             : theme.palette.error.main,
                         }}
                       >
-                        {isInOriginalPosition(item.id, index) ? (
+                        {isInCorrectPosition(item.serial_number, index) ? (
                           <CheckIcon />
                         ) : (
                           <CloseIcon />

@@ -1,14 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 
-import { AuthProvider } from './hoc/AuthProvider'
-import { GameProvider } from './hoc/GameProvider'
-import RequireAuth from './hoc/RequireAuth'
-
 import Layout from '@/components/Layout'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
+
+import RequireAuth from './hoc/RequireAuth'
+import { GameProvider } from './hoc/GameProvider'
+import { AuthProvider } from './hoc/AuthProvider'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))

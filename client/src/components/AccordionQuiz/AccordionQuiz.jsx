@@ -1,3 +1,5 @@
+/* eslint-disable operator-linebreak */
+/* eslint-disable no-nested-ternary */
 import { memo, useMemo } from 'react'
 import {
   Box,

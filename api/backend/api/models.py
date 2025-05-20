@@ -977,7 +977,7 @@ class GameSwiperResult(models.Model):
         super().save(*args, **kwargs)
 
 
-class Quiz(models.Model):
+class FireSafetyQuiz(models.Model):
     """Модель квиза."""
 
     instruction = models.JSONField(
@@ -993,6 +993,48 @@ class Quiz(models.Model):
 
     def __str__(self):
         return str(self.instruction.get("instruction", ""))
+
+
+class MedicineQuiz(models.Model):
+    """Модель квиза."""
+
+    title = models.TextField(
+        "Название",
+    )
+    type = models.IntegerField(
+        "Тип",
+        default=1,
+    )
+
+    class Meta:
+        verbose_name = "Медицинский квиз"
+        verbose_name_plural = "Медицинские квизы"
+
+    def __str__(self):
+        return str(self.title)
+
+
+class MedicineQuizItem(models.Model):
+    """Модель действий для медицинского квиза."""
+
+    quiz = models.ForeignKey(
+        MedicineQuiz,
+        on_delete=models.CASCADE,
+        related_name="quiz_items",
+        verbose_name="Медицинский кивз",
+    )
+    text = models.TextField("Действие")
+    serial_number = models.IntegerField(
+        "Порядковый номер",
+        default=1,
+    )
+
+    class Meta:
+        verbose_name = "Действие для медицинского квиза"
+        verbose_name_plural = "Действия для медицинского квиза"
+
+    def __str__(self):
+        return str(self.item)
 
 
 class QuizResult(models.Model):

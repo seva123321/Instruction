@@ -29,7 +29,9 @@ from api.models import (
     Rank,
     GameSwiper,
     GameSwiperResult,
-    QuizResult
+    QuizResult,
+    MedicineQuiz,
+    MedicineQuizItem
 )
 from api.utils.utils import (
     decrypt_descriptor,
@@ -687,3 +689,21 @@ class QuizResultSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "result": {"required": True},
         }
+
+
+class MedicineQuizItemSerializer(serializers.ModelSerializer):
+    """Сериализатор для элементов квиза по медицине."""
+
+    class Meta:
+        model = MedicineQuizItem
+        fields = ("text", "serial_number",)
+
+
+class MedicineQuizSerializer(serializers.ModelSerializer):
+    """Сериализатор для квиза по медицине."""
+
+    items = MedicineQuizItemSerializer(many=True, source="quiz_items")
+
+    class Meta:
+        model = MedicineQuiz
+        fields = ("title", "items",)

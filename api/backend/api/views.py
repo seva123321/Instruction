@@ -27,7 +27,9 @@ from api.models import (
     NormativeLegislation,
     InstructionResult,
     GameSwiper,
-    Quiz
+    FireSafetyQuiz,
+    MedicineQuiz,
+    MedicineQuizItem,
 )
 from api.serializers import (
     AdminUserSerializer,
@@ -46,7 +48,8 @@ from api.serializers import (
     RatingSerializer,
     GameSwiperSerializer,
     GameSwiperResultSerializer,
-    QuizResultSerializer
+    QuizResultSerializer,
+    MedicineQuizSerializer
 )
 from api.permissions import IsAdminPermission
 from api.utils.utils import decrypt_descriptor
@@ -612,23 +615,63 @@ class PowerOfUserView(APIView):
 
 @extend_schema(tags=["FireSafetyQuiz"], description="Получение данных о квизе.")
 class FireSafetyQuizView(APIView):
-    """Получение данных для викторины."""
+    """Получение данных для квиза."""
 
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        """Получение данных для викторины."""
+        """Получение данных для квиза."""
         level = request.GET.get("level")
-        try:
-            quiz = Quiz.objects.filter(level=level).first()
-            return Response(quiz.instruction, status=status.HTTP_200_OK)
-        except BaseException:
-            return Response({"error": "Уровень не поддерживается"})
+        if level:
+            try:
+                quiz = FireSafetyQuiz.objects.filter(level=level).first()
+                return Response(quiz.instruction, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"error": f"Ошибка получения данных: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return Response(
+            {"error": "Уровень не указан в запросе"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@extend_schema(tags=["MedicineQuiz"], description="Получение данных о медицинском квизе.")
+class MedicineQuizView(APIView):
+    """Получение данных для медицинского квиза."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Получение данных для квиза."""
+        level = request.GET.get("level")
+        if level:
+            try:
+                quizzes = MedicineQuiz.objects.prefetch_related(
+                    Prefetch(
+                        "quiz_items",
+                        queryset=MedicineQuizItem.objects.order_by("?")
+                    )
+                ).filter(type=level)
+                serializer = MedicineQuizSerializer(
+                    quizzes, many=True, context={"request": request}
+                )
+                return Response(serializer.data)
+            except Exception as e:
+                return Response(
+                    {"error": f"Ошибка получения данных: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return Response(
+            {"error": "Уровень не указан в запросе"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @extend_schema(tags=["FireSafetyQuizResult"], description="Сохранение данных о квизе.")
-class FireSafetyQuizResultView(APIView):
-    """Сохранение данных о викторине."""
+class QuizResultView(APIView):
+    """Сохранение данных о квизе."""
 
     permission_classes = (IsAuthenticated,)
 

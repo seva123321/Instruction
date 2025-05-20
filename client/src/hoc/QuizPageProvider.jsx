@@ -16,7 +16,6 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
-  Collapse,
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -30,8 +29,6 @@ import {
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
-  Celebration as CelebrationIcon,
-  MoodBad as MoodBadIcon,
   ExpandMore as ExpandMoreIcon,
   HelpOutline as HelpOutlineIcon,
   ZoomIn as ZoomInIcon,
@@ -42,6 +39,7 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import ErrorFallback from '@/components/ErrorFallback'
+import AlertGameResult from '@/components/AlertGameResult'
 import {
   useGetGameQuizQuery,
   usePostFireSafetyResultMutation,
@@ -349,53 +347,7 @@ export function QuizPageProvider({ children }) {
               </AccordionDetails>
             </Accordion>
           </Paper>
-
-          <Collapse in={showResult} timeout={500}>
-            <Box
-              sx={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 2000,
-                display: 'flex',
-                justifyContent: 'center',
-                p: 2,
-              }}
-            >
-              <Paper
-                elevation={6}
-                sx={{
-                  p: 3,
-                  backgroundColor:
-                    result === 'win' ? 'success.light' : 'error.light',
-                  color: 'white',
-                  borderRadius: '16px',
-                  maxWidth: '90%',
-                  textAlign: 'center',
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={2}>
-                  {result === 'win' ? (
-                    <>
-                      <CelebrationIcon fontSize="large" />
-                      <Typography variant="h6">
-                        Поздравляем! Вы правильно выполнили задание!
-                      </Typography>
-                    </>
-                  ) : (
-                    <>
-                      <MoodBadIcon fontSize="large" />
-                      <Typography variant="h6">
-                        Последовательность неверная! В следующий раз вам точно
-                        повезет
-                      </Typography>
-                    </>
-                  )}
-                </Stack>
-              </Paper>
-            </Box>
-          </Collapse>
+          <AlertGameResult result={result} showResult={showResult} />
         </Box>
       </ErrorBoundary>
     </QuizPageContext.Provider>

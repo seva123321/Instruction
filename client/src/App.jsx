@@ -5,7 +5,8 @@ import Layout from '@/components/Layout'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
-import SwiperGame from '@/models/SwiperGame'
+// import SwiperGame from '@/games/SwiperGame'
+// import GameMedicalTraining from './pages/GameMedicalTraining'
 
 import { AuthProvider } from './hoc/AuthProvider'
 import { GameProvider } from './hoc/GameProvider'
@@ -21,6 +22,9 @@ const RegPage = lazy(() => import('@/pages/RegPage'))
 const AuthPage = lazy(() => import('@/pages/AuthPage'))
 const CalendarResults = lazy(() => import('@/models/CalendarResults'))
 const RatingPage = lazy(() => import('@/pages/RatingPage'))
+const SwiperGame = lazy(() => import('@/games/SwiperGame'))
+const GameMedicalTraining = lazy(() => import('@/pages/GameMedicalTraining'))
+
 const QuizPageProvider = lazy(
   () =>
     import('./hoc/QuizPageProvider').then(
@@ -159,13 +163,31 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route
+          {/* <Route
             path="game/:gameType" // fire_safety
             element={
               <RequireAuth>
                 <QuizPageProvider>
                   <GamePageRouter />
                 </QuizPageProvider>
+              </RequireAuth>
+            }
+          /> */}
+          <Route
+            path="game/fire_safety"
+            element={
+              <RequireAuth>
+                <QuizPageProvider>
+                  <GamePageRouter />
+                </QuizPageProvider>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="game/medical_training"
+            element={
+              <RequireAuth>
+                <GameMedicalTraining />
               </RequireAuth>
             }
           />

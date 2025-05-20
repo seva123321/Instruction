@@ -16,10 +16,7 @@ import {
   useMediaQuery,
   Fade,
 } from '@mui/material'
-import {
-  ArrowBack as ArrowBackIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material'
+import { Info as InfoIcon } from '@mui/icons-material'
 
 import {
   useGetGameSwiperQuery,
@@ -27,6 +24,7 @@ import {
 } from '@/slices/gameApi'
 import useGame from '@/hook/useGame'
 import GameOverScreen from '@/components/GameOverScreen'
+import ButtonBack from '@/components/ButtonBack'
 
 const TIME_LIMIT = 30
 
@@ -316,33 +314,7 @@ function SwiperGame() {
         },
       }}
     >
-      {/* Кнопка назад */}
-      <Button
-        onClick={() => navigate(-1)}
-        variant="contained"
-        startIcon={<ArrowBackIcon />}
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          zIndex: 1000,
-          borderRadius: '50px',
-          backgroundColor: 'background.paper',
-          color: 'text.primary',
-          boxShadow: theme.shadows[2],
-          '&:hover': {
-            backgroundColor: 'background.default',
-          },
-          [theme.breakpoints.down('sm')]: {
-            top: 8,
-            right: 8,
-            padding: '6px 12px',
-            minWidth: 'auto',
-          },
-        }}
-      >
-        {isMobile ? 'Назад' : 'Назад к играм'}
-      </Button>
+      <ButtonBack />
 
       {/* Основной контент */}
       <Box

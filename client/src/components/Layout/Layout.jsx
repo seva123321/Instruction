@@ -26,10 +26,10 @@ function Layout() {
       flex: 1,
       maxWidth: 1200,
       margin: '0 auto',
-      '& h1': { fontSize: `${2.5 * fontSize}rem` },
-      '& h2': { fontSize: `${2 * fontSize}rem` },
-      '& h3': { fontSize: `${1.75 * fontSize}rem` },
-      '& p, & li': { fontSize: `${1.1 * fontSize}rem` },
+      '& h1': { fontSize: `${2.3 * fontSize}rem` },
+      '& h2': { fontSize: `${1.8 * fontSize}rem` },
+      '& h3': { fontSize: `${1.55 * fontSize}rem` },
+      '& p, & li': { fontSize: `${0.9 * fontSize}rem` },
     },
   }
 

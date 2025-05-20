@@ -21,7 +21,8 @@ from api.views import (
     PowerOfUserView,
     GenerateAESKeyView,
     FireSafetyQuizView,
-    FireSafetyQuizResultView
+    QuizResultView,
+    MedicineQuizView,
 )
 
 router = DefaultRouter()
@@ -55,6 +56,8 @@ urlpatterns = [
     path("game/swiper/", GameSwiperView.as_view(), name="game_swiper"),
     path("game/swiper_result/", GameSwiperResultView.as_view(), name="swiper_result"),
     path("game/fire_safety", FireSafetyQuizView.as_view(), name="fire_safety_quiz"),
-    path("game/fire_safety_results", FireSafetyQuizResultView.as_view(), name="fire_safety_quiz_results"),
+    path("game/medical_training", MedicineQuizView.as_view(), name="medicine_quiz"),
+    path("game/fire_safety_results", QuizResultView.as_view(), name="fire_safety_quiz_results"),
+    path("game/medical_training_results", QuizResultView.as_view(), name="medical_training_results"),
     path("", include(router.urls)),
 ]

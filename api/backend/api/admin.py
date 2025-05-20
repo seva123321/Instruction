@@ -28,7 +28,8 @@ from .models import (
     Badge,
     Position,
     GameSwiper,
-    GameSwiperResult
+    GameSwiperResult,
+    PowerOfUser,
 )
 
 
@@ -300,3 +301,10 @@ class DutyScheduleAdmin(admin.ModelAdmin):
     list_filter = ("date", "shift")
     search_fields = ("user__last_name", "user__first_name")
     date_hierarchy = "date"
+
+
+@admin.register(PowerOfUser)
+class PowerOfUserAdmin(admin.ModelAdmin):
+    list_display = ("user", "power")
+    search_fields = ("user__email", "user__last_name", "user__first_name")
+    list_filter = ("power",)

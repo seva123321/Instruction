@@ -1,16 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 
+import { AuthProvider } from './hoc/AuthProvider'
+import { GameProvider } from './hoc/GameProvider'
+import RequireAuth from './hoc/RequireAuth'
+
 import Layout from '@/components/Layout'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import TestingPage from '@/pages/TestingPage'
 import TestOnePage from '@/models/TestOnePage'
-// import SwiperGame from '@/games/SwiperGame'
-// import GameMedicalTraining from './pages/GameMedicalTraining'
-
-import { AuthProvider } from './hoc/AuthProvider'
-import { GameProvider } from './hoc/GameProvider'
-import RequireAuth from './hoc/RequireAuth'
 
 const InstructionsPage = lazy(() => import('@/pages/InstructionsPage'))
 const KnowBaseDocsPage = lazy(() => import('@/pages/KnowBaseDocsPage'))
@@ -163,16 +161,6 @@ function App() {
               </RequireAuth>
             }
           />
-          {/* <Route
-            path="game/:gameType" // fire_safety
-            element={
-              <RequireAuth>
-                <QuizPageProvider>
-                  <GamePageRouter />
-                </QuizPageProvider>
-              </RequireAuth>
-            }
-          /> */}
           <Route
             path="game/fire_safety"
             element={
@@ -200,7 +188,7 @@ function App() {
 }
 
 function AdminRedirect() {
-  window.location.href = 'http://localhost:8000/admin' // Порт Django
+  window.location.href = 'https://grustno-insrtuction.ru/admin' // Порт Django
   return null
 }
 export default App

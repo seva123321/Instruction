@@ -28,8 +28,17 @@ const PowderExtinguisher = forwardRef((props, ref) => {
     answer: answerServer,
   } = useMemo(() => gameData, [gameData])
 
+  const getModelPath = useCallback(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    const basePath = modelPath.split('.')[0]
+    const extension = modelPath.split('.').pop()
+
+    // Для мобильных используем облегченную версию (_light)
+    return isMobile ? `${basePath}_light.${extension}` : modelPath
+  }, [modelPath])
+
   // Загружаем модель и анимации через useGLTF
-  const { scene, animations: loadedAnimations } = useGLTF(modelPath) || {}
+  const { scene, animations: loadedAnimations } = useGLTF(getModelPath()) || {}
   const { actions } = useAnimations(loadedAnimations || [], group)
 
   const [isTouch, setIsTouch] = useState(false)

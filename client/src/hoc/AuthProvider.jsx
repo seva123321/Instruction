@@ -10,6 +10,7 @@ import {
   useLazyGetAesKeyQuery, // Изменяем на lazy версию
 } from '@/slices/userApi'
 import { secureStorage } from '@/service/utilsFunction'
+import { useNavigate } from 'react-router-dom'
 
 export const AuthContext = createContext(null)
 
@@ -22,7 +23,7 @@ export function AuthProvider({ children }) {
   const [postFaceLogin, { isLoading: isLoadingFaceLogin }] =
     useFaceLoginMutation()
   const [postLogout, { isLoading: isLoadingLogout }] = useLogoutMutation()
-
+  const navigate = useNavigate()
   // Используем lazy запрос для получения ключа по требованию
   const [fetchAesKey] = useLazyGetAesKeyQuery()
 
@@ -100,12 +101,15 @@ export function AuthProvider({ children }) {
         setUser(response)
         return response
       } catch (error) {
+        if (error.data.errors.admin) {
+          navigate(error.data.errors.admin)
+        }
         secureStorage.remove('user')
         setUser(null)
         throw error
       }
     },
-    [postFaceLogin, postLogin, fetchAesKey]
+    [postFaceLogin, postLogin, navigate, fetchAesKey]
   )
 
   const signOut = useCallback(

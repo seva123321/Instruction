@@ -425,6 +425,9 @@ const MarkdownContext = memo(({ markdown, header }) => {
         '& h1, & h2, & h3, & h4, & h5, & h6': {
           scrollMarginTop: '80px',
         },
+        [theme.breakpoints.down('sm')]: {
+          p: '16px 0',
+        },
       },
       sidebarDesktop: {
         width: 300,

@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 import { memo } from 'react'
 import { Box, Typography, Paper, styled } from '@mui/material'
 
@@ -9,25 +10,6 @@ const IndustrialBadgeWrapper = styled(Box)(({ theme }) => ({
     '& .MuiBadge-badge': {
       boxShadow: theme.shadows[4],
     },
-  },
-}))
-
-const BadgeLabel = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: -8,
-  right: 12,
-  backgroundColor: theme.palette.error.main,
-  color: 'white',
-  padding: '4px 12px',
-  borderRadius: '16px',
-  fontSize: '0.75rem',
-  fontWeight: 'bold',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  zIndex: 1,
-  '&.technical': {
-    backgroundColor: theme.palette.primary.main,
   },
 }))
 
@@ -70,6 +52,25 @@ function GameCard({
   children,
   onGameClick = () => {},
 }) {
+  const BadgeLabel = styled(Box)(({ theme }) => ({
+    position: 'absolute',
+    top: -8,
+    right: 12,
+    backgroundColor:
+      badgeTitle === 'Горячая смена'
+        ? theme.palette.error.main
+        : theme.palette.primary.main,
+    color: 'white',
+    padding: '4px 12px',
+    borderRadius: '16px',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    zIndex: 1,
+  }))
+
   return (
     <IndustrialBadgeWrapper>
       <BadgeLabel>{badgeTitle}</BadgeLabel>

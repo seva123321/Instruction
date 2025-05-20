@@ -1,14 +1,19 @@
 import { memo } from 'react'
-import { Box, Typography, Button, Paper, useTheme } from '@mui/material'
 import {
-  ArrowBack as ArrowBackIcon,
-  Refresh as RefreshIcon,
-} from '@mui/icons-material'
-import { useNavigate } from 'react-router-dom'
+  Box,
+  Typography,
+  Button,
+  Paper,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material'
+import { Refresh as RefreshIcon } from '@mui/icons-material'
+
+import ButtonBack from '../ButtonBack'
 
 function ErrorFallback({ error, resetErrorBoundary }) {
   const theme = useTheme()
-  const navigate = useNavigate()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   return (
     <Box
@@ -17,14 +22,14 @@ function ErrorFallback({ error, resetErrorBoundary }) {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        p: 2,
+        p: isMobile ? 1 : 2,
         backgroundColor: theme.palette.grey[50],
       }}
     >
       <Paper
         elevation={0}
         sx={{
-          p: { xs: 3, sm: 4 },
+          p: isMobile ? 2 : 3,
           maxWidth: 500,
           width: '100%',
           textAlign: 'center',
@@ -44,40 +49,14 @@ function ErrorFallback({ error, resetErrorBoundary }) {
           },
         }}
       >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            display: 'flex',
-            gap: 1,
-          }}
-        >
-          <Button
-            onClick={() => navigate(-1)}
-            variant="outlined"
-            size="small"
-            startIcon={<ArrowBackIcon fontSize="small" />}
-            sx={{
-              borderRadius: '20px',
-              textTransform: 'none',
-              color: 'text.secondary',
-              borderColor: theme.palette.grey[300],
-              '&:hover': {
-                borderColor: theme.palette.grey[400],
-              },
-            }}
-          >
-            Назад
-          </Button>
-        </Box>
+        <ButtonBack />
 
-        <Box sx={{ mt: 4, mb: 3 }}>
+        <Box sx={{ mt: isMobile ? 6 : 4, mb: isMobile ? 2 : 3 }}>
           <Box
             sx={{
-              width: 80,
-              height: 80,
-              margin: '0 auto 20px',
+              width: isMobile ? 60 : 80,
+              height: isMobile ? 60 : 80,
+              margin: '0 auto 16px',
               backgroundColor: theme.palette.error.light,
               borderRadius: '50%',
               display: 'flex',
@@ -86,30 +65,46 @@ function ErrorFallback({ error, resetErrorBoundary }) {
               color: theme.palette.error.contrastText,
             }}
           >
-            <Typography variant="h4">!</Typography>
+            <Typography variant={isMobile ? 'h5' : 'h4'}>!</Typography>
           </Box>
 
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+          <Typography
+            variant={isMobile ? 'subtitle1' : 'h6'}
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              mb: isMobile ? 1 : 2,
+              fontSize: isMobile ? '1.1rem' : '1.25rem',
+            }}
+          >
             Ой, что-то пошло не так
           </Typography>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mb: isMobile ? 2 : 3,
+              fontSize: isMobile ? '0.875rem' : '0.9375rem',
+            }}
+          >
             При обработке запроса возникла непредвиденная ошибка
           </Typography>
 
           <Box
             component="pre"
             sx={{
-              p: 2,
-              mb: 3,
+              p: isMobile ? 1 : 2,
+              mb: isMobile ? 2 : 3,
               textAlign: 'left',
               backgroundColor: theme.palette.grey[100],
               color: theme.palette.error.dark,
               borderRadius: 1,
               overflowX: 'auto',
-              fontSize: '0.75rem',
+              fontSize: isMobile ? '0.6875rem' : '0.75rem',
               borderLeft: `3px solid ${theme.palette.error.main}`,
-              maxHeight: '150px',
+              maxHeight: isMobile ? '100px' : '150px',
+              lineHeight: 1.4,
             }}
           >
             {error.message}
@@ -120,8 +115,8 @@ function ErrorFallback({ error, resetErrorBoundary }) {
           variant="contained"
           onClick={resetErrorBoundary}
           fullWidth
-          size="large"
-          startIcon={<RefreshIcon />}
+          size={isMobile ? 'medium' : 'large'}
+          startIcon={<RefreshIcon fontSize={isMobile ? 'small' : 'medium'} />}
           sx={{
             borderRadius: '8px',
             textTransform: 'none',
@@ -130,6 +125,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
             '&:hover': {
               backgroundColor: theme.palette.error.dark,
             },
+            py: isMobile ? 1 : 1.5,
           }}
         >
           Повторить попытку
@@ -138,7 +134,11 @@ function ErrorFallback({ error, resetErrorBoundary }) {
         <Typography
           variant="caption"
           color="text.secondary"
-          sx={{ mt: 2, display: 'block' }}
+          sx={{
+            mt: isMobile ? 1 : 2,
+            display: 'block',
+            fontSize: isMobile ? '0.6875rem' : '0.75rem',
+          }}
         >
           {`Код ошибки: ${error.code || 'UNKNOWN'}`}
         </Typography>

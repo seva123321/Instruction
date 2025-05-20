@@ -38,6 +38,7 @@ filelock==3.18.0
 fonttools==4.57.0
 gevent==24.11.1
 greenlet==3.1.1
+gunicorn==23.0.0
 h11==0.14.0
 httpcore==0.17.3
 httpx==0.24.1

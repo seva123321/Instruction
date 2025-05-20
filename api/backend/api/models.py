@@ -977,7 +977,7 @@ class GameSwiperResult(models.Model):
         super().save(*args, **kwargs)
 
 
-class Quiz(models.Model):
+class FireSafetyQuiz(models.Model):
     """Модель квиза."""
 
     instruction = models.JSONField(

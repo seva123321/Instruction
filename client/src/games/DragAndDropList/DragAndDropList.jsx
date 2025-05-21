@@ -1,11 +1,13 @@
+/* eslint-disable indent */
 /* eslint-disable arrow-body-style */
 /* eslint-disable operator-linebreak */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
@@ -51,6 +53,7 @@ function DragAndDropList() {
   const [hasInteracted, setHasInteracted] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [items, setItems] = useState([])
+  const [isDragging, setIsDragging] = useState(false)
 
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
@@ -65,12 +68,14 @@ function DragAndDropList() {
     }
   }, [gameData])
 
-  // Получаем правильный порядок из serial_number по возрастанию
-  const getCorrectOrder = () => {
-    return [...items]
-      .sort((a, b) => a.serial_number - b.serial_number)
-      .map((item) => item.serial_number)
-  }
+  // Мемоизируем правильный порядок
+  const correctOrder = useMemo(() => {
+    return gameData && gameData[0]
+      ? [...gameData[0].items]
+          .sort((a, b) => a.serial_number - b.serial_number)
+          .map((item) => item.serial_number)
+      : []
+  }, [gameData])
 
   useEffect(() => {
     let hideTimer
@@ -88,10 +93,17 @@ function DragAndDropList() {
     }
   }, [showResults])
 
+  // Оптимизированные сенсоры для разных устройств
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: isMobile ? 10 : 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: isMobile ? 250 : 300,
+        tolerance: isMobile ? 10 : 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -99,11 +111,13 @@ function DragAndDropList() {
     })
   )
 
-  const handleDragStart = () => {
+  const handleDragStart = useCallback(() => {
     setHasInteracted(true)
-  }
+    setIsDragging(true)
+  }, [])
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = useCallback((event) => {
+    setIsDragging(false)
     const { active, over } = event
 
     if (active.id !== over.id) {
@@ -118,21 +132,23 @@ function DragAndDropList() {
         return arrayMove(prevItems, oldIndex, newIndex)
       })
     }
-  }
+  }, [])
 
-  const sendResultsToServer = (correct) => {
-    postGameResultResult({
-      nameGame: 'medical_training',
-      level,
-      data: { result: correct },
-    })
-  }
+  const sendResultsToServer = useCallback(
+    (correct) => {
+      postGameResultResult({
+        nameGame: 'medical_training',
+        level,
+        data: { result: correct },
+      })
+    },
+    [postGameResultResult, level]
+  )
 
-  const checkResults = () => {
+  const checkResults = useCallback(() => {
     if (attempts <= 0 || isSubmitted || !gameData) return
 
     const userOrder = items.map((item) => item.serial_number)
-    const correctOrder = getCorrectOrder()
     const correct = JSON.stringify(userOrder) === JSON.stringify(correctOrder)
 
     setIsCorrect(correct)
@@ -144,20 +160,29 @@ function DragAndDropList() {
       sendResultsToServer(correct)
       setIsSubmitted(true)
     }
-  }
+  }, [
+    attempts,
+    isSubmitted,
+    gameData,
+    items,
+    correctOrder,
+    sendResultsToServer,
+  ])
 
-  const resetTest = () => {
+  const resetTest = useCallback(() => {
     if (attempts > 0 && !isSubmitted && gameData) {
       setShowResults(false)
       setItems(gameData[0].items)
       setHasInteracted(false)
     }
-  }
+  }, [attempts, isSubmitted, gameData])
 
-  const isInCorrectPosition = (serialNumber, index) => {
-    const correctOrder = getCorrectOrder()
-    return correctOrder[index] === serialNumber
-  }
+  const isInCorrectPosition = useCallback(
+    (serialNumber, index) => {
+      return correctOrder[index] === serialNumber
+    },
+    [correctOrder]
+  )
 
   if (isLoading) {
     return (
@@ -263,7 +288,9 @@ function DragAndDropList() {
                 >
                   <ListItem
                     sx={{
-                      backgroundColor: theme.palette.background.paper,
+                      backgroundColor: isDragging
+                        ? theme.palette.action.hover
+                        : theme.palette.background.paper,
                       borderBottom: `1px solid ${theme.palette.divider}`,
                       transition: 'all 0.2s ease',
                       '&:hover': {
@@ -287,11 +314,9 @@ function DragAndDropList() {
                       <DragHandleIcon
                         sx={{
                           color: theme.palette.action.active,
-                          cursor: 'grab',
-                          '&:active': {
-                            cursor: 'grabbing',
-                          },
+                          cursor: isDragging ? 'grabbing' : 'grab',
                           mr: 1,
+                          touchAction: 'none', // Важно для тач-устройств
                         }}
                       />
                       <Typography
@@ -391,7 +416,9 @@ function DragAndDropList() {
             fontStyle: 'italic',
           }}
         >
-          👆 Нажмите и удерживайте элемент для перемещения
+          {isDragging
+            ? 'Переместите элемент в нужное место'
+            : '👆 Нажмите и удерживайте элемент для перемещения'}
         </Typography>
       )}
       <AlertGameResult

@@ -227,7 +227,7 @@ export function QuizPageProvider({ children }) {
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <PanToolIcon color="primary" />
                   </ListItemIcon>
-                  <ListItemText primary="Shift + ЛКМ - смена фокуса (панорамирование)" />
+                  <ListItemText primary="ПКМ или Shift + ЛКМ - смена фокуса (панорамирование)" />
                 </ListItem>
               </List>
               {isMobile && (

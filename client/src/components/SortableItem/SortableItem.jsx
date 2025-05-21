@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { memo } from 'react'
 
-function SortableItem({ id, children }) {
+const SortableItem = memo(({ id, children }) => {
   const {
     attributes,
     listeners,
@@ -16,6 +17,7 @@ function SortableItem({ id, children }) {
     transition,
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 1000 : 'auto',
+    touchAction: 'none',
   }
 
   return (
@@ -23,6 +25,6 @@ function SortableItem({ id, children }) {
       {children}
     </div>
   )
-}
+})
 
 export default SortableItem

@@ -39,7 +39,16 @@ const Scene2 = forwardRef((props, ref) => {
     answer: answerServer = [],
   } = gameData || {}
 
-  const { scene: model, animations } = useGLTF(modelPath) || {
+  const getModelPath = useCallback(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    const basePath = modelPath.split('.')[0]
+    const extension = modelPath.split('.').pop()
+
+    // Для мобильных используем облегченную версию (_light)
+    return isMobile ? `${basePath}_light.${extension}` : modelPath
+  }, [modelPath])
+
+  const { scene: model, animations } = useGLTF(getModelPath()) || {
     scene: null,
     animations: [],
   }

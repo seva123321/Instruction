@@ -36,9 +36,7 @@ function Layout() {
   return (
     <Box sx={styles.root}>
       <div id="back-to-top-anchor" />
-
       <FontSizeControls fontSize={fontSize} setFontSize={setFontSize} />
-
       <Box sx={styles.container}>
         <MenuBox />
         <Box component="main" sx={styles.mainContent}>

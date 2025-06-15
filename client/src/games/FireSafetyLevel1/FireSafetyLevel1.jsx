@@ -16,7 +16,7 @@ import {
   AdaptiveDpr,
   AdaptiveEvents,
 } from '@react-three/drei'
-import * as THREE from 'three'
+import { Box3, Vector3 } from 'three'
 import { Box } from '@mui/material'
 
 import PowderExtinguisher from './PowderExtinguisher'
@@ -86,9 +86,9 @@ const FireSafetyLevel1 = forwardRef((props, ref) => {
         const checkModel = () => {
           if (extinguisherRef.current?.scene?.children?.length > 0) {
             const model = extinguisherRef.current.scene.children[0]
-            const box = new THREE.Box3().setFromObject(model)
-            const size = box.getSize(new THREE.Vector3()).length()
-            const center = box.getCenter(new THREE.Vector3())
+            const box = new Box3().setFromObject(model)
+            const size = box.getSize(new Vector3()).length()
+            const center = box.getCenter(new Vector3())
 
             const distanceMultiplier = isMobile
               ? MOBILE_CAMERA_DISTANCE_MULTIPLIER

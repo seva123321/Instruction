@@ -1,6 +1,12 @@
 /* eslint-disable react/no-unknown-property */
 import { useRef, useMemo } from 'react'
-import * as THREE from 'three'
+import {
+  BufferAttribute,
+  BufferGeometry,
+  PointsMaterial,
+  AdditiveBlending,
+  MathUtils,
+} from 'three'
 import { useFrame } from '@react-three/fiber'
 
 function ExtinguishingSubstance({ isActive, position, direction }) {
@@ -9,7 +15,7 @@ function ExtinguishingSubstance({ isActive, position, direction }) {
 
   // Геометрия частиц с конусообразным распределением
   const particlesGeometry = useMemo(() => {
-    const geom = new THREE.BufferGeometry()
+    const geom = new BufferGeometry()
     const count = 2000 // Увеличили количество частиц
     const positions = new Float32Array(count * 3)
     const sizes = new Float32Array(count)
@@ -27,19 +33,19 @@ function ExtinguishingSubstance({ isActive, position, direction }) {
       sizes[i] = 0.1 + Math.random() * 0.3 // Меньшие частицы
     }
 
-    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geom.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
+    geom.setAttribute('position', new BufferAttribute(positions, 3))
+    geom.setAttribute('size', new BufferAttribute(sizes, 1))
     return geom
   }, [])
 
   const particlesMaterial = useMemo(
     () =>
-      new THREE.PointsMaterial({
+      new PointsMaterial({
         color: 0x88ccff,
         size: 0.2,
         transparent: true,
         opacity: 0.9,
-        blending: THREE.AdditiveBlending,
+        blending: AdditiveBlending,
         sizeAttenuation: true,
       }),
     []
@@ -49,11 +55,7 @@ function ExtinguishingSubstance({ isActive, position, direction }) {
     if (!particlesRef.current) return
 
     // Плавное появление/исчезновение
-    progress.current = THREE.MathUtils.lerp(
-      progress.current,
-      isActive ? 1 : 0,
-      0.15
-    )
+    progress.current = MathUtils.lerp(progress.current, isActive ? 1 : 0, 0.15)
 
     // Анимация частиц
     const particles = particlesRef.current

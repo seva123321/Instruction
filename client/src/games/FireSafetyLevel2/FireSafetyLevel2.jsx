@@ -17,7 +17,7 @@ import {
   AdaptiveDpr,
   AdaptiveEvents,
 } from '@react-three/drei'
-import * as THREE from 'three'
+import { Box3, Vector3 } from 'three'
 import { Box } from '@mui/material'
 
 import Scene2 from './Scene2'
@@ -70,9 +70,9 @@ const FireSafetyLevel2 = forwardRef((props, ref) => {
         const checkModel = () => {
           if (scene2Ref.current?.scene?.children?.length > 0) {
             const model = scene2Ref.current.scene.children[0]
-            const box = new THREE.Box3().setFromObject(model)
-            const size = box.getSize(new THREE.Vector3()).length()
-            const center = box.getCenter(new THREE.Vector3())
+            const box = new Box3().setFromObject(model)
+            const size = box.getSize(new Vector3()).length()
+            const center = box.getCenter(new Vector3())
 
             const distanceMultiplier = isMobile
               ? MOBILE_CAMERA_DISTANCE_MULTIPLIER

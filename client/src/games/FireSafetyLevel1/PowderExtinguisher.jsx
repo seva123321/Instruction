@@ -13,7 +13,15 @@ import {
   useMemo,
   useCallback,
 } from 'react'
-import * as THREE from 'three'
+import {
+  Group,
+  Mesh,
+  LoopOnce,
+  CylinderGeometry,
+  MeshBasicMaterial,
+  BoxGeometry,
+  Vector3,
+} from 'three'
 
 import useQuizPage from '@/hook/useQuizPage'
 
@@ -103,27 +111,26 @@ const PowderExtinguisher = forwardRef((props, ref) => {
   }, [modelPath, scene, error])
 
   const createFallbackModel = () => {
-    const fallbackScene = new THREE.Group()
+    const fallbackScene = new Group()
 
-    const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 32)
-    const bodyMaterial = new THREE.MeshBasicMaterial({
+    const bodyGeometry = new CylinderGeometry(0.5, 0.5, 2, 32)
+    const bodyMaterial = new MeshBasicMaterial({
       color: 0xff0000,
       transparent: true,
       opacity: 0.8,
     })
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+    const body = new Mesh(bodyGeometry, bodyMaterial)
     body.position.y = 1
     fallbackScene.add(body)
 
-    const topGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 32)
-    const topMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 })
-    const top = new THREE.Mesh(topGeometry, topMaterial)
+    const topGeometry = new CylinderGeometry(0.3, 0.3, 0.4, 32)
+    const topMaterial = new MeshBasicMaterial({ color: 0x888888 })
+    const top = new Mesh(topGeometry, topMaterial)
     top.position.y = 2.2
     fallbackScene.add(top)
-
-    const handleGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.6)
-    const handleMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 })
-    const handle = new THREE.Mesh(handleGeometry, handleMaterial)
+    const handleGeometry = new BoxGeometry(0.2, 0.2, 0.6)
+    const handleMaterial = new MeshBasicMaterial({ color: 0x333333 })
+    const handle = new Mesh(handleGeometry, handleMaterial)
     handle.position.set(0, 2.4, 0.3)
     fallbackScene.add(handle)
 
@@ -185,7 +192,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
     if (!action.isRunning()) {
       if (action.time === 0) {
         action.reset()
-        action.setLoop(THREE.LoopOnce)
+        action.setLoop(LoopOnce)
         action.clampWhenFinished = true
         action.play()
       } else if (action.time >= action.getClip().duration) {
@@ -207,7 +214,7 @@ const PowderExtinguisher = forwardRef((props, ref) => {
 
         const clickedObject = event.object
         const offsetY = 0.3
-        const elevatedPoint = new THREE.Vector3(
+        const elevatedPoint = new Vector3(
           event.point.x,
           event.point.y + offsetY,
           event.point.z
@@ -246,10 +253,9 @@ const PowderExtinguisher = forwardRef((props, ref) => {
             (key) => key.includes(clickedObject.name)
             // eslint-disable-next-line function-paren-newline
           )
-
           if (matchingAction) {
             const action = actions[matchingAction]
-            action.reset().setLoop(THREE.LoopOnce, 1).clampWhenFinished = true
+            action.reset().setLoop(LoopOnce, 1).clampWhenFinished = true
             action.play()
           }
         }

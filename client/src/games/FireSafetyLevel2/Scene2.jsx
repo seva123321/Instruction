@@ -11,13 +11,13 @@ import {
   useMemo,
   useCallback,
 } from 'react'
-import * as THREE from 'three'
-
-import useQuizPage from '@/hook/useQuizPage'
+import { Color, Vector3, LoopOnce } from 'three'
 
 import FirePlane from '../CustomFire'
 
 import ExtinguishingSubstance from './ExtinguishingSubstance'
+
+import useQuizPage from '@/hook/useQuizPage'
 
 const Scene2 = forwardRef((props, ref) => {
   const [isBurning, setIsBurning] = useState(true)
@@ -89,7 +89,7 @@ const Scene2 = forwardRef((props, ref) => {
           // Увеличиваем яркость материала
           if (highlightMaterial.color) {
             const originalColor = highlightMaterial.color.clone()
-            highlightMaterial.color = new THREE.Color(
+            highlightMaterial.color = new Color(
               Math.min(originalColor.r * 1.8),
               Math.min(originalColor.g * 1.8),
               Math.min(originalColor.b * 1.8)
@@ -128,7 +128,7 @@ const Scene2 = forwardRef((props, ref) => {
 
         const clickedObject = event.object
         const offsetY = 0.1
-        const elevatedPoint = new THREE.Vector3(
+        const elevatedPoint = new Vector3(
           event.point.x,
           event.point.y + offsetY,
           event.point.z
@@ -209,7 +209,7 @@ const Scene2 = forwardRef((props, ref) => {
       setIsExtinguishing(true)
       model.traverse((child) => {
         if (child.name.includes('nozzle')) {
-          const worldPosition = new THREE.Vector3()
+          const worldPosition = new Vector3()
           child.getWorldPosition(worldPosition)
           setNozzlePosition([
             worldPosition.x + 8.2,
@@ -217,7 +217,7 @@ const Scene2 = forwardRef((props, ref) => {
             worldPosition.z + 1.2,
           ])
 
-          const direction = new THREE.Vector3(0, -1, 1.5)
+          const direction = new Vector3(0, -1, 1.5)
           child.localToWorld(direction)
           direction.sub(worldPosition).normalize()
           setExtinguishingDirection([direction.x, direction.y, direction.z])
@@ -239,7 +239,7 @@ const Scene2 = forwardRef((props, ref) => {
     if (!action.isRunning()) {
       if (action.time === 0) {
         action.reset()
-        action.setLoop(THREE.LoopOnce)
+        action.setLoop(LoopOnce)
         action.clampWhenFinished = true
         action.play()
       } else if (action.time >= action.getClip().duration) {
@@ -278,8 +278,8 @@ const Scene2 = forwardRef((props, ref) => {
         direction={extinguishingDirection}
       />
       <FirePlane
-        size={gameData.fire_size}
-        position={gameData.fire_position}
+        size={gameData?.fire_size || 1.0}
+        position={gameData?.fire_position || [0, 0, 0]}
         isBurning={isBurning}
       />
 

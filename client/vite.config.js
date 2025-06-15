@@ -44,6 +44,11 @@ export default defineConfig(({ mode }) => {
             chunkInfo.name === 'sw' ? '[name].js' : `assets/[name].[hash].js`,
           chunkFileNames: `assets/[name].[hash].js`,
           assetFileNames: `assets/[name].[hash].[ext]`,
+          manualChunks: {
+            three: ['three', '@react-three/fiber'],
+            faceapi: ['face-api.js'],
+            vendor: ['react', 'react-dom', '@mui/material'],
+          },
         },
       },
     },

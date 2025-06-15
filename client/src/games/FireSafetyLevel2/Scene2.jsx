@@ -13,11 +13,11 @@ import {
 } from 'react'
 import { Color, Vector3, LoopOnce } from 'three'
 
-import useQuizPage from '@/hook/useQuizPage'
-
 import FirePlane from '../CustomFire'
 
 import ExtinguishingSubstance from './ExtinguishingSubstance'
+
+import useQuizPage from '@/hook/useQuizPage'
 
 const Scene2 = forwardRef((props, ref) => {
   const [isBurning, setIsBurning] = useState(true)
@@ -278,8 +278,8 @@ const Scene2 = forwardRef((props, ref) => {
         direction={extinguishingDirection}
       />
       <FirePlane
-        size={gameData.fire_size}
-        position={gameData.fire_position}
+        size={gameData?.fire_size || 1.0}
+        position={gameData?.fire_position || [0, 0, 0]}
         isBurning={isBurning}
       />
 

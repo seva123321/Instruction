@@ -41,43 +41,38 @@ const AccordionSummaryWrapper = styled(AccordionSummary)(({ theme }) => ({
   },
 }))
 
-const DifficultyButton = styled(Button)(({ level, theme }) => ({
-  textDecoration: 'none',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: theme.spacing(1),
-  minWidth: 'auto',
-  '& .difficulty-circle': {
-    width: 40,
-    height: 40,
+const DifficultyButton = styled(Button)(({ level, theme }) => {
+  const bgcolor =
+    {
+      1: 'rgba(76, 175, 80, 0.2)',
+      2: 'rgba(255, 152, 0, 0.2)',
+    }[level] ?? 'rgba(244, 67, 54, 0.2)'
+
+  return {
+    textDecoration: 'none',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '50%',
-    backgroundColor:
-      level === 1
-        ? 'rgba(76, 175, 80, 0.2)'
-        : level === 2
-          ? 'rgba(255, 152, 0, 0.2)'
-          : 'rgba(244, 67, 54, 0.2)',
-    border: `2px solid ${
-      level === 1 ? '#4CAF50' : level === 2 ? '#FF9800' : '#F44336'
-    }`,
-    transition: 'all 0.3s ease',
-  },
-  '&:hover .difficulty-circle': {
-    transform: 'scale(1.1)',
-    boxShadow: `0 0 12px ${
-      level === 1
-        ? 'rgba(76, 175, 80, 0.4)'
-        : level === 2
-          ? 'rgba(255, 152, 0, 0.4)'
-          : 'rgba(244, 67, 54, 0.4)'
-    }`,
-  },
-}))
+    padding: theme.spacing(1),
+    minWidth: 'auto',
+    '& .difficulty-circle': {
+      width: 40,
+      height: 40,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '50%',
+      backgroundColor: bgcolor,
+      border: `2px solid ${{ 1: '#4CAF50', 2: '#FF9800' }[level] ?? '#F44336'}`,
+      transition: 'all 0.3s ease',
+    },
+    '&:hover .difficulty-circle': {
+      transform: 'scale(1.1)',
+      boxShadow: `0 0 12px ${bgcolor}`,
+    },
+  }
+})
 
 function AccordionQuiz({
   subtitle,

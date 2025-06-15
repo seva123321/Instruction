@@ -3,14 +3,20 @@
 import { useRef, useMemo, useState } from 'react'
 import { useFrame, extend } from '@react-three/fiber'
 import { shaderMaterial } from '@react-three/drei'
-import * as THREE from 'three'
+import {
+  Color,
+  PlaneGeometry,
+  MathUtils,
+  DoubleSide,
+  AdditiveBlending,
+} from 'three'
 
 const FireShaderMaterial = shaderMaterial(
   {
     time: 0,
-    color1: new THREE.Color(0xff4500), // Основной цвет (оранжево-красный)
-    color2: new THREE.Color(0xffff00), // Верхний цвет (жёлтый)
-    color3: new THREE.Color(0x8b0000), // Базовый цвет (тёмно-красный)
+    color1: new Color(0xff4500), // Основной цвет (оранжево-красный)
+    color2: new Color(0xffff00), // Верхний цвет (жёлтый)
+    color3: new Color(0x8b0000), // Базовый цвет (тёмно-красный)
     intensity: 1.5,
     speed: 1.0,
     distortion: 2.0,
@@ -106,7 +112,7 @@ export default function FirePlane({
 
   // Оптимизированная геометрия с мемоизацией
   const geometry = useMemo(
-    () => new THREE.PlaneGeometry(size[0], size[1], 32, 32),
+    () => new PlaneGeometry(size[0], size[1], 32, 32),
     [size]
   )
 
@@ -118,7 +124,7 @@ export default function FirePlane({
 
     // Плавное изменение прогресса горения
     const targetProgress = isBurning ? 1 : 0
-    const newProgress = THREE.MathUtils.lerp(fireProgress, targetProgress, 0.1)
+    const newProgress = MathUtils.lerp(fireProgress, targetProgress, 0.1)
 
     setFireProgress(newProgress)
     materialRef.current.fireProgress = newProgress
@@ -142,9 +148,9 @@ export default function FirePlane({
       <fireShaderMaterial
         ref={materialRef}
         transparent
-        side={THREE.DoubleSide}
+        side={DoubleSide}
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={AdditiveBlending}
         intensity={intensity}
         speed={speed}
         fireProgress={fireProgress}

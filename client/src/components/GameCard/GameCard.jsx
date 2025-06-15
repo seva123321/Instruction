@@ -1,6 +1,7 @@
 /* eslint-disable operator-linebreak */
 import { memo } from 'react'
-import { Box, Typography, Paper, styled } from '@mui/material'
+import { Box, Typography, Paper } from '@mui/material'
+import { styled } from '@mui/material/styles'
 
 const IndustrialBadgeWrapper = styled(Box)(({ theme }) => ({
   position: 'relative',

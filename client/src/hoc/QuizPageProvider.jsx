@@ -10,27 +10,23 @@ import {
   lazy,
   Suspense,
 } from 'react'
-import {
-  Button,
-  Box,
-  Typography,
-  Stack,
-  Paper,
-  useMediaQuery,
-  useTheme,
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Tooltip,
-  IconButton,
-} from '@mui/material'
-import {
-  ArrowBack as ArrowBackIcon,
-  ExpandMore as ExpandMoreIcon,
-  HelpOutline as HelpOutlineIcon,
-} from '@mui/icons-material'
-import { ErrorBoundary } from 'react-error-boundary'
 import { useLocation, useNavigate } from 'react-router-dom'
+import Button from '@mui/material/Button'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Stack from '@mui/material/Stack'
+import Paper from '@mui/material/Paper'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
+import Accordion from '@mui/material/Accordion'
+import AccordionDetails from '@mui/material/AccordionDetails'
+import AccordionSummary from '@mui/material/AccordionSummary'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import { ErrorBoundary } from 'react-error-boundary'
 
 import ErrorFallback from '@/components/ErrorFallback'
 import AlertGameResult from '@/components/AlertGameResult'

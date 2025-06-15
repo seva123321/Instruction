@@ -9,22 +9,19 @@ import {
   forwardRef,
   memo,
 } from 'react'
-import * as faceapi from 'face-api.js'
 import { Typography, Container, CircularProgress, Box } from '@mui/material'
-
 import VideoContainer from '@/components/VideoContainer'
 import MessageAlert from '@/components/MessageAlert'
 
-// Константы для конфигурации
 const MODEL_URL = '/modelFaceApi'
 const DETECTOR_OPTIONS = {
   inputSize: 256,
   scoreThreshold: 0.5,
 }
 const BLINK_CONFIG = {
-  cooldown: 500, // 0.5s между морганиями
-  earThreshold: 0.25, // Порог закрытого глаза
-  requiredCount: 1, // Количество морганий для завершения
+  cooldown: 500,
+  earThreshold: 0.25,
+  requiredCount: 1,
 }
 
 const loadModelsOnce = (() => {
@@ -37,14 +34,19 @@ const loadModelsOnce = (() => {
 
     loadingPromise = (async () => {
       try {
+        // Динамический импорт face-api.js
+        const faceapi = await import('face-api.js')
+
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ])
+
         modelsLoaded = true
-        return true
+        return faceapi // Возвращаем загруженный экземпляр faceapi
       } catch (error) {
+        console.error('Failed to load face-api.js:', error)
         throw new Error(error.message)
       }
     })()
@@ -56,6 +58,7 @@ const loadModelsOnce = (() => {
 const FaceRecognition = forwardRef(
   ({ onClose, onFaceDescriptor, onCameraError }, ref) => {
     // useState
+    const [faceapi, setFaceapi] = useState(null)
     const [isLoadedModel, setIsLoadedModel] = useState(false)
     const [message, setMessage] = useState({ text: '', type: '' })
     const [cameraPermissionGranted, setCameraPermissionGranted] =
@@ -66,12 +69,17 @@ const FaceRecognition = forwardRef(
     const animationFrameRef = useRef(null)
     const blinkCountRef = useRef(blinkCount)
     const descriptorsRef = useRef([])
-    const detectorOptions = useRef(
-      new faceapi.TinyFaceDetectorOptions({
-        inputSize: DETECTOR_OPTIONS.inputSize,
-        scoreThreshold: DETECTOR_OPTIONS.scoreThreshold,
-      })
-    )
+    const detectorOptions = useRef(null)
+
+    // Инициализация detectorOptions после загрузки faceApi
+    useEffect(() => {
+      if (faceapi) {
+        detectorOptions.current = new faceapi.TinyFaceDetectorOptions({
+          inputSize: DETECTOR_OPTIONS.inputSize,
+          scoreThreshold: DETECTOR_OPTIONS.scoreThreshold,
+        })
+      }
+    }, [faceapi])
 
     useEffect(() => {
       blinkCountRef.current = blinkCount
@@ -150,7 +158,7 @@ const FaceRecognition = forwardRef(
 
     const handleVideoPlay = useCallback(async () => {
       const video = videoRef.current
-      if (!video || video.videoWidth === 0) return
+      if (!video || video.videoWidth === 0 || !faceapi) return
 
       let lastBlinkTime = 0
 
@@ -159,7 +167,7 @@ const FaceRecognition = forwardRef(
           const detections = await faceapi
             .detectAllFaces(video, detectorOptions.current)
             .withFaceLandmarks(true)
-            .withFaceDescriptors() // Добавляем запрос дескрипторов
+            .withFaceDescriptors()
 
           if (detections.length === 0) {
             animationFrameRef.current = requestAnimationFrame(processFrame)
@@ -218,6 +226,7 @@ const FaceRecognition = forwardRef(
 
       animationFrameRef.current = requestAnimationFrame(processFrame)
     }, [
+      faceapi,
       averageDescriptors,
       onFaceDescriptor,
       safeClose,
@@ -225,7 +234,8 @@ const FaceRecognition = forwardRef(
     ])
     const startRecognition = useCallback(async () => {
       try {
-        await loadModelsOnce()
+        const loadedFaceapi = await loadModelsOnce()
+        setFaceapi(loadedFaceapi)
         setIsLoadedModel(true)
         await startVideo()
       } catch (error) {

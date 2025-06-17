@@ -187,8 +187,10 @@ function App() {
   )
 }
 
+
 function AdminRedirect() {
-  window.location.href = 'https://grustno-insrtuction.ru/admin' // Порт Django
+  const adminUrl = import.meta.env.VITE_ADMIN_URL
+  window.location.href = adminUrl
   return null
 }
 export default App

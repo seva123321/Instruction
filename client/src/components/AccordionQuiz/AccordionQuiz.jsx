@@ -6,11 +6,11 @@ import {
   Typography,
   Tooltip,
   AccordionDetails,
-  styled,
   Accordion,
   Button,
   AccordionSummary,
 } from '@mui/material'
+import { styled } from '@mui/material/styles'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 // Выносим стилизованные компоненты за пределы основного компонента для оптимизации

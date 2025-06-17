@@ -1,5 +1,5 @@
 /* eslint-disable operator-linebreak */
-import { memo, useEffect, useMemo, useState } from 'react'
+import { memo, lazy, useEffect, useMemo, useState, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import {
   Box,
@@ -13,6 +13,7 @@ import {
   Avatar,
   Divider,
   Chip,
+  CircularProgress,
 } from '@mui/material'
 import {
   Save as SaveIcon,
@@ -21,6 +22,7 @@ import {
   Person as PersonIcon,
   Work as WorkIcon,
   Info as InfoIcon,
+  Cake as CakeIcon,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 
@@ -30,8 +32,10 @@ import {
   isPhoneNumber,
   formatPhoneNumber,
 } from '@/service/utilsFunction'
-import DatePicker from '@/components/DatePicker'
 import MessageAlert from '@/components/MessageAlert'
+
+// Ленивая загрузка DatePicker
+const LazyDatePicker = lazy(() => import('@/components/DatePicker'))
 
 function ProfileEditSection({ profileData }) {
   const {
@@ -60,6 +64,7 @@ function ProfileEditSection({ profileData }) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
+  // const [datePickerLoaded, setDatePickerLoaded] = useState(false)
 
   const hasErrors = useMemo(() => Object.keys(errors).length > 0, [errors])
   const isSaveDisabled = useMemo(
@@ -107,6 +112,11 @@ function ProfileEditSection({ profileData }) {
   }
 
   const getCombinedError = (fieldName) => errors[fieldName]?.message
+  // const handleDateFieldClick = () => {
+  //   if (!datePickerLoaded) {
+  //     setDatePickerLoaded(true)
+  //   }
+  // }
 
   return (
     <Paper
@@ -452,7 +462,11 @@ function ProfileEditSection({ profileData }) {
             control={control}
             // eslint-disable-next-line prettier/prettier
             render={
-              ({ field }) => <DatePicker field={field} isDesktop={isDesktop} />
+              ({ field }) => (
+                <Suspense fallback={<CircularProgress size={20} />}>
+                  <LazyDatePicker field={field} isDesktop={isDesktop} />
+                </Suspense>
+              )
               // eslint-disable-next-line react/jsx-curly-newline
             }
           />

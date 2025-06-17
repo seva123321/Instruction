@@ -160,7 +160,7 @@ app_name = 'two_factor'  # Добавляем app_name
 urlpatterns = core + profile + plugin_urlpatterns  # Убираем кортеж
 ```
 Также добавьте в админ-панель кнопку перехода в настройки 2ФА.
-Для этого откройте unfold/templates/unfold/helpers/account_likes.html
+Для этого откройте unfold/templates/unfold/helpers/account_links.html
 ```
                 {% firstof user.get_short_name user.get_username %}
             </span>

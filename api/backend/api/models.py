@@ -3,6 +3,7 @@ from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
+from django.utils import timezone
 from telegram import Bot
 
 from .utils.validators import normalize_phone_number
@@ -409,6 +410,7 @@ class Notification(models.Model):
             )
         elif self.instruction_result:
             status_emoji = "✅" if self.instruction_result.result else "❌"
+            local_date = timezone.localtime(self.instruction_result.date)
             return (
                 f"{emojis['instruction']} *Результат инструктажа!*\n"
                 f"🎮 Уровень: {self.employee.current_rank.name if self.employee.current_rank else 'Новичок'}\n"
@@ -416,7 +418,7 @@ class Notification(models.Model):
                 f"👷 Сотрудник: {self.employee}\n"
                 f"📋 Инструктаж: {self.instruction_result.instruction.name}\n"
                 f"🏅 Статус: {status_emoji} {'Пройден' if self.instruction_result.result else 'Не пройден'}\n"
-                f"⏱ Дата: {self.instruction_result.date.strftime('%d.%m.%Y %H:%M')}"
+                f"⏱ Дата: {local_date.strftime('%d.%m.%Y %H:%M')}"
             )
 
 
